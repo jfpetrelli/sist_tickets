@@ -31,7 +31,7 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
   final List<String> _types = ['Instalación', 'Reparación', 'Mantenimiento', 'Soporte'];
   final List<String> _priorities = ['Baja', 'Media', 'Alta', 'Urgente'];
 
-  // Modificado: Ahora el método _selectDate devuelve DateTime?
+  
   Future<DateTime?> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -61,10 +61,9 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
         _selectedDate = picked;
       });
     }
-    return picked; // Retornamos la fecha seleccionada (o null si se canceló)
+    return picked; 
   }
 
-  // Modificado: Ahora el método _selectTime devuelve TimeOfDay?
   Future<TimeOfDay?> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -92,7 +91,7 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
         _selectedTime = picked;
       });
     }
-    return picked; // Retornamos la hora seleccionada (o null si se canceló)
+    return picked; 
   }
 
   String get _formattedDateTime {
@@ -156,10 +155,10 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
                     ],
                   ),
                   child: GestureDetector(
-                    // CAMBIO CLAVE AQUÍ: Lógica para manejar la cancelación del DatePicker
+                    
                     onTap: () async {
                       final DateTime? pickedDate = await _selectDate(context);
-                      // Solo si se seleccionó una fecha, entonces se procede a la hora
+                      
                       if (pickedDate != null) {
                         await _selectTime(context);
                       }
@@ -217,7 +216,7 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
           _buildTextField(_descriptionController, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ut ultrices metus.', Icons.description, maxLines: 5),
           const SizedBox(height: 16),
 
-          // Sección de Documentos
+
           const Text(
             'Ningún documento agregado',
             style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -245,7 +244,7 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
           ),
           const SizedBox(height: 30),
 
-          // Botón Completar
+         
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -273,7 +272,7 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
     );
   }
 
-  // --- Widgets Auxiliares ---
+
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
