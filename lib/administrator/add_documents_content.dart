@@ -1,7 +1,7 @@
 // lib/administrator/add_documents_content.dart
 import 'package:flutter/material.dart';
 
-const Color kPrimaryColor = Color(0xFFE74C3C); // Color primario (rojo)
+const Color kPrimaryColor = Color(0xFFE74C3C); 
 
 class AddDocumentsContent extends StatelessWidget {
   final VoidCallback onBack;
@@ -21,7 +21,7 @@ class AddDocumentsContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Nuevo Caso - Añadir Documentos', // <--- ¡CAMBIO AQUÍ!
+            'Nuevo Caso - Añadir Documentos', 
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -29,7 +29,7 @@ class AddDocumentsContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Aquí iría la lógica y UI para subir documentos, por ejemplo:
+
           Center(
             child: ElevatedButton.icon(
               onPressed: () {
@@ -49,7 +49,7 @@ class AddDocumentsContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Lista de documentos subidos (ejemplo)
+
           Card(
             elevation: 2,
             margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -102,7 +102,7 @@ class AddDocumentsContent extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: onConfirm, // Este onConfirm ahora llama a _goToForm en NewCaseContent
+                  onPressed: onConfirm, 
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kPrimaryColor,
                     foregroundColor: Colors.white,
