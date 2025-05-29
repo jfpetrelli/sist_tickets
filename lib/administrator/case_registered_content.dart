@@ -1,7 +1,7 @@
 // lib/administrator/case_registered_content.dart
 import 'package:flutter/material.dart';
 
-const Color kPrimaryColor = Color(0xFFE74C3C); // Color primario (rojo)
+const Color kPrimaryColor = Color(0xFFE74C3C); 
 
 class CaseRegisteredContent extends StatelessWidget {
   final VoidCallback onGoBackToForm;
@@ -18,10 +18,10 @@ class CaseRegisteredContent extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // Centrar contenido verticalmente si hay espacio
-        crossAxisAlignment: CrossAxisAlignment.center, // Centrar contenido horizontalmente
+        mainAxisAlignment: MainAxisAlignment.center, 
+        crossAxisAlignment: CrossAxisAlignment.center, 
         children: [
-          const SizedBox(height: 50), // Espacio superior
+          const SizedBox(height: 50), 
           Icon(
             Icons.check_circle_outline,
             color: Colors.green[700],
@@ -48,7 +48,6 @@ class CaseRegisteredContent extends StatelessWidget {
           ),
           const SizedBox(height: 40),
 
-          // Botón para ir a la pestaña de Casos
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -72,7 +71,7 @@ class CaseRegisteredContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Botón para volver al formulario de Nuevo Caso
+
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -94,7 +93,7 @@ class CaseRegisteredContent extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 50), // Espacio inferior
+          const SizedBox(height: 50), 
         ],
       ),
     );
