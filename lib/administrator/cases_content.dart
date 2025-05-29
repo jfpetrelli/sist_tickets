@@ -8,11 +8,11 @@ class CasesContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView( // Asegura que el contenido sea scrollable si excede la altura
-      padding: const EdgeInsets.all(10.0), // Padding general más compacto
+    return SingleChildScrollView( 
+      padding: const EdgeInsets.all(10.0), 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        // mainAxisAlignment: MainAxisAlignment.spaceBetween, // Se quita si el padre es SingleChildScrollView
+        
         children: [
           _buildSectionTitle('Casos pendientes'),
           const SizedBox(height: 8),
@@ -38,7 +38,6 @@ class CasesContent extends StatelessWidget {
     );
   }
 
-  // Métodos auxiliares deben ser parte de la clase o static
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -105,9 +104,6 @@ class CasesContent extends StatelessWidget {
       child: InkWell(
         onTap: () {
           print('Nuevo Caso presionado desde CasesContent!');
-          // Si quieres cambiar a la pestaña 'Nuevo Caso' desde aquí,
-          // CasesContent necesitaría un 'onTabSelected' callback similar al de NewCaseContent.
-          // Por ahora, solo imprime.
         },
         borderRadius: BorderRadius.circular(10),
         child: Container(
