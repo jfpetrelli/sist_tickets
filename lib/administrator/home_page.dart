@@ -1,9 +1,9 @@
 // lib/administrator/home_page.dart
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/app_template.dart'; // Asegúrate de que este archivo exista y sea correcto
+import 'package:sist_tickets/app_template.dart'; 
 import 'package:sist_tickets/administrator/new_case_content.dart';
-import 'package:sist_tickets/administrator/cases_content.dart'; // Importa CasesContent
-import 'package:sist_tickets/administrator/profile_content.dart'; // Importa ProfileContent
+import 'package:sist_tickets/administrator/cases_content.dart'; 
+import 'package:sist_tickets/administrator/profile_content.dart'; 
 
 const Color kPrimaryColor = Color(0xFFE74C3C);
 
@@ -25,19 +25,18 @@ class _HomePageState extends State<HomePage> {
     _selectedIndex = widget.initialIndex;
   }
 
-  // La lista de cuerpos de pantalla
   late final List<Widget> _screenBodies;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _screenBodies = <Widget>[
-      // NewCaseContent recibe el callback para poder cambiar a la pestaña de Casos
+
       SizedBox.expand(
         child: NewCaseContent(onTabSelected: _onBottomItemTapped),
       ),
-      const CasesContent(), // Se muestra el widget CasesContent
-      const ProfileContent(), // Se muestra el widget ProfileContent
+      const CasesContent(),
+      const ProfileContent(), 
     ];
   }
 
