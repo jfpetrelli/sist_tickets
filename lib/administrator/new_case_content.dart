@@ -47,20 +47,18 @@ class _NewCaseContentState extends State<NewCaseContent> {
       case NewCaseFlowStep.form:
         return NewCaseFormBody(
           onAddDocuments: _goToAddDocuments,
-          // Cuando se completa el formulario principal, va a "registered"
+          
           onCompleteCase: _goToCaseRegistered,
         );
       case NewCaseFlowStep.addDocuments:
         return AddDocumentsContent(
           onBack: _goToForm,
-          // <--- ¡CAMBIO CLAVE AQUÍ!
-          // Cuando se confirma en añadir documentos, vuelve al formulario principal.
           onConfirm: _goToForm,
         );
       case NewCaseFlowStep.registered:
         return CaseRegisteredContent(
           onGoBackToForm: _goToForm,
-          onGoToCasesTab: () => widget.onTabSelected(1), // Cambia a la pestaña de "Casos" (índice 1)
+          onGoToCasesTab: () => widget.onTabSelected(1), 
         );
     }
   }
