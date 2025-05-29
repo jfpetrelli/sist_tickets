@@ -1,7 +1,7 @@
 // lib/administrator/profile_content.dart
 import 'package:flutter/material.dart';
 
-const Color kPrimaryColor = Color(0xFFE74C3C); // Color primario (rojo)
+const Color kPrimaryColor = Color(0xFFE74C3C);
 const Color kBackgroundColor = Color(0xFFF0F0F0); // Color de fondo gris claro
 
 class ProfileContent extends StatelessWidget {
