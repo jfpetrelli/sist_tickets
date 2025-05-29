@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/administrator/home_page.dart';
 
-// Define el color principal aquí (o impórtalo desde un archivo de constantes)
+
 const Color kPrimaryColor = Color(0xFFE74C3C); // E74C3C
 
 class LoginScreen extends StatelessWidget {
@@ -10,20 +10,19 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos LayoutBuilder para que el Column pueda expandirse y tomar el espacio disponible
-    // sin que necesite scroll si el contenido es demasiado para pantallas pequeñas.
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: LayoutBuilder(
         builder: (context, constraints) {
-          return Column( // ¡QUITAMOS SingleChildScrollView!
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribuye el espacio verticalmente
+          return Column( 
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, 
             children: [
-              // Sección superior con círculos y el logo UTP
+
               Container(
-                height: constraints.maxHeight * 0.28, // Altura reducida al 28%
+                height: constraints.maxHeight * 0.28, 
                 decoration: const BoxDecoration(
-                  color: kPrimaryColor, // Usar el nuevo color
+                  color: kPrimaryColor,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(50),
                     bottomRight: Radius.circular(50),
@@ -62,7 +61,7 @@ class LoginScreen extends StatelessWidget {
                         width: constraints.maxWidth * 0.5,
                         height: constraints.maxWidth * 0.5,
                         decoration: BoxDecoration(
-                          color: kPrimaryColor, // Usar el nuevo color
+                          color: kPrimaryColor,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -100,54 +99,54 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
 
-              // Contenido principal del login envuelto en Expanded
-              Expanded( // Permite que esta columna ocupe el espacio restante
+
+              Expanded( 
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0), // Padding ajustado
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0), 
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribuye los elementos
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Iniciar Sesión',
                         style: TextStyle(
-                          fontSize: 26, // Fuente ligeramente más pequeña
+                          fontSize: 26, 
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 15), // Espacio ajustado
+                      const SizedBox(height: 15), 
                       _buildTextField(
                         hint: 'Usuario, email, teléfono celular',
                         icon: Icons.person_outline,
                       ),
-                      const SizedBox(height: 10), // Espacio ajustado
+                      const SizedBox(height: 10), 
                       _buildTextField(
                         hint: 'Contraseña',
                         icon: Icons.lock_outline,
                         isPassword: true,
                       ),
-                      const SizedBox(height: 10), // Espacio ajustado
+                      const SizedBox(height: 10), 
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {},
                           child: Text(
                             '¿Olvidaste tu contraseña?',
-                            style: TextStyle(color: Colors.grey[700], fontSize: 13), // Fuente más pequeña
+                            style: TextStyle(color: Colors.grey[700], fontSize: 13), 
                           ),
                         ),
                       ),
-                      const SizedBox(height: 15), // Espacio ajustado
+                      const SizedBox(height: 15), 
                       _buildLoginButton(context),
-                      const SizedBox(height: 15), // Espacio ajustado
+                      const SizedBox(height: 15), 
                       Center(
                         child: Text(
                           'O Ingresa con',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       ),
-                      const SizedBox(height: 15), // Espacio ajustado
+                      const SizedBox(height: 15), 
                       _buildSocialLoginButtons(),
                     ],
                   ),
@@ -185,7 +184,7 @@ class LoginScreen extends StatelessWidget {
           hintStyle: TextStyle(color: Colors.grey[400]),
           prefixIcon: Icon(icon, color: Colors.grey[600]),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10), // Padding más compacto
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10), 
         ),
       ),
     );
@@ -198,11 +197,11 @@ class LoginScreen extends StatelessWidget {
         onPressed: () {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomePage(initialIndex: 1)), // Ir a "Casos"
+            MaterialPageRoute(builder: (context) => const HomePage(initialIndex: 1)), 
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: kPrimaryColor, // Usar el nuevo color
+          backgroundColor: kPrimaryColor, 
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 15),
           shape: RoundedRectangleBorder(
@@ -226,12 +225,12 @@ class LoginScreen extends StatelessWidget {
           icon: Icons.g_mobiledata,
           onPressed: () {},
         ),
-        const SizedBox(width: 15), // Espacio ajustado
+        const SizedBox(width: 15), 
         _buildSocialButton(
           icon: Icons.facebook,
           onPressed: () {},
         ),
-        const SizedBox(width: 15), // Espacio ajustado
+        const SizedBox(width: 15), 
         _buildSocialButton(
           icon: Icons.apple,
           onPressed: () {},
@@ -255,7 +254,7 @@ class LoginScreen extends StatelessWidget {
         ],
       ),
       child: IconButton(
-        icon: child ?? Icon(icon, size: 28, color: Colors.grey[700]), // Tamaño de ícono ajustado
+        icon: child ?? Icon(icon, size: 28, color: Colors.grey[700]), 
         onPressed: onPressed,
       ),
     );
