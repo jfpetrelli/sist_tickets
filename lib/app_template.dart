@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class AppTemplate extends StatelessWidget {
   final Widget body;
   final String appBarTitle;
-  final TextStyle? appBarTitleStyle; // <--- ¡NUEVO PARÁMETRO AQUÍ!
+  final TextStyle? appBarTitleStyle; 
   final Color appBarColor;
   final Widget? leadingAppBarIcon;
   final List<Widget>? appBarActions;
@@ -16,7 +16,7 @@ class AppTemplate extends StatelessWidget {
     super.key,
     required this.body,
     required this.appBarTitle,
-    this.appBarTitleStyle, // <--- ¡AÑÁDELO AL CONSTRUCTOR!
+    this.appBarTitleStyle, 
     required this.appBarColor,
     this.leadingAppBarIcon,
     this.appBarActions,
@@ -31,17 +31,15 @@ class AppTemplate extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           appBarTitle,
-          style: appBarTitleStyle ?? const TextStyle(color: Colors.white), // Usa el estilo nuevo o el por defecto
+          style: appBarTitleStyle ?? const TextStyle(color: Colors.white), 
         ),
         backgroundColor: appBarColor,
         leading: leadingAppBarIcon,
         actions: appBarActions,
-        // Eliminamos el `elevation` de aquí para que la AppBar tenga una apariencia más limpia por defecto
-        // y se pueda controlar desde donde se usa el AppTemplate si se quiere sombra.
-        elevation: 0, // Por ejemplo, sin sombra por defecto
+        elevation: 0, 
       ),
       body: Container(
-        color: Colors.grey[200], // Fondo por defecto para el body
+        color: Colors.grey[200], 
         child: body,
       ),
       bottomNavigationBar: bottomNavigationBar,
