@@ -1,9 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/login_screen.dart';
-
-
-const Color kPrimaryColor = Color(0xFFE74C3C); // E74C3C
+import 'package:sist_tickets/constants.dart'; 
 
 void main() {
   runApp(const MyApp());

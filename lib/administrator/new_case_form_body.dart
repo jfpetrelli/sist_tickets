@@ -1,7 +1,6 @@
 // lib/administrator/new_case_form_body.dart
 import 'package:flutter/material.dart';
-
-const Color kPrimaryColor = Color(0xFFE74C3C); // E74C3C
+import 'package:sist_tickets/constants.dart'; 
 
 class NewCaseFormBody extends StatefulWidget {
   final VoidCallback onAddDocuments;

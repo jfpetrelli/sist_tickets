@@ -1,7 +1,6 @@
 // lib/administrator/case_registered_content.dart
 import 'package:flutter/material.dart';
-
-const Color kPrimaryColor = Color(0xFFE74C3C); 
+import 'package:sist_tickets/constants.dart'; 
 
 class CaseRegisteredContent extends StatelessWidget {
   final VoidCallback onGoBackToForm;
@@ -47,31 +46,6 @@ class CaseRegisteredContent extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onGoToCasesTab,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 5,
-              ),
-              child: const Text(
-                'Ver Mis Casos',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(

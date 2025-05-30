@@ -1,8 +1,6 @@
 // lib/administrator/profile_content.dart
 import 'package:flutter/material.dart';
-
-const Color kPrimaryColor = Color(0xFFE74C3C);
-const Color kBackgroundColor = Color(0xFFF0F0F0); // Color de fondo gris claro
+import 'package:sist_tickets/constants.dart'; 
 
 class ProfileContent extends StatelessWidget {
   const ProfileContent({super.key});
@@ -25,21 +23,6 @@ class ProfileContent extends StatelessWidget {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Builder(
-                      builder: (context) {
-                        return IconButton(
-                          icon: const Icon(Icons.menu, color: Colors.white, size: 30),
-                          onPressed: () {
-                            Scaffold.of(context).openDrawer();
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
                   Container(
                     width: 100,
                     height: 100,

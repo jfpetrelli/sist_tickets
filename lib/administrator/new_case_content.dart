@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sist_tickets/administrator/new_case_form_body.dart';
 import 'package:sist_tickets/administrator/add_documents_content.dart';
 import 'package:sist_tickets/administrator/case_registered_content.dart';
-
-const Color kPrimaryColor = Color(0xFFE74C3C);
+import 'package:sist_tickets/constants.dart'; 
 
 enum NewCaseFlowStep {
   form,

@@ -1,35 +1,49 @@
 // lib/administrator/cases_content.dart
 import 'package:flutter/material.dart';
-
-const Color kPrimaryColor = Color(0xFFE74C3C); // E74C3C
+import 'package:sist_tickets/constants.dart';
 
 class CasesContent extends StatelessWidget {
-  const CasesContent({super.key});
+  final ValueChanged<String> onShowCaseDetail; // Callback para mostrar el detalle
+
+  const CasesContent({super.key, required this.onShowCaseDetail});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView( 
-      padding: const EdgeInsets.all(10.0), 
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        
         children: [
+          // Título de la sección "Casos" dentro del body
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
+            child: Text(
+              'Casos',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12), // Espacio después del título principal
+
           _buildSectionTitle('Casos pendientes'),
           const SizedBox(height: 8),
-          _buildCaseCard(context, 'Distribuidora Dique', 'Instalación redes WiFi'),
+          _buildCaseCard(context, 'Distribuidora Dique', 'Instalación redes WiFi', 'case_001'),
           const SizedBox(height: 4),
-          _buildCaseCard(context, 'Detalle caso 2', ''),
+          _buildCaseCard(context, 'Detalle caso 2', '', 'case_002'),
           const SizedBox(height: 4),
-          _buildCaseCard(context, 'Detalle caso 3', ''),
+          _buildCaseCard(context, 'Detalle caso 3', '', 'case_003'),
           const SizedBox(height: 12),
 
           _buildSectionTitle('Casos Completados'),
           const SizedBox(height: 8),
-          _buildCaseCard(context, 'Obring', 'Instalación redes WiFi'),
+          _buildCaseCard(context, 'Obring', 'Instalación redes WiFi', 'case_004'),
           const SizedBox(height: 4),
-          _buildCaseCard(context, 'Detalle caso 2', ''),
+          _buildCaseCard(context, 'Detalle caso 2', '', 'case_005'),
           const SizedBox(height: 4),
-          _buildCaseCard(context, 'Detalle caso 3', ''),
+          _buildCaseCard(context, 'Detalle caso 3', '', 'case_006'),
           const SizedBox(height: 12),
 
           _buildNewCaseButton(),
@@ -49,7 +63,7 @@ class CasesContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCaseCard(BuildContext context, String title, String subtitle) {
+  Widget _buildCaseCard(BuildContext context, String title, String subtitle, String caseId) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -59,7 +73,8 @@ class CasesContent extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                print('Ver: $title');
+                print('Ver: $title (ID: $caseId)');
+                onShowCaseDetail(caseId); // Llama al callback para que HomePage muestre el detalle
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimaryColor.withOpacity(0.9),
@@ -104,6 +119,9 @@ class CasesContent extends StatelessWidget {
       child: InkWell(
         onTap: () {
           print('Nuevo Caso presionado desde CasesContent!');
+          // Si quisieras que este botón cambie a la pestaña "Nuevo Caso",
+          // HomePage debería pasar un callback a CasesContent para hacerlo.
+          // Por ahora, solo imprime.
         },
         borderRadius: BorderRadius.circular(10),
         child: Container(

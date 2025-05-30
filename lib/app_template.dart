@@ -2,49 +2,46 @@
 import 'package:flutter/material.dart';
 
 class AppTemplate extends StatelessWidget {
-  final Widget body;
   final String appBarTitle;
-  final TextStyle? appBarTitleStyle; 
   final Color appBarColor;
-  final Widget? leadingAppBarIcon;
-  final List<Widget>? appBarActions;
+  final TextStyle? appBarTitleStyle;
+  final Widget body;
   final Widget? bottomNavigationBar;
   final Widget? drawer;
-  final FloatingActionButton? floatingActionButton;
+  final Widget? leadingAppBarIcon;
+  final List<Widget>? appBarActions;
+  final GlobalKey<ScaffoldState>? scaffoldKey; // <-- ESTA LÍNEA ES LA IMPORTANTE AHORA
 
   const AppTemplate({
     super.key,
-    required this.body,
     required this.appBarTitle,
-    this.appBarTitleStyle, 
-    required this.appBarColor,
-    this.leadingAppBarIcon,
-    this.appBarActions,
+    this.appBarColor = Colors.blue,
+    this.appBarTitleStyle,
+    required this.body,
     this.bottomNavigationBar,
     this.drawer,
-    this.floatingActionButton,
+    this.leadingAppBarIcon,
+    this.appBarActions,
+    this.scaffoldKey, // <-- Y ESTA LÍNEA EN EL CONSTRUCTOR
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey, // Asigna la key al Scaffold
       appBar: AppBar(
-        title: Text(
-          appBarTitle,
-          style: appBarTitleStyle ?? const TextStyle(color: Colors.white), 
-        ),
         backgroundColor: appBarColor,
         leading: leadingAppBarIcon,
+        title: Text(
+          appBarTitle,
+          style: appBarTitleStyle ?? const TextStyle(color: Colors.white),
+        ),
         actions: appBarActions,
-        elevation: 0, 
+        centerTitle: true,
       ),
-      body: Container(
-        color: Colors.grey[200], 
-        child: body,
-      ),
+      body: body,
       bottomNavigationBar: bottomNavigationBar,
       drawer: drawer,
-      floatingActionButton: floatingActionButton,
     );
   }
 }

@@ -1,9 +1,7 @@
 // lib/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/administrator/home_page.dart';
-
-
-const Color kPrimaryColor = Color(0xFFE74C3C); // E74C3C
+import 'package:sist_tickets/constants.dart'; 
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
