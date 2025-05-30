@@ -4,7 +4,7 @@ import 'package:sist_tickets/constants.dart';
 
 class CaseDetailContent extends StatelessWidget {
   final String caseId;
-  final VoidCallback onBackToList; // Callback para volver a la lista de casos
+  final VoidCallback onBackToList; 
 
   const CaseDetailContent({
     super.key,
@@ -19,12 +19,12 @@ class CaseDetailContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título de la sección "Detalle del Caso" y botón de retroceso dentro del body
+
           Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back, color: kPrimaryColor),
-                onPressed: onBackToList, // Vuelve a la lista de casos
+                onPressed: onBackToList,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -37,27 +37,23 @@ class CaseDetailContent extends StatelessWidget {
                   ),
                 ),
               ),
-              // Botones de acción (Editar/Eliminar) aquí en el body si no van en la AppBar
+
               IconButton(
                 icon: const Icon(Icons.edit, color: kPrimaryColor),
                 onPressed: () {
                   print('Editar caso $caseId (desde el body)');
-                  // Lógica para editar el caso.
-                  // Podrías navegar a otra pantalla, o abrir un formulario modal.
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.delete, color: kPrimaryColor),
                 onPressed: () {
                   print('Eliminar caso $caseId (desde el body)');
-                  // Lógica para eliminar el caso.
-                  // Puedes mostrar un diálogo de confirmación aquí.
-                  // Si se elimina, llama a onBackToList();
+
                 },
               ),
             ],
           ),
-          const SizedBox(height: 12), // Espacio después del título principal
+          const SizedBox(height: 12),
 
           Card(
             elevation: 5,
@@ -69,7 +65,6 @@ class CaseDetailContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sección de Encabezado
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -115,7 +110,6 @@ class CaseDetailContent extends StatelessWidget {
                   ),
                   const Divider(height: 30, thickness: 1),
 
-                  // Sección de Fecha y Hora
                   Row(
                     children: [
                       Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
@@ -141,7 +135,6 @@ class CaseDetailContent extends StatelessWidget {
                   ),
                   const Divider(height: 30, thickness: 1),
 
-                  // Sección de Detalles
                   Text(
                     'Detalles',
                     style: TextStyle(
@@ -157,7 +150,6 @@ class CaseDetailContent extends StatelessWidget {
                   _buildDetailRow(Icons.check_box, 'Pendiente', color: kPrimaryColor),
                   const Divider(height: 30, thickness: 1),
 
-                  // Sección de Documentos
                   Text(
                     'Documentos',
                     style: TextStyle(
@@ -209,8 +201,6 @@ class CaseDetailContent extends StatelessWidget {
                     ),
                   ),
                   const Divider(height: 30, thickness: 1),
-
-                  // Sección de Descripción
                   Text(
                     'Descripción',
                     style: TextStyle(
@@ -227,9 +217,6 @@ class CaseDetailContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  // Los botones de acción se pueden mantener aquí si no se quieren en la AppBar
-                  // Ya que la AppBar es fija, tenerlos aquí es una opción válida.
-                
                 ],
               ),
             ),
@@ -239,7 +226,6 @@ class CaseDetailContent extends StatelessWidget {
     );
   }
 
-  // --- MÉTODO CORREGIDO ---
   Widget _buildDetailRow(IconData icon, String text, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
