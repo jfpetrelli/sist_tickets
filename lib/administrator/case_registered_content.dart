@@ -1,6 +1,6 @@
 // lib/administrator/case_registered_content.dart
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart'; 
+import 'package:sist_tickets/constants.dart';
 
 class CaseRegisteredContent extends StatelessWidget {
   final VoidCallback onGoBackToForm;
@@ -14,45 +14,67 @@ class CaseRegisteredContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+    return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, 
-        crossAxisAlignment: CrossAxisAlignment.center, 
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 50), 
-          Icon(
-            Icons.check_circle_outline,
-            color: Colors.green[700],
-            size: 100,
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: kPrimaryColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check_circle,
+              size: 80,
+              color: kPrimaryColor,
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           const Text(
-            '¡Caso Registrado con Éxito!',
+            '¡Caso Registrado!',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'Tu nuevo caso ha sido creado y se está gestionando.',
+          const SizedBox(height: 12),
+          Text(
+            'El caso ha sido registrado exitosamente',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey,
+              color: Colors.grey[600],
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onGoToCasesTab,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 5,
+              ),
+              child: const Text(
+                'Ver Casos',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
               onPressed: onGoBackToForm,
               style: OutlinedButton.styleFrom(
                 foregroundColor: kPrimaryColor,
-                side: const BorderSide(color: kPrimaryColor),
+                side: BorderSide(color: kPrimaryColor),
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -60,14 +82,10 @@ class CaseRegisteredContent extends StatelessWidget {
               ),
               child: const Text(
                 'Registrar Otro Caso',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18),
               ),
             ),
           ),
-          const SizedBox(height: 50), 
         ],
       ),
     );
