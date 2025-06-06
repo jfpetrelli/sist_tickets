@@ -19,37 +19,52 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    // --- MODIFICACIÓN INICIA AQUÍ ---
+    // Remove or comment out the validation and API call for direct navigation.
+    // if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    try {
-      await ApiService.login(
-        _emailController.text,
-        _passwordController.text,
-      );
+    // Simulate a delay for demonstration purposes, mimicking a network request.
+    await Future.delayed(const Duration(seconds: 1)); 
 
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const HomePage(),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const HomePage(),
+        ),
+      );
+    }
+    
+    // The try-catch block for ApiService.login is now bypassed.
+    // try {
+    //   await ApiService.login(
+    //     _emailController.text,
+    //     _passwordController.text,
+    //   );
+
+    //   if (mounted) {
+    //     Navigator.of(context).pushReplacement(
+    //       MaterialPageRoute(
+    //         builder: (context) => const HomePage(),
+    //       ),
+    //     );
+    //   }
+    // } catch (e) {
+    //   setState(() {
+    //     _errorMessage = e.toString();
+    //   });
+    // } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
       }
-    }
+    // }
+    // --- MODIFICACIÓN TERMINA AQUÍ ---
   }
 
   @override
@@ -151,6 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               vertical: 16,
                             ),
                           ),
+                          // The validator is still there, but it won't be called if you remove the `_formKey.currentState!.validate()` call.
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Por favor ingrese su email';
@@ -191,6 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               vertical: 16,
                             ),
                           ),
+                          // The validator is still there, but it won't be called if you remove the `_formKey.currentState!.validate()` call.
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Por favor ingrese su contraseña';
@@ -249,6 +266,63 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: Colors.grey[300])),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'O continuar con',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: Colors.grey[300])),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildSocialButton('google'),
+                            _buildSocialButton('facebook'),
+                            _buildSocialButton('apple'),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '¿No tienes una cuenta?',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // TODO: Navegar a la pantalla de registro
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.only(left: 8),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'Regístrate',
+                                style: TextStyle(
+                                  color: kPrimaryColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -267,5 +341,40 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
-}
 
+  Widget _buildSocialButton(String type) {
+    final iconPath = 'assets/icons/$type.png';
+    print('Trying to load icon: $iconPath'); // Debug print
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          print('$type button tapped'); // Debug print
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Image.asset(
+            iconPath,
+            width: 24,
+            height: 24,
+            errorBuilder: (context, error, stackTrace) {
+              print('Error loading icon: $iconPath');
+              print('Error details: $error');
+              return Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 24,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
