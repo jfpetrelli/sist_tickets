@@ -1,9 +1,14 @@
-// lib/administrator/profile_content.dart
+
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
 
 class ProfileContent extends StatelessWidget {
-  const ProfileContent({super.key});
+  final VoidCallback onLogout;
+
+  const ProfileContent({
+    super.key,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +200,7 @@ class ProfileContent extends StatelessWidget {
               _buildSettingTile(
                 'Cerrar sesión',
                 Icons.exit_to_app,
-                () => print('Cerrar sesión'),
+                () => onLogout(),
                 isDestructive: true,
               ),
             ],

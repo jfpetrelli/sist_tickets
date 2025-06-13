@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart'; // Asumiendo que 'constants.dart' define kPrimaryColor y kSuccessColor
+import 'package:sist_tickets/constants.dart';
 
 class ReportsContent extends StatelessWidget {
   const ReportsContent({super.key});
@@ -63,7 +63,7 @@ class ReportsContent extends StatelessWidget {
                       width: 120,
                       height: 120,
                       child: CircularProgressIndicator(
-                        value: 0.75, // 75% completado
+                        value: 0.75,
                         strokeWidth: 12,
                         backgroundColor: Colors.grey[300],
                         valueColor: const AlwaysStoppedAnimation<Color>(kPrimaryColor),
@@ -111,11 +111,11 @@ class ReportsContent extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Manejar la acción de exportar
+                  
                   print('Exportar Tareas');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEF5350), // Un color rojizo para exportar
+                  backgroundColor: const Color(0xFFEF5350), 
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -184,11 +184,11 @@ class ReportsContent extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Manejar la acción de exportar
+                  
                   print('Exportar Ranking');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEF5350), // Un color rojizo para exportar
+                  backgroundColor: const Color(0xFFEF5350),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -247,7 +247,7 @@ class ReportsContent extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: isUp ? kSuccessColor : Colors.red,
+              color: isUp ? kSuccessColor : Colors.red
             ),
           ),
           Icon(

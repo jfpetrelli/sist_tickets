@@ -1,4 +1,4 @@
-// lib/app_template.dart
+
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
 
@@ -33,13 +33,13 @@ class AppTemplate extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.search, color: Colors.white),
             onPressed: () {
-              // Implementar búsqueda
+
             },
           ),
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {
-              // Implementar notificaciones
+
             },
           ),
         ],

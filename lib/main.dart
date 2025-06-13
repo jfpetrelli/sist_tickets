@@ -1,4 +1,4 @@
-// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/login_screen.dart';
 import 'package:sist_tickets/constants.dart';

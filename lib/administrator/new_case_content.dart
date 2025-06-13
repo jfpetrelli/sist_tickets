@@ -1,8 +1,5 @@
-// lib/administrator/new_case_content.dart
+
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/administrator/new_case_form_body.dart';
-import 'package:sist_tickets/administrator/add_documents_content.dart';
-import 'package:sist_tickets/administrator/case_registered_content.dart';
 import 'package:sist_tickets/constants.dart'; 
 
 enum NewCaseFlowStep {
@@ -82,7 +79,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
               ],
               ElevatedButton.icon(
                 onPressed: () {
-                  // Implementar selección de documento
+                  
                   setState(() {
                     _documents.add(
                       DocumentItem(
@@ -132,7 +129,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 20),
             
-            // Cliente
+            
             TextFormField(
               decoration: InputDecoration(
                 labelText: 'Cliente',
@@ -160,7 +157,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 16),
 
-            // Título
+            
             TextFormField(
               decoration: InputDecoration(
                 labelText: 'Título',
@@ -188,7 +185,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 16),
 
-            // Fecha y Hora
+            
             TextFormField(
               readOnly: true,
               onTap: _selectDateTime,
@@ -217,7 +214,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 16),
             
-            // Técnico Asignado
+            
             TextFormField(
               readOnly: true,
               decoration: InputDecoration(
@@ -241,7 +238,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 16),
 
-            // Tipo
+            
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 labelText: 'Tipo',
@@ -276,7 +273,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 16),
 
-            // Prioridad
+            
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 labelText: 'Prioridad',
@@ -310,7 +307,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 16),
 
-            // Descripción
+            
             TextFormField(
               decoration: const InputDecoration(
                 labelText: 'Descripción',
@@ -327,7 +324,7 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 16),
 
-            // Documentos
+            
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -385,14 +382,14 @@ class _NewCaseContentState extends State<NewCaseContent> {
             ),
             const SizedBox(height: 24),
 
-            // Botón Guardar
+            
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Implementar guardado
+                    
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -418,23 +415,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: kPrimaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: kPrimaryColor,
-        ),
-      ),
-    );
-  }
 }
 
 class DocumentItem {

@@ -1,4 +1,4 @@
-// lib/administrator/confirmation_signature_content.dart
+
 import 'package:flutter/material.dart';
 
 class ConfirmationSignatureContent extends StatelessWidget {
@@ -36,7 +36,7 @@ class ConfirmationSignatureContent extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.asset(
-                      'assets/firms/firma_placeholder.png', // <--- Imagen agregada aquí
+                      'assets/firms/firma_placeholder.png', 
                       fit: BoxFit.contain,
                     ),
                   ),

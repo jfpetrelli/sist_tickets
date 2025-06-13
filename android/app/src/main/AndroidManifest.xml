@@ -2,7 +2,7 @@
     <application
         android:label="sist_tickets"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/cif">
         <activity
             android:name=".MainActivity"
             android:exported="true"

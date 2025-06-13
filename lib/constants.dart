@@ -1,16 +1,16 @@
-// lib/constants.dart
+
 import 'package:flutter/material.dart';
 
-const Color kPrimaryColor = Color(0xFFE74C3C); // Color rojo primario
-const kSecondaryColor = Color(0xFFF1948A); // Versión más clara del rojo primario
+const Color kPrimaryColor = Color(0xFFE74C3C);
+const kSecondaryColor = Color(0xFFF1948A);
 const kBackgroundColor = Color(0xFFF5F5F5);
 const kTextColor = Color(0xFF333333);
 const kErrorColor = Color(0xFFE57373);
 const kSuccessColor = Color(0xFF81C784);
 const kWarningColor = Color(0xFFFFB74D);
 
-const Color kAccentColor = Color(0xFFE74C3C); // Mismo color que el primario para consistencia
-const Color kLightTextColor = Color(0xFF7F8C8D); // Color de texto secundario (gris)
+const Color kAccentColor = Color(0xFFE74C3C);
+const Color kLightTextColor = Color(0xFF7F8C8D);
 
 final kButtonStyle = ElevatedButton.styleFrom(
   backgroundColor: kPrimaryColor,

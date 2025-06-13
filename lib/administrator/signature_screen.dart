@@ -142,7 +142,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
                       }
                       final signature = await _controller.toPngBytes();
                       if (signature != null) {
-                        // Aquí se implementaría la lógica para guardar la firma
+
                         Navigator.pop(context);
                       }
                     },
@@ -172,4 +172,4 @@ class _SignatureScreenState extends State<SignatureScreen> {
       ),
     );
   }
-} 
+}

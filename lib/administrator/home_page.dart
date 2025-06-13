@@ -1,12 +1,12 @@
-// lib/administrator/home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/app_template.dart';
 import 'package:sist_tickets/administrator/new_case_content.dart';
 import 'package:sist_tickets/administrator/cases_content.dart';
-import 'package:sist_tickets/administrator/profile_content.dart';
+import 'package:sist_tickets/administrator/profile_content.dart'; 
 import 'package:sist_tickets/administrator/case_detail_content.dart';
-import 'package:sist_tickets/administrator/reports_content.dart';
-import 'package:sist_tickets/administrator/confirmation_signature_content.dart'; // <--- ¡Importación corregida!
+import 'package:sist_tickets/administrator/reports_content.dart'; 
+import 'package:sist_tickets/administrator/confirmation_signature_content.dart';
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/services/api_service.dart';
 import 'package:sist_tickets/login_screen.dart';
@@ -20,82 +20,84 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedIndex = 1; // Mantenemos 1 como el índice inicial para 'Casos'
+  int _selectedIndex = 1; 
 
   final List<Widget> _widgetOptions = <Widget>[];
 
-  // Variables de estado para controlar qué contenido se muestra
   String? _currentCaseDetailId;
-  bool _showingConfirmationSignature = false; // <--- ¡Nombre de la variable de estado corregido!
+  bool _showingConfirmationSignature = false;
+  bool _showingReportsFromDrawer = false;
 
   @override
   void initState() {
     super.initState();
+    
     _widgetOptions.addAll([
-      const NewCaseContent(),      // Índice 0
-      CasesContent(onShowCaseDetail: _showCaseCaseDetail), // Índice 1
-      const ReportsContent(),     // Índice 2
-      const ProfileContent(),     // Índice 3
+      const NewCaseContent(), 
+      CasesContent(onShowCaseDetail: _showCaseCaseDetail), 
+      
+      ProfileContent(onLogout: () => _handleLogout(context)), 
     ]);
   }
 
   void _showCaseCaseDetail(String caseId) {
     setState(() {
       _currentCaseDetailId = caseId;
-      _showingConfirmationSignature = false; // Si volvemos al detalle, ocultamos la firma
-      _selectedIndex = 1; // Asegurarse de que la pestaña de Casos esté activa
+      _showingConfirmationSignature = false;
+      _showingReportsFromDrawer = false; 
+      _selectedIndex = 1; 
     });
   }
 
   void _hideCaseDetail() {
     setState(() {
       _currentCaseDetailId = null;
-      // Al ocultar el detalle, se vuelve a la lista de casos si el _selectedIndex sigue siendo 1
+      
     });
   }
 
-  // ¡Funciones para manejar la pantalla de firma!
-  void _showConfirmationSignatureScreen() { // <--- Nombre de la función corregido
+  void _showConfirmationSignatureScreen() {
     setState(() {
-      _showingConfirmationSignature = true; // Cambia el estado
+      _showingConfirmationSignature = true;
+      _showingReportsFromDrawer = false; 
     });
   }
 
-  void _hideConfirmationSignatureScreen() { // <--- Nombre de la función corregido
+  void _hideConfirmationSignatureScreen() {
     setState(() {
       _showingConfirmationSignature = false;
-      // Después de cerrar la firma, queremos volver al CaseDetailContent.
-      // _currentCaseDetailId ya debería tener el ID del caso, así que no es necesario resetearlo.
     });
   }
-  // Fin de las funciones --->
 
   void _onBottomItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      _currentCaseDetailId = null; // Ocultar detalle de caso al cambiar de pestaña
-      _showingConfirmationSignature = false; // Ocultar firma de conformidad al cambiar de pestaña
+      _currentCaseDetailId = null; 
+      _showingConfirmationSignature = false; 
+      _showingReportsFromDrawer = false; 
     });
   }
 
   @override
   Widget build(BuildContext context) {
     Widget bodyContent;
+
     if (_showingConfirmationSignature) {
-      // Si _showingConfirmationSignature es true, mostramos la pantalla de firma.
       bodyContent = ConfirmationSignatureContent(
-        caseId: _currentCaseDetailId ?? 'default_case_id', // Pasa el ID del caso actual
+        caseId: _currentCaseDetailId ?? 'default_case_id',
         onBack: _hideConfirmationSignatureScreen,
       );
     } else if (_currentCaseDetailId != null && _selectedIndex == 1) {
-      // Si estamos en la pestaña de Casos y hay un caseId seleccionado, mostramos el detalle.
       bodyContent = CaseDetailContent(
         caseId: _currentCaseDetailId!,
         onBack: _hideCaseDetail,
-        onShowConfirmationSignature: _showConfirmationSignatureScreen, // <--- ¡Aquí se pasa la función corregida!
+        onShowConfirmationSignature: _showConfirmationSignatureScreen,
       );
+    } else if (_showingReportsFromDrawer) {
+      
+      bodyContent = const ReportsContent();
     } else {
-      // De lo contrario, mostramos el contenido de la pestaña seleccionada.
+      
       bodyContent = _widgetOptions.elementAt(_selectedIndex);
     }
 
@@ -127,6 +129,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Casos',
               activeIcon: Icon(Icons.list_alt, size: 28),
             ),
+            
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
               label: 'Perfil',
@@ -219,9 +222,15 @@ class _HomePageState extends State<HomePage> {
                 ),
                 onTap: () {
                   setState(() {
-                    _selectedIndex = 2;
+                    
+                    _showingReportsFromDrawer = true;
+                    
                     _currentCaseDetailId = null;
-                    _showingConfirmationSignature = false; // Asegurarse de que no muestre la firma
+                    _showingConfirmationSignature = false;
+                    
+                    
+                    
+                    
                   });
                   Navigator.pop(context);
                 },
@@ -245,9 +254,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 onTap: () {
                   setState(() {
-                    _selectedIndex = 3;
+                    _selectedIndex = 2; 
                     _currentCaseDetailId = null;
-                    _showingConfirmationSignature = false; // Asegurarse de que no muestre la firma
+                    _showingConfirmationSignature = false;
+                    _showingReportsFromDrawer = false; 
                   });
                   Navigator.pop(context);
                 },
@@ -260,7 +270,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
-                  _handleLogout(context);
+                  _handleLogout(context); 
                 },
               ),
               const SizedBox(height: 16),

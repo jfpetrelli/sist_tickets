@@ -1,7 +1,7 @@
-// lib/administrator/new_case_form_body.dart
+
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
-import 'package:intl/intl.dart';
+
 
 class NewCaseFormBody extends StatefulWidget {
   final VoidCallback onAddDocuments;
@@ -29,13 +29,13 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
 
   final List<String> _types = ['Instalación', 'Reparación', 'Mantenimiento'];
   final List<String> _priorities = ['Alta', 'Media', 'Baja'];
-  // Eliminamos _technicians de aquí, ya que el técnico es un valor fijo en la UI.
-  // final List<String> _technicians = ['Juan Ortega', 'Carlos Pérez', 'Ana García'];
+  
+  
 
   @override
   void initState() {
     super.initState();
-    // Inicializar con la fecha y hora actual
+    
     _selectedDate = DateTime.now();
     _selectedTime = TimeOfDay.now();
   }
@@ -128,15 +128,7 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                _selectedDate != null 
-                    ? '${DateFormat('dd/MM/yyyy').format(_selectedDate)} ${_selectedTime.format(context).toLowerCase()}hs'
-                    : 'Seleccionar fecha y hora',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: _selectedDate != null ? Colors.black87 : Colors.grey[600],
-                ),
-              ),
+              
             ),
           ),
           Container(

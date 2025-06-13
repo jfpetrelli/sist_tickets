@@ -1,4 +1,4 @@
-// lib/administrator/cases_content.dart
+
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
 

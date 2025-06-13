@@ -1,8 +1,7 @@
-// lib/login_screen.dart
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart';
-import 'package:sist_tickets/administrator/home_page.dart';
-import 'package:sist_tickets/services/api_service.dart';
+import 'package:sist_tickets/constants.dart'; 
+import 'package:sist_tickets/administrator/home_page.dart'; 
+import 'package:sist_tickets/services/api_service.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,52 +18,48 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
 
   Future<void> _login() async {
-    // --- MODIFICACIÓN INICIA AQUÍ ---
-    // Remove or comment out the validation and API call for direct navigation.
-    // if (!_formKey.currentState!.validate()) return;
+
+    if (!_formKey.currentState!.validate()) {
+
+      return;
+    }
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    // Simulate a delay for demonstration purposes, mimicking a network request.
-    await Future.delayed(const Duration(seconds: 1)); 
+    try {
 
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const HomePage(),
-        ),
+      await ApiService.login(
+        _emailController.text,
+        _passwordController.text, 
       );
-    }
-    
-    // The try-catch block for ApiService.login is now bypassed.
-    // try {
-    //   await ApiService.login(
-    //     _emailController.text,
-    //     _passwordController.text,
-    //   );
+      if (mounted) { 
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ),
+        );
+      }
+    } catch (e) {
 
-    //   if (mounted) {
-    //     Navigator.of(context).pushReplacement(
-    //       MaterialPageRoute(
-    //         builder: (context) => const HomePage(),
-    //       ),
-    //     );
-    //   }
-    // } catch (e) {
-    //   setState(() {
-    //     _errorMessage = e.toString();
-    //   });
-    // } finally {
+      setState(() {
+
+        _errorMessage = e.toString().contains('Exception:')
+                        ? e.toString().replaceFirst('Exception: ', '')
+                        : 'Error desconocido: $e';
+
+        print('Login Error: $_errorMessage');
+      });
+    } finally {
+
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
       }
-    // }
-    // --- MODIFICACIÓN TERMINA AQUÍ ---
+    }
   }
 
   @override
@@ -73,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Círculos decorativos
+
           Positioned(
             left: -120,
             top: -20,
@@ -98,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          // Contenido del formulario
+
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -120,6 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 48),
+
                         if (_errorMessage != null)
                           Container(
                             padding: const EdgeInsets.all(12),
@@ -166,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               vertical: 16,
                             ),
                           ),
-                          // The validator is still there, but it won't be called if you remove the `_formKey.currentState!.validate()` call.
+
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Por favor ingrese su email';
@@ -207,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               vertical: 16,
                             ),
                           ),
-                          // The validator is still there, but it won't be called if you remove the `_formKey.currentState!.validate()` call.
+
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Por favor ingrese su contraseña';
@@ -238,6 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton(
+
                             onPressed: _isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,
@@ -305,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             TextButton(
                               onPressed: () {
-                                // TODO: Navegar a la pantalla de registro
+
                               },
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.only(left: 8),
@@ -342,15 +339,15 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+
   Widget _buildSocialButton(String type) {
     final iconPath = 'assets/icons/$type.png';
-    print('Trying to load icon: $iconPath'); // Debug print
-    
+    print('Trying to load icon: $iconPath'); 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          print('$type button tapped'); // Debug print
+          print('$type button tapped'); 
         },
         borderRadius: BorderRadius.circular(8),
         child: Container(
@@ -363,10 +360,11 @@ class _LoginScreenState extends State<LoginScreen> {
             iconPath,
             width: 24,
             height: 24,
+            // Esto es útil si los iconos no se cargan
             errorBuilder: (context, error, stackTrace) {
               print('Error loading icon: $iconPath');
               print('Error details: $error');
-              return Icon(
+              return const Icon(
                 Icons.error_outline,
                 color: Colors.red,
                 size: 24,

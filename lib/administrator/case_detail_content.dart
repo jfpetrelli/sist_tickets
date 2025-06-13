@@ -1,17 +1,17 @@
-// lib/administrator/case_detail_content.dart
+
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart'; // Necesario para kSuccessColor, kPrimaryColor
+import 'package:sist_tickets/constants.dart'; 
 
 class CaseDetailContent extends StatelessWidget {
   final String caseId;
   final VoidCallback onBack;
-  final VoidCallback onShowConfirmationSignature; // <--- Nombre del callback actualizado
+  final VoidCallback onShowConfirmationSignature; 
 
   const CaseDetailContent({
     super.key,
     required this.caseId,
     required this.onBack,
-    required this.onShowConfirmationSignature, // <--- Recibimos el callback aquí
+    required this.onShowConfirmationSignature, 
   });
 
   @override
@@ -204,7 +204,7 @@ class CaseDetailContent extends StatelessWidget {
         const SizedBox(height: 16),
         ElevatedButton.icon(
           onPressed: () {
-            // Lógica para descargar documentos
+            
           },
           icon: const Icon(Icons.download),
           label: const Text('Descargar documentos'),
@@ -222,7 +222,7 @@ class CaseDetailContent extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         ElevatedButton.icon(
-          onPressed: onShowConfirmationSignature, // <--- ¡Aquí se ejecuta el callback!
+          onPressed: onShowConfirmationSignature, 
           icon: const Icon(Icons.verified),
           label: const Text('Ver firma de conformidad'),
           style: ElevatedButton.styleFrom(
