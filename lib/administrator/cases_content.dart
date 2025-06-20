@@ -1,6 +1,8 @@
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sist_tickets/constants.dart';
+import 'package:sist_tickets/model/ticket.dart';
+import 'package:sist_tickets/provider/ticket_provider.dart';
 
 class CasesContent extends StatelessWidget {
   final ValueChanged<String> onShowCaseDetail;
@@ -17,66 +19,26 @@ class CasesContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Casos Pendientes',
-            style: const TextStyle(
+          const Text(
+            'Casos',
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
-          _buildCasesList([
-            _CaseItem(
-              title: 'Distribuidora Dique',
-              subtitle: 'Instalación redes WIFI',
-              onTap: () => onShowCaseDetail('1'),
-            ),
-            _CaseItem(
-              title: 'Detalle caso 2',
-              subtitle: 'Descripción breve',
-              onTap: () => onShowCaseDetail('2'),
-            ),
-            _CaseItem(
-              title: 'Detalle caso 3',
-              subtitle: 'Descripción breve',
-              onTap: () => onShowCaseDetail('3'),
-            ),
-          ]),
-          const SizedBox(height: 16),
-          Text(
-            'Casos Completados',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _buildCasesList([
-            _CaseItem(
-              title: 'Obring',
-              subtitle: 'Instalación redes WIFI',
-              isCompleted: true,
-              onTap: () => onShowCaseDetail('4'),
-            ),
-            _CaseItem(
-              title: 'Detalle caso 2',
-              subtitle: 'Descripción breve',
-              isCompleted: true,
-              onTap: () => onShowCaseDetail('5'),
-            ),
-            _CaseItem(
-              title: 'Detalle caso 3',
-              subtitle: 'Descripción breve',
-              isCompleted: true,
-              onTap: () => onShowCaseDetail('6'),
-            ),
-          ]),
+          Consumer<TicketProvider>(builder: (context, value, child) {
+            if (value.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final pendingCases = value.tickets.toList();
+            return _buildCasesList(pendingCases);
+          })
         ],
       ),
     );
   }
 
-  Widget _buildCasesList(List<_CaseItem> cases) {
+  Widget _buildCasesList(List<Ticket> cases) {
     return Column(
       children: cases.map((caseItem) {
         return Padding(
@@ -90,9 +52,11 @@ class CasesContent extends StatelessWidget {
             child: ListTile(
               dense: true,
               visualDensity: const VisualDensity(vertical: -4),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
               leading: ElevatedButton(
-                onPressed: caseItem.onTap,
+                onPressed: () => onShowCaseDetail(caseItem.idCaso
+                    .toString()), //TODO ver como hacerlo statefull
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   foregroundColor: Colors.white,
@@ -114,14 +78,14 @@ class CasesContent extends StatelessWidget {
                 ),
               ),
               title: Text(
-                caseItem.title,
+                caseItem.idCliente.toString(),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
               ),
               subtitle: Text(
-                caseItem.subtitle,
+                caseItem.titulo,
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,

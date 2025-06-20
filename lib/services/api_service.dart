@@ -21,7 +21,8 @@ class ApiService {
   }
 
   // Login
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+      String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse(ApiConfig.login),
@@ -62,12 +63,14 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Error al obtener tickets');
+      throw Exception(
+          'Error al obtener tickets: ${response.statusCode}, ${response.body}');
     }
   }
 
   // Create Ticket
-  static Future<Map<String, dynamic>> createTicket(Map<String, dynamic> ticketData) async {
+  static Future<Map<String, dynamic>> createTicket(
+      Map<String, dynamic> ticketData) async {
     final response = await http.post(
       Uri.parse(ApiConfig.tickets),
       headers: _headers,
@@ -82,7 +85,8 @@ class ApiService {
   }
 
   // Update Ticket
-  static Future<Map<String, dynamic>> updateTicket(String id, Map<String, dynamic> ticketData) async {
+  static Future<Map<String, dynamic>> updateTicket(
+      String id, Map<String, dynamic> ticketData) async {
     final response = await http.put(
       Uri.parse('${ApiConfig.ticketById}$id'),
       headers: _headers,
@@ -121,4 +125,4 @@ class ApiService {
       throw Exception('Error al obtener perfil de usuario');
     }
   }
-} 
+}

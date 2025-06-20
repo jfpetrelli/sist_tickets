@@ -1,15 +1,17 @@
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sist_tickets/app_template.dart';
 import 'package:sist_tickets/administrator/new_case_content.dart';
 import 'package:sist_tickets/administrator/cases_content.dart';
-import 'package:sist_tickets/administrator/profile_content.dart'; 
+import 'package:sist_tickets/administrator/profile_content.dart';
 import 'package:sist_tickets/administrator/case_detail_content.dart';
-import 'package:sist_tickets/administrator/reports_content.dart'; 
+import 'package:sist_tickets/administrator/reports_content.dart';
 import 'package:sist_tickets/administrator/confirmation_signature_content.dart';
 import 'package:sist_tickets/constants.dart';
+import 'package:sist_tickets/provider/ticket_provider.dart';
 import 'package:sist_tickets/services/api_service.dart';
 import 'package:sist_tickets/login_screen.dart';
+import '../provider/ticket_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,8 +22,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedIndex = 1; 
-
+  int _selectedIndex = 1;
   final List<Widget> _widgetOptions = <Widget>[];
 
   String? _currentCaseDetailId;
@@ -31,12 +32,18 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    
+
+    WidgetsBinding.instance.addPostFrameCallback((timestamp) {
+      Provider.of<TicketProvider>(context, listen: false).fetchTickets();
+    });
+
     _widgetOptions.addAll([
-      const NewCaseContent(), 
-      CasesContent(onShowCaseDetail: _showCaseCaseDetail), 
-      
-      ProfileContent(onLogout: () => _handleLogout(context)), 
+      const NewCaseContent(),
+      //get tickets list from API
+
+      CasesContent(onShowCaseDetail: _showCaseCaseDetail),
+
+      ProfileContent(onLogout: () => _handleLogout(context)),
     ]);
   }
 
@@ -44,22 +51,21 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _currentCaseDetailId = caseId;
       _showingConfirmationSignature = false;
-      _showingReportsFromDrawer = false; 
-      _selectedIndex = 1; 
+      _showingReportsFromDrawer = false;
+      _selectedIndex = 1;
     });
   }
 
   void _hideCaseDetail() {
     setState(() {
       _currentCaseDetailId = null;
-      
     });
   }
 
   void _showConfirmationSignatureScreen() {
     setState(() {
       _showingConfirmationSignature = true;
-      _showingReportsFromDrawer = false; 
+      _showingReportsFromDrawer = false;
     });
   }
 
@@ -72,9 +78,9 @@ class _HomePageState extends State<HomePage> {
   void _onBottomItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      _currentCaseDetailId = null; 
-      _showingConfirmationSignature = false; 
-      _showingReportsFromDrawer = false; 
+      _currentCaseDetailId = null;
+      _showingConfirmationSignature = false;
+      _showingReportsFromDrawer = false;
     });
   }
 
@@ -94,10 +100,8 @@ class _HomePageState extends State<HomePage> {
         onShowConfirmationSignature: _showConfirmationSignatureScreen,
       );
     } else if (_showingReportsFromDrawer) {
-      
       bodyContent = const ReportsContent();
     } else {
-      
       bodyContent = _widgetOptions.elementAt(_selectedIndex);
     }
 
@@ -129,7 +133,6 @@ class _HomePageState extends State<HomePage> {
               label: 'Casos',
               activeIcon: Icon(Icons.list_alt, size: 28),
             ),
-            
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
               label: 'Perfil',
@@ -193,7 +196,8 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.add_circle_outline, color: Colors.white),
+                leading:
+                    const Icon(Icons.add_circle_outline, color: Colors.white),
                 title: const Text(
                   'Nuevo Caso',
                   style: TextStyle(color: Colors.white),
@@ -222,15 +226,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 onTap: () {
                   setState(() {
-                    
                     _showingReportsFromDrawer = true;
-                    
+
                     _currentCaseDetailId = null;
                     _showingConfirmationSignature = false;
-                    
-                    
-                    
-                    
                   });
                   Navigator.pop(context);
                 },
@@ -254,10 +253,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 onTap: () {
                   setState(() {
-                    _selectedIndex = 2; 
+                    _selectedIndex = 2;
                     _currentCaseDetailId = null;
                     _showingConfirmationSignature = false;
-                    _showingReportsFromDrawer = false; 
+                    _showingReportsFromDrawer = false;
                   });
                   Navigator.pop(context);
                 },
@@ -270,7 +269,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
-                  _handleLogout(context); 
+                  _handleLogout(context);
                 },
               ),
               const SizedBox(height: 16),
