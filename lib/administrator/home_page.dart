@@ -33,10 +33,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((timestamp) {
-      Provider.of<TicketProvider>(context, listen: false).fetchTickets();
-    });
-
     _widgetOptions.addAll([
       const NewCaseContent(),
       //get tickets list from API
