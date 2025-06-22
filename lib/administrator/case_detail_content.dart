@@ -1,58 +1,98 @@
-
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart'; 
+import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
+import '../model/ticket.dart';
+import '../provider/ticket_provider.dart';
+import 'package:provider/provider.dart';
 
-class CaseDetailContent extends StatelessWidget {
+class CaseDetailContent extends StatefulWidget {
   final String caseId;
   final VoidCallback onBack;
-  final VoidCallback onShowConfirmationSignature; 
+  final VoidCallback onShowConfirmationSignature;
 
   const CaseDetailContent({
     super.key,
     required this.caseId,
     required this.onBack,
-    required this.onShowConfirmationSignature, 
+    required this.onShowConfirmationSignature,
   });
 
   @override
+  State<CaseDetailContent> createState() => _CaseDetailContentState();
+}
+
+class _CaseDetailContentState extends State<CaseDetailContent> {
+  // You can now introduce state variables here.
+  // For example:
+  // bool _isLoading = true;
+  // Map<String, dynamic>? _caseData;
+
+  @override
+  void initState() {
+    super.initState();
+    // This schedules a callback to be executed after the first frame is rendered.
+    // It safely calls the provider to fetch the initial list of tickets.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<TicketProvider>(context, listen: false)
+          .getTicketById(widget.caseId);
+    });
+  }
+
+  // void _fetchCaseDetails() {
+  //   // Example: logic to fetch data using widget.caseId
+  //   setState(() {
+  //     _isLoading = false;
+  //     _caseData = { ... }; // Your fetched data
+  //   });
+  // }
+
+  @override
   Widget build(BuildContext context) {
+    // If you were loading data, you could show a spinner:
+    // if (_isLoading) {
+    //   return const Center(child: CircularProgressIndicator());
+    // }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 24),
-          _buildDetails(),
-          const SizedBox(height: 24),
-          _buildDocuments(),
-          const SizedBox(height: 24),
-          _buildDescription(),
-        ],
+      child: Consumer<TicketProvider>(
+        builder: (context, value, child) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(value.ticket),
+              const SizedBox(height: 24),
+              _buildDetails(value.ticket),
+              const SizedBox(height: 24),
+              _buildDocuments(),
+              const SizedBox(height: 24),
+              _buildDescription(),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(Ticket? ticket) {
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'OBRING',
-                style: TextStyle(
+              Text(
+                ticket?.idCliente.toString() ?? 'Cliente no disponible',
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Instalación redes WIFI',
-                style: TextStyle(
+                ticket?.titulo ?? 'Título no disponible',
+                style: const TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: Colors.grey,
                 ),
               ),
             ],
@@ -74,7 +114,7 @@ class CaseDetailContent extends StatelessWidget {
     );
   }
 
-  Widget _buildDetails() {
+  Widget _buildDetails(Ticket? ticket) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -96,7 +136,10 @@ class CaseDetailContent extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailRow(Icons.calendar_today, '07/02/2024'),
+                _buildDetailRow(
+                    Icons.calendar_today,
+                    ticket?.fecha?.toLocal().toString().split(' ')[0] ??
+                        'Fecha no disponible'),
                 const SizedBox(height: 4),
                 _buildDetailRow(Icons.access_time, '8:00 AM - 10:00 AM'),
               ],
@@ -125,7 +168,8 @@ class CaseDetailContent extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Franco Schiavoni',
+                      ticket?.idPersonalAsignado.toString() ??
+                          'Técnico no asignado',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -204,7 +248,7 @@ class CaseDetailContent extends StatelessWidget {
         const SizedBox(height: 16),
         ElevatedButton.icon(
           onPressed: () {
-            
+            // Logic for downloading documents can be implemented here.
           },
           icon: const Icon(Icons.download),
           label: const Text('Descargar documentos'),
@@ -222,7 +266,8 @@ class CaseDetailContent extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         ElevatedButton.icon(
-          onPressed: onShowConfirmationSignature, 
+          onPressed:
+              widget.onShowConfirmationSignature, // Access callback via widget
           icon: const Icon(Icons.verified),
           label: const Text('Ver firma de conformidad'),
           style: ElevatedButton.styleFrom(

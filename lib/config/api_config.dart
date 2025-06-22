@@ -9,7 +9,7 @@ class ApiConfig {
 
   // Tickets endpoints
   static const String tickets = '$baseUrl/tickets';
-  static const String ticketById = '$baseUrl/ticket/'; // Agregar ID al final
+  static const String ticketById = '$baseUrl/tickets/'; // Agregar ID al final
 
   // User endpoints
   static const String users = '$baseUrl/usuarios';

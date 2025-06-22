@@ -68,6 +68,20 @@ class ApiService {
     }
   }
 
+  // Get Ticket by ID
+  static Future<Map<String, dynamic>> getTicketById(String id) async {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.ticketById}$id'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Error al obtener ticket por ID: ${response.statusCode}');
+    }
+  }
+
   // Create Ticket
   static Future<Map<String, dynamic>> createTicket(
       Map<String, dynamic> ticketData) async {

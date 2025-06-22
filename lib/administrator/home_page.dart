@@ -8,10 +8,10 @@ import 'package:sist_tickets/administrator/case_detail_content.dart';
 import 'package:sist_tickets/administrator/reports_content.dart';
 import 'package:sist_tickets/administrator/confirmation_signature_content.dart';
 import 'package:sist_tickets/constants.dart';
-import 'package:sist_tickets/provider/ticket_provider.dart';
+//import 'package:sist_tickets/provider/ticket_provider.dart';
 import 'package:sist_tickets/services/api_service.dart';
 import 'package:sist_tickets/login_screen.dart';
-import '../provider/ticket_provider.dart';
+//import '../provider/ticket_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

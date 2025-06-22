@@ -79,8 +79,6 @@ class Ticket {
     };
   }
 
-  //TODO refactor this method to use PROVIDER approach
-
   static Future<List<Ticket>> getTickets() async {
     try {
       final response = await ApiService.getTickets();
@@ -88,6 +86,16 @@ class Ticket {
     } catch (e) {
       print('$e');
       return [];
+    }
+  }
+
+  static Future<Ticket?> getTicketById(String id) async {
+    try {
+      final response = await ApiService.getTicketById(id);
+      return Ticket.fromJson(response);
+    } catch (e) {
+      print('$e');
+      return null;
     }
   }
 }
