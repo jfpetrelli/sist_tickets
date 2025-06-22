@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart'; 
-import 'package:sist_tickets/administrator/home_page.dart'; 
-import 'package:sist_tickets/services/api_service.dart'; 
+import 'package:sist_tickets/constants.dart';
+import 'package:sist_tickets/administrator/home_page.dart';
+import 'package:sist_tickets/services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,13 +14,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isPasswordObscured = true;
   bool _isLoading = false;
   String? _errorMessage;
 
   Future<void> _login() async {
-
     if (!_formKey.currentState!.validate()) {
-
       return;
     }
 
@@ -30,12 +29,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-
       await ApiService.login(
         _emailController.text,
-        _passwordController.text, 
+        _passwordController.text,
       );
-      if (mounted) { 
+      if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const HomePage(),
@@ -43,17 +41,14 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-
       setState(() {
-
         _errorMessage = e.toString().contains('Exception:')
-                        ? e.toString().replaceFirst('Exception: ', '')
-                        : 'Error desconocido: $e';
+            ? e.toString().replaceFirst('Exception: ', '')
+            : 'Error desconocido: $e';
 
         print('Login Error: $_errorMessage');
       });
     } finally {
-
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -68,7 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-
           Positioned(
             left: -120,
             top: -20,
@@ -93,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -115,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 48),
-
                         if (_errorMessage != null)
                           Container(
                             padding: const EdgeInsets.all(12),
@@ -146,15 +138,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: kPrimaryColor),
+                              borderSide:
+                                  const BorderSide(color: kPrimaryColor),
                             ),
                             prefixIcon: const Icon(Icons.email_outlined),
                             contentPadding: const EdgeInsets.symmetric(
@@ -162,7 +157,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               vertical: 16,
                             ),
                           ),
-
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Por favor ingrese su email';
@@ -176,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: true,
+                          obscureText: _isPasswordObscured,
                           decoration: InputDecoration(
                             hintText: 'Contraseña',
                             hintStyle: TextStyle(
@@ -187,23 +181,37 @@ class _LoginScreenState extends State<LoginScreen> {
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: kPrimaryColor),
+                              borderSide:
+                                  const BorderSide(color: kPrimaryColor),
                             ),
                             prefixIcon: const Icon(Icons.lock_outline),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 16,
                             ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordObscured = !_isPasswordObscured;
+                                });
+                              },
+                            ),
                           ),
-
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Por favor ingrese su contraseña';
@@ -234,7 +242,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton(
-
                             onPressed: _isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,
@@ -268,7 +275,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Expanded(child: Divider(color: Colors.grey[300])),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 'O continuar con',
                                 style: TextStyle(
@@ -301,9 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             TextButton(
-                              onPressed: () {
-
-                              },
+                              onPressed: () {},
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.only(left: 8),
                                 minimumSize: Size.zero,
@@ -339,16 +345,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-
   Widget _buildSocialButton(String type) {
     final iconPath = 'assets/icons/$type.png';
-    print('Trying to load icon: $iconPath'); 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {
-          print('$type button tapped'); 
-        },
+        onTap: () {},
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -362,8 +364,6 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 24,
             // Esto es útil si los iconos no se cargan
             errorBuilder: (context, error, stackTrace) {
-              print('Error loading icon: $iconPath');
-              print('Error details: $error');
               return const Icon(
                 Icons.error_outline,
                 color: Colors.red,
