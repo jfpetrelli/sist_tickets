@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/administrator/confirmation_signature_content.dart';
-import 'package:sist_tickets/administrator/signature_screen.dart';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
-import '../model/ticket.dart';
-import '../provider/ticket_provider.dart';
+import '../../models/ticket.dart';
+import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
 
 class CaseDetailContent extends StatefulWidget {

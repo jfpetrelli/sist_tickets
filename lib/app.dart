@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:sist_tickets/administrator/home_page.dart';
+import 'package:sist_tickets/screens/home/home_screen.dart';
 import 'package:sist_tickets/constants.dart';
 
 class App extends ConsumerWidget {
@@ -15,7 +15,7 @@ class App extends ConsumerWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: kPrimaryColor),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const HomeScreen(),
     );
   }
-} 
+}

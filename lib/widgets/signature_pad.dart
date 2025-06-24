@@ -135,14 +135,14 @@ class _SignatureScreenState extends State<SignatureScreen> {
                       if (_controller.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Por favor, firme antes de confirmar'),
+                            content:
+                                Text('Por favor, firme antes de confirmar'),
                           ),
                         );
                         return;
                       }
                       final signature = await _controller.toPngBytes();
                       if (signature != null) {
-
                         Navigator.pop(context);
                       }
                     },

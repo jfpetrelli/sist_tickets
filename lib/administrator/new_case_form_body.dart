@@ -1,7 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
-
 
 class NewCaseFormBody extends StatefulWidget {
   final VoidCallback onAddDocuments;
@@ -29,13 +27,11 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
 
   final List<String> _types = ['Instalación', 'Reparación', 'Mantenimiento'];
   final List<String> _priorities = ['Alta', 'Media', 'Baja'];
-  
-  
 
   @override
   void initState() {
     super.initState();
-    
+
     _selectedDate = DateTime.now();
     _selectedTime = TimeOfDay.now();
   }
@@ -128,7 +124,6 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              
             ),
           ),
           Container(
@@ -314,7 +309,8 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
         controller: _descriptionController,
         maxLines: 3,
         decoration: const InputDecoration(
-          hintText: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ut ultrices metus.',
+          hintText:
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ut ultrices metus.',
           border: InputBorder.none,
           contentPadding: EdgeInsets.all(12),
         ),
@@ -332,15 +328,14 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
         children: [
           _buildInputWithLabel('Cliente', _buildSearchField()),
           const SizedBox(height: 16),
-          
           _buildInputWithLabel('Título', _buildTitleField()),
           const SizedBox(height: 16),
-          
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _buildInputWithLabel('Fecha y Hora', _buildDateTimeField()),
+                child:
+                    _buildInputWithLabel('Fecha y Hora', _buildDateTimeField()),
               ),
               const SizedBox(width: 16),
               Column(
@@ -375,16 +370,12 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
             ],
           ),
           const SizedBox(height: 16),
-
           _buildInputWithLabel('Tipo', _buildTypeField()),
           const SizedBox(height: 16),
-
           _buildInputWithLabel('Prioridad', _buildPriorityField()),
           const SizedBox(height: 16),
-
           _buildInputWithLabel('Descripción', _buildDescriptionField()),
           const SizedBox(height: 16),
-
           const Text(
             'Ningún documento agregado',
             style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -409,7 +400,6 @@ class _NewCaseFormBodyState extends State<NewCaseFormBody> {
             ),
           ),
           const SizedBox(height: 30),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(

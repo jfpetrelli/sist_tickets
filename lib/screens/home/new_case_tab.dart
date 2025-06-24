@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart'; 
+import 'package:sist_tickets/constants.dart';
 
 enum NewCaseFlowStep {
   form,
@@ -8,14 +7,14 @@ enum NewCaseFlowStep {
   registered,
 }
 
-class NewCaseContent extends StatefulWidget {
-  const NewCaseContent({super.key});
+class NewCaseTab extends StatefulWidget {
+  const NewCaseTab({super.key});
 
   @override
-  State<NewCaseContent> createState() => _NewCaseContentState();
+  State<NewCaseTab> createState() => _NewCaseTabState();
 }
 
-class _NewCaseContentState extends State<NewCaseContent> {
+class _NewCaseTabState extends State<NewCaseTab> {
   final _formKey = GlobalKey<FormState>();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -79,7 +78,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               ],
               ElevatedButton.icon(
                 onPressed: () {
-                  
                   setState(() {
                     _documents.add(
                       DocumentItem(
@@ -128,8 +126,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               ),
             ),
             const SizedBox(height: 20),
-            
-            
             TextFormField(
               decoration: InputDecoration(
                 labelText: 'Cliente',
@@ -145,7 +141,8 @@ class _NewCaseContentState extends State<NewCaseContent> {
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 prefixIcon: const Icon(Icons.business),
               ),
               validator: (value) {
@@ -156,8 +153,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               },
             ),
             const SizedBox(height: 16),
-
-            
             TextFormField(
               decoration: InputDecoration(
                 labelText: 'Título',
@@ -173,7 +168,8 @@ class _NewCaseContentState extends State<NewCaseContent> {
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 prefixIcon: const Icon(Icons.title),
               ),
               validator: (value) {
@@ -184,8 +180,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               },
             ),
             const SizedBox(height: 16),
-
-            
             TextFormField(
               readOnly: true,
               onTap: _selectDateTime,
@@ -203,7 +197,8 @@ class _NewCaseContentState extends State<NewCaseContent> {
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 prefixIcon: const Icon(Icons.calendar_today),
               ),
               controller: TextEditingController(
@@ -213,8 +208,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               ),
             ),
             const SizedBox(height: 16),
-            
-            
             TextFormField(
               readOnly: true,
               decoration: InputDecoration(
@@ -231,14 +224,13 @@ class _NewCaseContentState extends State<NewCaseContent> {
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 prefixIcon: const Icon(Icons.person),
               ),
               controller: TextEditingController(text: 'Juan Ortega'),
             ),
             const SizedBox(height: 16),
-
-            
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 labelText: 'Tipo',
@@ -254,13 +246,17 @@ class _NewCaseContentState extends State<NewCaseContent> {
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 prefixIcon: const Icon(Icons.category),
               ),
               items: const [
-                DropdownMenuItem(value: 'instalacion', child: Text('Instalación')),
-                DropdownMenuItem(value: 'reparacion', child: Text('Reparación')),
-                DropdownMenuItem(value: 'mantenimiento', child: Text('Mantenimiento')),
+                DropdownMenuItem(
+                    value: 'instalacion', child: Text('Instalación')),
+                DropdownMenuItem(
+                    value: 'reparacion', child: Text('Reparación')),
+                DropdownMenuItem(
+                    value: 'mantenimiento', child: Text('Mantenimiento')),
                 DropdownMenuItem(value: 'consulta', child: Text('Consulta')),
               ],
               onChanged: (String? value) {},
@@ -272,8 +268,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               },
             ),
             const SizedBox(height: 16),
-
-            
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 labelText: 'Prioridad',
@@ -289,7 +283,8 @@ class _NewCaseContentState extends State<NewCaseContent> {
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 prefixIcon: const Icon(Icons.warning_amber),
               ),
               items: const [
@@ -306,8 +301,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               },
             ),
             const SizedBox(height: 16),
-
-            
             TextFormField(
               decoration: const InputDecoration(
                 labelText: 'Descripción',
@@ -323,8 +316,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
               },
             ),
             const SizedBox(height: 16),
-
-            
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -359,7 +350,8 @@ class _NewCaseContentState extends State<NewCaseContent> {
                               leading: const Icon(Icons.description),
                               title: Text(doc.name),
                               trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () {
                                   setState(() {
                                     _documents.removeAt(index);
@@ -381,16 +373,12 @@ class _NewCaseContentState extends State<NewCaseContent> {
               ],
             ),
             const SizedBox(height: 24),
-
-            
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    
-                  }
+                  if (_formKey.currentState!.validate()) {}
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
@@ -414,7 +402,6 @@ class _NewCaseContentState extends State<NewCaseContent> {
       ),
     );
   }
-
 }
 
 class DocumentItem {

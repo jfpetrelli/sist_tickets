@@ -1,11 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
 
-class ProfileContent extends StatelessWidget {
+class ProfileTab extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const ProfileContent({
+  const ProfileTab({
     super.key,
     required this.onLogout,
   });
@@ -130,7 +129,8 @@ class ProfileContent extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Padding(
             padding: const EdgeInsets.all(15),
             child: Column(
@@ -188,7 +188,8 @@ class ProfileContent extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Column(
             children: [
               _buildSettingTile(
@@ -210,7 +211,8 @@ class ProfileContent extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingTile(String title, IconData icon, VoidCallback onTap, {bool isDestructive = false}) {
+  Widget _buildSettingTile(String title, IconData icon, VoidCallback onTap,
+      {bool isDestructive = false}) {
     return ListTile(
       leading: Icon(icon, color: isDestructive ? Colors.red : kPrimaryColor),
       title: Text(

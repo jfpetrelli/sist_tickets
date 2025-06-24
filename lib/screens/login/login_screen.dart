@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sist_tickets/constants.dart';
-import 'package:sist_tickets/administrator/home_page.dart';
-import 'package:sist_tickets/services/api_service.dart';
+import 'package:provider/provider.dart'; // Asegúrate de importar Provider
+import '../../api/api_service.dart'; // Ajusta la ruta a tu archivo api_service.dart
+import '../../constants.dart';
+import '../home/home_screen.dart'; // Ajusta la ruta a tu home_screen.dart
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,14 +30,20 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await ApiService.login(
+      // 1. Obtenemos la instancia de ApiService que proveímos en main.dart
+      // Usamos `listen: false` porque solo queremos llamar al método, no redibujar si cambia.
+      final apiService = Provider.of<ApiService>(context, listen: false);
+
+      // 2. Llamamos al método 'login' sobre la INSTANCIA, no sobre la CLASE.
+      await apiService.login(
         _emailController.text,
         _passwordController.text,
       );
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => const HomePage(),
+            builder: (context) => const HomeScreen(),
           ),
         );
       }

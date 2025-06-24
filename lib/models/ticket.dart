@@ -1,6 +1,6 @@
-// model for ticket
+// lib/models/ticket.dart
+
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
 
 class Ticket {
   final int? idCaso;
@@ -15,22 +15,23 @@ class Ticket {
   final DateTime? ultimaModificacion;
   final DateTime? fechaTentativaInicio;
   final DateTime? fechaTentativaFinalizacion;
-  final VoidCallback onTap;
+  final VoidCallback? onTap; // onTap puede ser nulo ahora
 
-  Ticket(
-      {this.idCaso,
-      this.fecha,
-      required this.titulo,
-      required this.idCliente,
-      required this.idPersonalCreador,
-      required this.idPersonalAsignado,
-      required this.idTipocaso,
-      required this.idEstado,
-      required this.idPrioridad,
-      this.ultimaModificacion,
-      this.fechaTentativaInicio,
-      this.fechaTentativaFinalizacion,
-      required this.onTap});
+  Ticket({
+    this.idCaso,
+    this.fecha,
+    required this.titulo,
+    required this.idCliente,
+    required this.idPersonalCreador,
+    required this.idPersonalAsignado,
+    required this.idTipocaso,
+    required this.idEstado,
+    required this.idPrioridad,
+    this.ultimaModificacion,
+    this.fechaTentativaInicio,
+    this.fechaTentativaFinalizacion,
+    this.onTap,
+  });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
@@ -54,10 +55,7 @@ class Ticket {
       fechaTentativaFinalizacion: json['fecha_tentativa_finalizacion'] == null
           ? null
           : DateTime.parse(json['fecha_tentativa_finalizacion'] as String),
-      onTap: () {
-        // Define the action to be performed when the ticket is tapped
-        print('');
-      },
+      onTap: () {}, // Se mantiene por compatibilidad, pero no se usará
     );
   }
 
@@ -77,25 +75,5 @@ class Ticket {
       'fecha_tentativa_finalizacion':
           fechaTentativaFinalizacion?.toIso8601String(),
     };
-  }
-
-  static Future<List<Ticket>> getTickets() async {
-    try {
-      final response = await ApiService.getTickets();
-      return response.map((ticket) => Ticket.fromJson(ticket)).toList();
-    } catch (e) {
-      print('$e');
-      return [];
-    }
-  }
-
-  static Future<Ticket?> getTicketById(String id) async {
-    try {
-      final response = await ApiService.getTicketById(id);
-      return Ticket.fromJson(response);
-    } catch (e) {
-      print('$e');
-      return null;
-    }
   }
 }

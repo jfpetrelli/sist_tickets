@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sist_tickets/constants.dart';
-import 'package:sist_tickets/model/ticket.dart';
-import 'package:sist_tickets/provider/ticket_provider.dart';
+import 'package:sist_tickets/models/ticket.dart';
+import 'package:sist_tickets/providers/ticket_provider.dart';
+import 'package:sist_tickets/screens/case_detail/case_detail_screen.dart';
 
 // The widget is now a StatefulWidget.
 // It holds the final properties that don't change over time, like the callback.
-class CasesContent extends StatefulWidget {
-  final ValueChanged<String> onShowCaseDetail;
-
-  const CasesContent({
+class CasesTab extends StatefulWidget {
+  const CasesTab({
     super.key,
-    required this.onShowCaseDetail,
   });
 
   // StatefulWidget requires creating a State object.
   @override
-  State<CasesContent> createState() => _CasesContentState();
+  State<CasesTab> createState() => _CasesTabState();
 }
 
 // The State class holds the mutable state and the build logic.
-class _CasesContentState extends State<CasesContent> {
+class _CasesTabState extends State<CasesTab> {
   // initState is called once when the widget is inserted into the widget tree.
   // It's the perfect place for one-time initialization like fetching data.
   @override
@@ -97,8 +95,16 @@ class _CasesContentState extends State<CasesContent> {
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
               leading: ElevatedButton(
                 // To access the properties of the StatefulWidget, we use `widget.`
-                onPressed: () =>
-                    widget.onShowCaseDetail(caseItem.idCaso.toString()),
+                onPressed: () {
+                  // En lugar de llamar a un callback, navegamos a la nueva pantalla
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CaseDetailScreen(caseId: caseItem.idCaso.toString()),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   foregroundColor: Colors.white,
