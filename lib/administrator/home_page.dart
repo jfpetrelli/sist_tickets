@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
 
     if (_showingConfirmationSignature) {
       bodyContent = ConfirmationSignatureContent(
-        caseId: _currentCaseDetailId ?? 'default_case_id',
+        caseId: _currentCaseDetailId ?? '',
         onBack: _hideConfirmationSignatureScreen,
       );
     } else if (_currentCaseDetailId != null && _selectedIndex == 1) {

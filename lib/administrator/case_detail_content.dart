@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sist_tickets/administrator/confirmation_signature_content.dart';
+import 'package:sist_tickets/administrator/signature_screen.dart';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
 import '../model/ticket.dart';
 import '../provider/ticket_provider.dart';
@@ -63,7 +65,7 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
               const SizedBox(height: 24),
               _buildDetails(value.ticket),
               const SizedBox(height: 24),
-              _buildDocuments(),
+              _buildDocuments(value.ticket?.idCaso.toString() ?? ''),
               const SizedBox(height: 24),
               _buildDescription(),
             ],
@@ -234,7 +236,7 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
     );
   }
 
-  Widget _buildDocuments() {
+  Widget _buildDocuments(String ticketId) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -266,8 +268,8 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
         ),
         const SizedBox(height: 8),
         ElevatedButton.icon(
-          onPressed:
-              widget.onShowConfirmationSignature, // Access callback via widget
+          onPressed: widget.onShowConfirmationSignature,
+          //widget.onShowConfirmationSignature, // Access callback via widget
           icon: const Icon(Icons.verified),
           label: const Text('Ver firma de conformidad'),
           style: ElevatedButton.styleFrom(
