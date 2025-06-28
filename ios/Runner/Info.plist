@@ -6,6 +6,12 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Sist Tickets</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Your reason for needing local network access, e.g., for debugging purposes.</string>
+	<key>NSBonjourServices</key>
+	<array>
+    	<string>_dartobservatory._tcp</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

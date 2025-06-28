@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class ConfirmationSignatureContent extends StatelessWidget {
   final String caseId;
-  final VoidCallback onBack;
+  //final VoidCallback onBack;
 
   const ConfirmationSignatureContent({
     super.key,
     required this.caseId,
-    required this.onBack,
+    //required this.onBack,
   });
 
   @override
@@ -78,7 +78,7 @@ class ConfirmationSignatureContent extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: onBack,
+                    onPressed: Navigator.of(context).pop,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red[400],
                       padding: const EdgeInsets.symmetric(vertical: 15),

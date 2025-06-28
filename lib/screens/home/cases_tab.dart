@@ -126,7 +126,7 @@ class _CasesTabState extends State<CasesTab> {
                 ),
               ),
               title: Text(
-                caseItem.idCliente.toString(),
+                caseItem.cliente?.razonSocial ?? 'Cliente no disponible',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

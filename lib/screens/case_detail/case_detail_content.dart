@@ -3,6 +3,8 @@ import 'package:sist_tickets/constants.dart'; // Assuming this file exists and c
 import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:sist_tickets/widgets/button_widget_standard.dart';
 
 class CaseDetailContent extends StatefulWidget {
   final String caseId;
@@ -81,7 +83,7 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                ticket?.idCliente.toString() ?? 'Cliente no disponible',
+                ticket?.cliente?.razonSocial ?? 'Cliente no disponible',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -115,105 +117,151 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
   }
 
   Widget _buildDetails(Ticket? ticket) {
+    DateTime fecha = ticket?.fecha?.toLocal() ?? DateTime.now();
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Detalles',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Column(
+      // Añadimos clipBehavior para asegurar que el contenido respete los bordes redondeados.
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        // 1. Usamos un Stack para poder apilar widgets.
+        children: [
+          // Este es el contenido principal de la tarjeta.
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailRow(
-                    Icons.calendar_today,
-                    ticket?.fecha?.toLocal().toString().split(' ')[0] ??
-                        'Fecha no disponible'),
-                const SizedBox(height: 4),
-                _buildDetailRow(Icons.access_time, '8:00 AM - 10:00 AM'),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
+                const Text(
+                  'Detalles',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Column(
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.person_outline,
-                      size: 24,
-                    ),
+                    _buildDetailRow(
+                        Icons.calendar_today,
+                        ticket?.fecha != null
+                            ? DateFormat('dd-MM-yyyy')
+                                .format(ticket!.fecha!.toLocal())
+                            : 'Fecha no disponible'),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Técnico',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    Text(
-                      ticket?.idPersonalAsignado.toString() ??
-                          'Técnico no asignado',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[800],
-                      ),
-                    ),
+                    _buildDetailRow(Icons.access_time,
+                        '${DateFormat.Hm().format(fecha)} hs'),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildDetailRow(Icons.location_on, 'Av.Avellaneda 1244'),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+                // 3. Añadimos espacio extra para que el contenido no se solape con la caja flotante.
+                // Puedes ajustar este valor según el tamaño de la caja.
+                const SizedBox(height: 4),
+
+                const Divider(
+                  color: Colors.grey,
+                  thickness: 1,
+                ),
                 const Text(
-                  'Calificación',
+                  'Visita técnica',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: kSuccessColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    '9/10',
-                    style: TextStyle(
-                      color: kSuccessColor,
-                      fontWeight: FontWeight.bold,
+                const SizedBox(height: 16),
+                _buildDetailRow(
+                    Icons.date_range_rounded,
+                    ticket?.fechaTentativaInicio != null
+                        ? '${DateFormat('dd-MM-yyyy HH:mm').format(ticket!.fechaTentativaInicio!.toLocal())} hs'
+                        : 'Fecha tentativa no asignada'),
+                _buildDetailRow(Icons.location_on,
+                    ticket?.cliente?.domicilio ?? 'Domicilio no disponible'),
+                const SizedBox(height: 16),
+                const Divider(
+                  color: Colors.grey,
+                  thickness: 1,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Calificación',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: kSuccessColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '9/10',
+                        style: TextStyle(
+                          color: kSuccessColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+
+          // 2. Esta es la caja flotante del técnico.
+          Positioned(
+            top: 16, // Distancia desde arriba.
+            right: 16, // Distancia desde la derecha.
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    // Sombra opcional para darle más profundidad.
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    )
+                  ]),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.person_outline,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Técnico',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  Text(
+                    ticket?.idPersonalAsignado.toString() ??
+                        'Técnico no asignado',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -238,49 +286,23 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Documentos',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         const SizedBox(height: 16),
-        ElevatedButton.icon(
-          onPressed: () {
-            // Logic for downloading documents can be implemented here.
-          },
-          icon: const Icon(Icons.download),
-          label: const Text('Descargar documentos'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            StandardIconButton(
+              text: 'Documentos',
+              icon: Icons.edit_document,
+              onPressed: () {
+                // Logic for downloading documents can be implemented here.
+              },
             ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 12,
+            StandardIconButton(
+              text: 'Ver firma',
+              icon: Icons.verified,
+              onPressed: widget.onShowConfirmationSignature,
             ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        ElevatedButton.icon(
-          onPressed: widget.onShowConfirmationSignature,
-          //widget.onShowConfirmationSignature, // Access callback via widget
-          icon: const Icon(Icons.verified),
-          label: const Text('Ver firma de conformidad'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 12,
-            ),
-          ),
+          ],
         ),
       ],
     );

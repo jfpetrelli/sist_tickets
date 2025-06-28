@@ -1,6 +1,8 @@
 // lib/screens/case_detail/case_detail_screen.dart
 
 import 'package:flutter/material.dart';
+//import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature.dart';
+import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature_screen.dart';
 import 'case_detail_content.dart'; // Ruta temporal, idealmente este contenido también se mueve aquí
 
 class CaseDetailScreen extends StatelessWidget {
@@ -23,8 +25,11 @@ class CaseDetailScreen extends StatelessWidget {
         onBack: () =>
             Navigator.pop(context), // El botón de volver ahora usa Navigator
         onShowConfirmationSignature: () {
-          // Aquí puedes navegar a la pantalla de la firma
-          // Navigator.push(context, ...);
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      ConfirmationSignatureScreen(caseId: caseId)));
         },
       ),
     );

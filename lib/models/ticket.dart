@@ -1,6 +1,7 @@
 // lib/models/ticket.dart
 
 import 'package:flutter/material.dart';
+import 'cliente.dart';
 
 class Ticket {
   final int? idCaso;
@@ -15,6 +16,7 @@ class Ticket {
   final DateTime? ultimaModificacion;
   final DateTime? fechaTentativaInicio;
   final DateTime? fechaTentativaFinalizacion;
+  final Cliente? cliente; // Cliente puede ser nulo
   final VoidCallback? onTap; // onTap puede ser nulo ahora
 
   Ticket({
@@ -30,6 +32,7 @@ class Ticket {
     this.ultimaModificacion,
     this.fechaTentativaInicio,
     this.fechaTentativaFinalizacion,
+    this.cliente, // Cliente puede ser nulo
     this.onTap,
   });
 
@@ -55,6 +58,9 @@ class Ticket {
       fechaTentativaFinalizacion: json['fecha_tentativa_finalizacion'] == null
           ? null
           : DateTime.parse(json['fecha_tentativa_finalizacion'] as String),
+      cliente: json['cliente'] != null
+          ? Cliente.fromJson(json['cliente'] as Map<String, dynamic>)
+          : null, // Cliente puede ser nulo
       onTap: () {}, // Se mantiene por compatibilidad, pero no se usará
     );
   }

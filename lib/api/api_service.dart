@@ -65,7 +65,9 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getTicketById(String id) async {
-    final response = await http.get(Uri.parse('${ApiConfig.ticketById}$id'),
+    final response = await http.get(
+        Uri.parse('${ApiConfig.ticketById}$id')
+            .replace(queryParameters: {'incluir_cliente': 'true'}),
         headers: _headers);
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
