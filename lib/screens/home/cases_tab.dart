@@ -36,41 +36,52 @@ class _CasesTabState extends State<CasesTab> {
     await Provider.of<TicketProvider>(context, listen: false).fetchTickets();
   }
 
-  // All the building logic and helper methods are moved here.
   @override
   Widget build(BuildContext context) {
     // The RefreshIndicator widget adds pull-to-refresh functionality.
     return RefreshIndicator(
       onRefresh: _refreshTickets,
-      child: SingleChildScrollView(
-        // Ensures the scroll view is always scrollable, allowing refresh even with few items.
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 16.0, bottom: 8.0),
-              child: Text(
-                'Casos',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+      // Wrap the scroll view in a LayoutBuilder to get the parent's constraints (the screen height).
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            // Ensures the scroll view is always scrollable, allowing refresh even with few items.
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+            // Use a ConstrainedBox to set a minimum height for the content.
+            child: ConstrainedBox(
+              // The minHeight is set to the maxHeight from the LayoutBuilder's constraints.
+              // This makes the scrollable area at least as tall as the screen.
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 16.0, bottom: 8.0),
+                    child: Text(
+                      'Casos',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  // The Consumer listens for changes in TicketProvider and rebuilds the list.
+                  Consumer<TicketProvider>(builder: (context, value, child) {
+                    // Show a loading spinner only on the initial load when the list is empty.
+                    if (value.isLoading && value.tickets.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    // Data from the provider is used to build the list.
+                    final pendingCases = value.tickets.toList();
+                    return _buildCasesList(pendingCases);
+                  })
+                ],
               ),
             ),
-            // The Consumer listens for changes in TicketProvider and rebuilds the list.
-            Consumer<TicketProvider>(builder: (context, value, child) {
-              // Show a loading spinner only on the initial load when the list is empty.
-              if (value.isLoading && value.tickets.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              // Data from the provider is used to build the list.
-              final pendingCases = value.tickets.toList();
-              return _buildCasesList(pendingCases);
-            })
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -79,7 +90,6 @@ class _CasesTabState extends State<CasesTab> {
   Widget _buildCasesList(List<Ticket> cases) {
     return Column(
       spacing: 5,
-
       // The list is built dynamically from the 'cases' data.
       children: cases.map((caseItem) {
         return InkWell(
@@ -109,7 +119,7 @@ class _CasesTabState extends State<CasesTab> {
                 alignment: Alignment.center,
                 width: 40, // Optional: set a fixed width if needed
                 child: Text(
-                  caseItem.idCaso.toString(),
+                  '#${caseItem.idCaso.toString()}',
                   style: const TextStyle(
                     color: kPrimaryColor,
                     fontWeight: FontWeight.bold,
