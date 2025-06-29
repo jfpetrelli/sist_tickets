@@ -78,13 +78,25 @@ class _CasesTabState extends State<CasesTab> {
   // This helper method is now part of the State class.
   Widget _buildCasesList(List<Ticket> cases) {
     return Column(
+      spacing: 5,
+
       // The list is built dynamically from the 'cases' data.
       children: cases.map((caseItem) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 18.0),
+        return InkWell(
+          //podemos tener quick options con un long press
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    CaseDetailScreen(caseId: caseItem.idCaso.toString()),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
           child: Card(
             elevation: 1,
-            margin: EdgeInsets.zero,
+            //margin: EdgeInsets.only(bottom: 18.0),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -93,50 +105,23 @@ class _CasesTabState extends State<CasesTab> {
               visualDensity: const VisualDensity(vertical: -4),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-              leading: ElevatedButton(
-                // To access the properties of the StatefulWidget, we use `widget.`
-                onPressed: () {
-                  // En lugar de llamar a un callback, navegamos a la nueva pantalla
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CaseDetailScreen(caseId: caseItem.idCaso.toString()),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 0,
-                  ),
-                  minimumSize: const Size(40, 30),
-                ),
-                child: const Text(
-                  'Ver',
-                  style: TextStyle(
-                    fontSize: 12,
+              leading: Container(
+                alignment: Alignment.center,
+                width: 40, // Optional: set a fixed width if needed
+                child: Text(
+                  caseItem.idCaso.toString(),
+                  style: const TextStyle(
+                    color: kPrimaryColor,
                     fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
               ),
               title: Text(
-                caseItem.cliente?.razonSocial ?? 'Cliente no disponible',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              subtitle: Text(
                 caseItem.titulo,
                 style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
             ),
