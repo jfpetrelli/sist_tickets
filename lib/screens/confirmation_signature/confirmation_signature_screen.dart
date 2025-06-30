@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature.dart';
-import 'confirmation_signature.dart'; // Ruta temporal, idealmente este contenido también se mueve aquí
 
 class ConfirmationSignatureScreen extends StatelessWidget {
   final String caseId;

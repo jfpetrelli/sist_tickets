@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:sist_tickets/models/usuario.dart';
 import 'api_config.dart';
 
 class ApiService {
@@ -22,7 +23,6 @@ class ApiService {
     };
   }
 
-  // Login ahora usa setToken internamente
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await http.post(
@@ -34,8 +34,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['access_token'] != null) {
-          setToken(
-              data['access_token']); // Establece el token al iniciar sesión
+          setToken(data['access_token']);
         }
         return data;
       } else {
@@ -47,12 +46,51 @@ class ApiService {
     }
   }
 
-  // Logout ahora usa clearToken
+  Future<void> refreshToken() async {
+    // Lógica para refrescar el token
+    try {
+      final response = await http.post(Uri.parse(ApiConfig.refresh));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setToken(data['access_token']);
+      } else {
+        clearToken();
+        throw Exception('Sesión expirada.');
+      }
+    } catch (e) {
+      clearToken();
+      rethrow;
+    }
+  }
+
+  Future<http.Response> _makeAuthenticatedRequest(
+    Future<http.Response> Function() request,
+  ) async {
+    var response = await request();
+    if (response.statusCode == 401) {
+      await refreshToken();
+      response = await request(); // Reintenta la solicitud
+    }
+    return response;
+  }
+
+  Future<Usuario> getMe() async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(Uri.parse(ApiConfig.me),
+          headers: _headers), // Usará la ruta corregida
+    );
+
+    if (response.statusCode == 200) {
+      return Usuario.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Falló al cargar los datos del usuario');
+    }
+  }
+
   void logout() {
     clearToken();
   }
 
-  // Los siguientes métodos ya no son estáticos
   Future<List<dynamic>> getTickets() async {
     final response =
         await http.get(Uri.parse(ApiConfig.tickets), headers: _headers);
@@ -75,6 +113,4 @@ class ApiService {
       throw Exception('Error al obtener ticket por ID: ${response.statusCode}');
     }
   }
-
-  // ... (el resto de los métodos: create, update, delete, etc. también sin 'static')
 }

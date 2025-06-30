@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
+import 'package:sist_tickets/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class ProfileTab extends StatelessWidget {
   final VoidCallback onLogout;
@@ -11,31 +13,37 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Perfil',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final user = userProvider.user;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Perfil',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildProfileCard(user?.nombre, user?.email),
+              const SizedBox(height: 20),
+              _buildStatsSection(),
+              const SizedBox(height: 20),
+              _buildSettingsSection(),
+            ],
           ),
-          const SizedBox(height: 20),
-          _buildProfileCard(),
-          const SizedBox(height: 20),
-          _buildStatsSection(),
-          const SizedBox(height: 20),
-          _buildSettingsSection(),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildProfileCard() {
+  Widget _buildProfileCard(String? name, String? email) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -60,9 +68,9 @@ class ProfileTab extends StatelessWidget {
               child: Icon(Icons.person, size: 50, color: kPrimaryColor),
             ),
             const SizedBox(height: 15),
-            const Text(
-              'Juan Ortega',
-              style: TextStyle(
+            Text(
+              name ?? 'Nombre de Usuario', // Muestra el nombre del usuario
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -70,7 +78,7 @@ class ProfileTab extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              'Técnico Senior',
+              email ?? 'email@example.com', // Muestra el email del usuario
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white.withOpacity(0.9),

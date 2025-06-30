@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sist_tickets/screens/login/login_screen.dart'; // Nueva ruta
+import 'package:sist_tickets/screens/login/login_screen.dart';
 import 'package:sist_tickets/constants.dart';
-import 'package:sist_tickets/providers/ticket_provider.dart'; // Nueva ruta
-import 'package:sist_tickets/api/api_service.dart'; // Nueva ruta
+import 'package:sist_tickets/providers/ticket_provider.dart';
+import 'package:sist_tickets/api/api_service.dart';
+import 'package:sist_tickets/providers/user_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,6 +20,9 @@ class MyApp extends StatelessWidget {
       providers: [
         // Proveemos una única instancia de ApiService para toda la app.
         Provider<ApiService>(create: (_) => ApiService()),
+
+        // ChangeNotifierProvider para el UserProvider
+        ChangeNotifierProvider(create: (context) => UserProvider()),
 
         // ChangeNotifierProvider ahora crea TicketProvider con ApiService.
         ChangeNotifierProvider(

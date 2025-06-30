@@ -1,7 +1,6 @@
-// lib/screens/home/home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/screens/home/cases_tab.dart';
@@ -9,6 +8,7 @@ import 'package:sist_tickets/screens/home/new_case_tab.dart';
 import 'package:sist_tickets/screens/home/profile_tab.dart';
 import 'package:sist_tickets/screens/login/login_screen.dart';
 import 'package:sist_tickets/widgets/app_template.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -74,35 +74,47 @@ class _HomeScreenState extends State<HomeScreen> {
           color: kPrimaryColor,
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 50, bottom: 20),
-                child: Column(
-                  children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.person, size: 40, color: kPrimaryColor),
+              // --- INICIO DE LA MODIFICACIÓN ---
+              Consumer<UserProvider>(
+                builder: (context, userProvider, child) {
+                  final user = userProvider.user;
+                  final lastLogin = user?.fechaIngreso != null
+                      ? DateFormat('dd/MM/yyyy HH:mm')
+                          .format(user!.fechaIngreso!.toLocal())
+                      : 'No disponible';
+
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 50, bottom: 20),
+                    child: Column(
+                      children: [
+                        const CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.person,
+                              size: 40, color: kPrimaryColor),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          user?.nombre ?? 'Nombre de Usuario', // Dato dinámico
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Último ingreso: $lastLogin', // Dato dinámico
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Juan Cruz Ortega', // Nombre de ejemplo
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      // Usando la fecha y hora actuales como ejemplo
-                      'Último ingreso: 25/06/2025 19:10',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
+              // --- FIN DE LA MODIFICACIÓN ---
               const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Divider(color: Colors.white24)),
@@ -112,8 +124,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: const Text('Nuevo Caso',
                     style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  _onBottomItemTapped(0); // Cambia a la pestaña 0
-                  Navigator.pop(context); // Cierra el drawer
+                  _onBottomItemTapped(0);
+                  Navigator.pop(context);
                 },
               ),
               ListTile(
@@ -121,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title:
                     const Text('Casos', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  _onBottomItemTapped(1); // Cambia a la pestaña 1
+                  _onBottomItemTapped(1);
                   Navigator.pop(context);
                 },
               ),
@@ -130,10 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: const Text('Reportes',
                     style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context); // Cierra el drawer primero
-                  // Y luego navega a la pantalla de Reportes.
-                  // Descomenta la siguiente línea cuando hayas creado ReportsScreen.
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportsScreen()));
+                  Navigator.pop(context);
                 },
               ),
               const Padding(
@@ -144,18 +153,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 title:
                     const Text('Perfil', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  _onBottomItemTapped(2); // Cambia a la pestaña 2
+                  _onBottomItemTapped(2);
                   Navigator.pop(context);
                 },
               ),
-              const Spacer(), // Empuja el último elemento al fondo
+              const Spacer(),
               ListTile(
                 leading: const Icon(Icons.exit_to_app, color: Colors.white),
                 title: const Text('Cerrar Sesión',
                     style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context); // Cierra el drawer
-                  _handleLogout(context); // Llama a la función de logout
+                  Navigator.pop(context);
+                  _handleLogout(context);
                 },
               ),
               const SizedBox(height: 16),
@@ -163,7 +172,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      // --- FIN DE LA CORRECCIÓN ---
     );
   }
 
@@ -183,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Text('Aceptar'),
               onPressed: () {
                 context.read<ApiService>().logout();
+                context.read<UserProvider>().clearUser();
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                   (route) => false,
