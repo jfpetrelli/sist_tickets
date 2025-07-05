@@ -103,12 +103,36 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: kSuccessColor.withOpacity(0.2),
+            color: () {
+              if (ticket?.idEstado == 3) {
+                return kSuccessColor.withOpacity(0.2);
+              } else if (ticket?.idEstado == 2) {
+                return kPrimaryColor.withOpacity(0.2);
+              } else {
+                return Colors.orange.withOpacity(0.2);
+              }
+            }(),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.check_circle,
-            color: kSuccessColor,
+          child: Icon(
+            () {
+              if (ticket?.idEstado == 3) {
+                return Icons.check_circle;
+              } else if (ticket?.idEstado == 2) {
+                return Icons.settings_suggest_rounded;
+              } else {
+                return Icons.hourglass_empty;
+              }
+            }(),
+            color: () {
+              if (ticket?.idEstado == 3) {
+                return kSuccessColor;
+              } else if (ticket?.idEstado == 2) {
+                return kPrimaryColor;
+              } else {
+                return Colors.orange;
+              }
+            }(),
             size: 24,
           ),
         ),

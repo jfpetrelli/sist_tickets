@@ -39,49 +39,106 @@ class _CasesTabState extends State<CasesTab> {
   @override
   Widget build(BuildContext context) {
     // The RefreshIndicator widget adds pull-to-refresh functionality.
-    return RefreshIndicator(
-      onRefresh: _refreshTickets,
-      // Wrap the scroll view in a LayoutBuilder to get the parent's constraints (the screen height).
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            // Ensures the scroll view is always scrollable, allowing refresh even with few items.
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-            // Use a ConstrainedBox to set a minimum height for the content.
-            child: ConstrainedBox(
-              // The minHeight is set to the maxHeight from the LayoutBuilder's constraints.
-              // This makes the scrollable area at least as tall as the screen.
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16.0, bottom: 8.0),
-                    child: Text(
-                      'Casos',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          const TabBar(
+            labelColor: kPrimaryColor,
+            unselectedLabelColor: Colors.black54,
+            indicatorColor: kPrimaryColor,
+            tabs: [
+              Tab(text: 'Pendientes'),
+              Tab(text: 'En Proceso'),
+              Tab(text: 'Completados'),
+            ],
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return TabBarView(
+                  children: [
+                    // Pendientes (idEstado == 1)
+                    RefreshIndicator(
+                      onRefresh: _refreshTickets,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 4.0),
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: Consumer<TicketProvider>(
+                            builder: (context, value, child) {
+                              if (value.isLoading && value.tickets.isEmpty) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              final cases = value.tickets
+                                  .where((ticket) => ticket.idEstado == 1)
+                                  .toList();
+                              return _buildCasesList(cases);
+                            },
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  // The Consumer listens for changes in TicketProvider and rebuilds the list.
-                  Consumer<TicketProvider>(builder: (context, value, child) {
-                    // Show a loading spinner only on the initial load when the list is empty.
-                    if (value.isLoading && value.tickets.isEmpty) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    // Data from the provider is used to build the list.
-                    final pendingCases = value.tickets.toList();
-                    return _buildCasesList(pendingCases);
-                  })
-                ],
-              ),
+                    // En Proceso (idEstado == 2)
+                    RefreshIndicator(
+                      onRefresh: _refreshTickets,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 4.0),
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: Consumer<TicketProvider>(
+                            builder: (context, value, child) {
+                              if (value.isLoading && value.tickets.isEmpty) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              final cases = value.tickets
+                                  .where((ticket) => ticket.idEstado == 2)
+                                  .toList();
+                              return _buildCasesList(cases);
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Finalizados (idEstado == 3)
+                    RefreshIndicator(
+                      onRefresh: _refreshTickets,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 4.0),
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: Consumer<TicketProvider>(
+                            builder: (context, value, child) {
+                              if (value.isLoading && value.tickets.isEmpty) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              final cases = value.tickets
+                                  .where((ticket) => ticket.idEstado == 3)
+                                  .toList();
+                              return _buildCasesList(cases);
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -132,6 +189,13 @@ class _CasesTabState extends State<CasesTab> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
+                ),
+              ),
+              subtitle: Text(
+                '${caseItem.cliente?.razonSocial ?? ''} - (${caseItem.idPersonalAsignado.toString()}) ${caseItem.tecnico ?? ''}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black54,
                 ),
               ),
             ),

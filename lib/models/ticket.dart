@@ -16,7 +16,8 @@ class Ticket {
   final DateTime? ultimaModificacion;
   final DateTime? fechaTentativaInicio;
   final DateTime? fechaTentativaFinalizacion;
-  final Cliente? cliente; // Cliente puede ser nulo
+  final Cliente? cliente;
+  final String? tecnico; // Cliente puede ser nulo
   final VoidCallback? onTap; // onTap puede ser nulo ahora
 
   Ticket({
@@ -32,7 +33,8 @@ class Ticket {
     this.ultimaModificacion,
     this.fechaTentativaInicio,
     this.fechaTentativaFinalizacion,
-    this.cliente, // Cliente puede ser nulo
+    this.cliente,
+    this.tecnico, // Cliente puede ser nulo
     this.onTap,
   });
 
@@ -60,7 +62,8 @@ class Ticket {
           : DateTime.parse(json['fecha_tentativa_finalizacion'] as String),
       cliente: json['cliente'] != null
           ? Cliente.fromJson(json['cliente'] as Map<String, dynamic>)
-          : null, // Cliente puede ser nulo
+          : null,
+      tecnico: json['tecnico'] as String, // Cliente puede ser nulo
       onTap: () {}, // Se mantiene por compatibilidad, pero no se usará
     );
   }
