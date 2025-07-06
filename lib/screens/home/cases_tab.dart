@@ -170,11 +170,16 @@ class _CasesTabState extends State<CasesTab> {
   // This helper method is now part of the State class.
   Widget _buildCasesList(List<Ticket> cases) {
     return Column(
-      spacing: 5,
-      // The list is built dynamically from the 'cases' data.
+      // Removed 'spacing: 5,' as Column doesn't have a 'spacing' property. Use SizedBox if needed.
       children: cases.map((caseItem) {
+        // Format the date as dd/MM
+        String formattedDate = '';
+        if (caseItem.fecha != null) {
+          final date = caseItem.fecha;
+          formattedDate =
+              '${date?.day.toString().padLeft(2, '0')}/${date?.month.toString().padLeft(2, '0')}';
+        }
         return InkWell(
-          //podemos tener quick options con un long press
           onTap: () {
             Navigator.push(
               context,
@@ -187,7 +192,6 @@ class _CasesTabState extends State<CasesTab> {
           borderRadius: BorderRadius.circular(8),
           child: Card(
             elevation: 1,
-            //margin: EdgeInsets.only(bottom: 18.0),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -198,7 +202,7 @@ class _CasesTabState extends State<CasesTab> {
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
               leading: Container(
                 alignment: Alignment.center,
-                width: 40, // Optional: set a fixed width if needed
+                width: 40,
                 child: Text(
                   '#${caseItem.idCaso.toString()}',
                   style: const TextStyle(
@@ -210,7 +214,7 @@ class _CasesTabState extends State<CasesTab> {
               ),
               title: Text(
                 caseItem.titulo,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -220,6 +224,15 @@ class _CasesTabState extends State<CasesTab> {
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.black54,
+                ),
+              ),
+              // Add the date at the far right
+              trailing: Text(
+                formattedDate,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
