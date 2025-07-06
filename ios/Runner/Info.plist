@@ -10,7 +10,7 @@
 	<string>Your reason for needing local network access, e.g., for debugging purposes.</string>
 	<key>NSBonjourServices</key>
 	<array>
-    	<string>_dartobservatory._tcp</string>
+		<string>_dartobservatory._tcp</string>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
@@ -51,5 +51,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

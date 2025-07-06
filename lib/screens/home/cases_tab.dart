@@ -21,14 +21,33 @@ class CasesTab extends StatefulWidget {
 class _CasesTabState extends State<CasesTab> {
   // initState is called once when the widget is inserted into the widget tree.
   // It's the perfect place for one-time initialization like fetching data.
+  late final TextEditingController _searchController;
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     // This schedules a callback to be executed after the first frame is rendered.
     // It safely calls the provider to fetch the initial list of tickets.
+
+    _searchController = TextEditingController();
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TicketProvider>(context, listen: false).fetchTickets();
     });
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the controller to free up resources.
+    _searchController.dispose();
+    super.dispose();
   }
 
   // This function will be called when the user pulls down to refresh.
@@ -43,6 +62,7 @@ class _CasesTabState extends State<CasesTab> {
       length: 3,
       child: Column(
         children: [
+          _buildSearchField(),
           const TabBar(
             labelColor: kPrimaryColor,
             unselectedLabelColor: Colors.black54,
@@ -58,87 +78,91 @@ class _CasesTabState extends State<CasesTab> {
               builder: (context, constraints) {
                 return TabBarView(
                   children: [
-                    // Pendientes (idEstado == 1)
-                    RefreshIndicator(
-                      onRefresh: _refreshTickets,
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0, vertical: 4.0),
-                        child: ConstrainedBox(
-                          constraints:
-                              BoxConstraints(minHeight: constraints.maxHeight),
-                          child: Consumer<TicketProvider>(
-                            builder: (context, value, child) {
-                              if (value.isLoading && value.tickets.isEmpty) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              }
-                              final cases = value.tickets
-                                  .where((ticket) => ticket.idEstado == 1)
-                                  .toList();
-                              return _buildCasesList(cases);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    // En Proceso (idEstado == 2)
-                    RefreshIndicator(
-                      onRefresh: _refreshTickets,
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0, vertical: 4.0),
-                        child: ConstrainedBox(
-                          constraints:
-                              BoxConstraints(minHeight: constraints.maxHeight),
-                          child: Consumer<TicketProvider>(
-                            builder: (context, value, child) {
-                              if (value.isLoading && value.tickets.isEmpty) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              }
-                              final cases = value.tickets
-                                  .where((ticket) => ticket.idEstado == 2)
-                                  .toList();
-                              return _buildCasesList(cases);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Finalizados (idEstado == 3)
-                    RefreshIndicator(
-                      onRefresh: _refreshTickets,
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0, vertical: 4.0),
-                        child: ConstrainedBox(
-                          constraints:
-                              BoxConstraints(minHeight: constraints.maxHeight),
-                          child: Consumer<TicketProvider>(
-                            builder: (context, value, child) {
-                              if (value.isLoading && value.tickets.isEmpty) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              }
-                              final cases = value.tickets
-                                  .where((ticket) => ticket.idEstado == 3)
-                                  .toList();
-                              return _buildCasesList(cases);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildCasesTabView(1, constraints), // Pendientes
+                    _buildCasesTabView(2, constraints), // En Proceso
+                    _buildCasesTabView(3, constraints), // Completados
                   ],
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCasesTabView(int statusId, BoxConstraints constraints) {
+    return RefreshIndicator(
+      onRefresh: _refreshTickets,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Consumer<TicketProvider>(
+            builder: (context, value, child) {
+              if (value.isLoading && value.tickets.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final normalizedQuery = _searchQuery.toLowerCase();
+
+              final cases = value.tickets
+                  .where((ticket) => ticket.idEstado == statusId)
+                  .where((ticket) {
+                // Add this second .where for filtering
+                // If search is empty, show all tickets for this tab
+                if (normalizedQuery.isEmpty) return true;
+
+                // Check against multiple fields
+                final id = '#${ticket.idCaso.toString()}';
+                final title = ticket.titulo.toLowerCase();
+                final client =
+                    (ticket.cliente?.razonSocial ?? '').toLowerCase();
+                final tech = (ticket.tecnico ?? '').toLowerCase();
+
+                return id.contains(normalizedQuery) ||
+                    title.contains(normalizedQuery) ||
+                    client.contains(normalizedQuery) ||
+                    tech.contains(normalizedQuery);
+              }).toList();
+              // If no cases match the search query, show a message
+              if (cases.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No se encontraron casos que coincidan con la búsqueda.',
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                );
+              }
+              return _buildCasesList(cases);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Buscar por ID, título, cliente...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          // Add a clear button
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+        ),
       ),
     );
   }

@@ -273,8 +273,8 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
                     ),
                   ),
                   Text(
-                    ticket?.idPersonalAsignado.toString() ??
-                        'Técnico no asignado',
+                    ticket?.tecnico ?? 'Técnico no asignado',
+                    softWrap: true,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
