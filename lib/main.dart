@@ -1,6 +1,8 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sist_tickets/screens/login/login_screen.dart';
+import 'package:sist_tickets/screens/splash/splash_screen.dart'; // Importa la nueva pantalla
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/providers/ticket_provider.dart';
 import 'package:sist_tickets/api/api_service.dart';
@@ -15,19 +17,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MultiProvider para registrar nuestros servicios y proveedores
     return MultiProvider(
       providers: [
-        // Proveemos una única instancia de ApiService para toda la app.
         Provider<ApiService>(create: (_) => ApiService()),
-
-        // ChangeNotifierProvider para el UserProvider
         ChangeNotifierProvider(create: (context) => UserProvider()),
-
-        // ChangeNotifierProvider ahora crea TicketProvider con ApiService.
         ChangeNotifierProvider(
           create: (context) => TicketProvider(
-            // Usamos context.read para obtener la instancia de ApiService recién creada.
             context.read<ApiService>(),
           ),
         ),
@@ -40,7 +35,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: kPrimaryColor),
           useMaterial3: true,
         ),
-        home: const LoginScreen(),
+        home: const SplashScreen(), // 👈 ¡Aquí está el cambio!
       ),
     );
   }

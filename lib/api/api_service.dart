@@ -4,17 +4,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:sist_tickets/models/usuario.dart';
 import 'api_config.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   String? _token;
-
-  void setToken(String token) {
-    _token = token;
-  }
-
-  void clearToken() {
-    _token = null;
-  }
+  final _storage = const FlutterSecureStorage();
 
   Map<String, String> get _headers {
     return {
@@ -23,50 +18,82 @@ class ApiService {
     };
   }
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.login),
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: {'username': email, 'password': password},
-      );
+  void setToken(String token) {
+    _token = token;
+    _storage.write(key: 'access_token', value: token);
+  }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['access_token'] != null) {
-          setToken(data['access_token']);
-        }
-        return data;
-      } else {
-        final error = jsonDecode(response.body);
-        throw Exception(error['detail'] ?? 'Error en el inicio de sesión');
+  // Modifica el login para que espere ambos tokens y los guarde
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse(ApiConfig.login),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {'username': email, 'password': password},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['access_token'] != null && data['refresh_token'] != null) {
+        setToken(data['access_token']);
+        await _storage.write(
+            key: 'refresh_token', value: data['refresh_token']);
       }
-    } catch (e) {
-      throw Exception('Error en el inicio de sesión: $e');
+      if (kDebugMode) {
+        // Esto asegura que el código solo se ejecute en modo debug
+        final storedAccessToken = await _storage.read(key: 'access_token');
+        final storedRefreshToken = await _storage.read(key: 'refresh_token');
+        debugPrint('--- VERIFICACIÓN DE TOKENS EN STORAGE ---');
+        debugPrint('✅ Access Token guardado: $storedAccessToken');
+        debugPrint('🔑 Refresh Token guardado: $storedRefreshToken');
+        debugPrint('-----------------------------------------');
+      }
+      return data;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['detail'] ?? 'Error en el inicio de sesión');
     }
   }
 
-  Future<void> refreshToken() async {
-    if (_token == null) {
-      throw Exception('No hay token para refrescar.');
+  void clearToken() {
+    _token = null;
+    _storage.delete(key: 'access_token');
+    _storage.delete(key: 'refresh_token');
+  }
+
+  void logout() {
+    clearToken();
+  }
+
+  Future<bool> tryLoadToken() async {
+    final storedToken = await _storage.read(key: 'access_token');
+    if (storedToken != null) {
+      _token = storedToken;
+      return true;
     }
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.refresh),
-        headers: {
-          'Authorization': 'Bearer $_token'
-        }, // Enviamos el token para el refresh
-      );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setToken(data['access_token']);
-      } else {
-        clearToken();
-        throw Exception('Sesión expirada.');
-      }
-    } catch (e) {
+    return false;
+  }
+
+  // Modifica refreshToken para que envíe el token en el cuerpo
+  Future<void> refreshToken() async {
+    final refreshToken = await _storage.read(key: 'refresh_token');
+
+    if (refreshToken == null) {
+      throw Exception('No hay token de refresh para renovar la sesión.');
+    }
+
+    final response = await http.post(
+      Uri.parse(ApiConfig.refresh),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(
+          {'refresh_token': refreshToken}), // Envía el token en el body
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setToken(data['access_token']);
+    } else {
       clearToken();
-      rethrow;
+      throw Exception('Sesión expirada.');
     }
   }
 
@@ -98,10 +125,6 @@ class ApiService {
     } else {
       throw Exception('Falló al cargar los datos del usuario');
     }
-  }
-
-  void logout() {
-    clearToken();
   }
 
   Future<List<dynamic>> getTickets() async {
