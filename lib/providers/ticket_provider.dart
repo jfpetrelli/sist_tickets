@@ -23,6 +23,7 @@ class TicketProvider extends ChangeNotifier {
     try {
       final responseData = await _apiService.getTickets();
       // La conversión de JSON a Ticket se hace aquí
+      print('Response data: $responseData');
       _tickets = responseData.map((data) => Ticket.fromJson(data)).toList();
     } catch (e) {
       print('Error en fetchTickets: $e');

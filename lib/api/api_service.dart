@@ -47,9 +47,16 @@ class ApiService {
   }
 
   Future<void> refreshToken() async {
-    // Lógica para refrescar el token
+    if (_token == null) {
+      throw Exception('No hay token para refrescar.');
+    }
     try {
-      final response = await http.post(Uri.parse(ApiConfig.refresh));
+      final response = await http.post(
+        Uri.parse(ApiConfig.refresh),
+        headers: {
+          'Authorization': 'Bearer $_token'
+        }, // Enviamos el token para el refresh
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setToken(data['access_token']);
@@ -68,16 +75,22 @@ class ApiService {
   ) async {
     var response = await request();
     if (response.statusCode == 401) {
-      await refreshToken();
-      response = await request(); // Reintenta la solicitud
+      try {
+        await refreshToken(); // Intenta refrescar el token
+        response =
+            await request(); // Reintenta la solicitud original con el nuevo token
+      } catch (e) {
+        // Si el refresh falla, propaga la excepción para que la UI pueda reaccionar
+        // (por ejemplo, redirigiendo al login).
+        rethrow;
+      }
     }
     return response;
   }
 
   Future<Usuario> getMe() async {
     final response = await _makeAuthenticatedRequest(
-      () => http.get(Uri.parse(ApiConfig.me),
-          headers: _headers), // Usará la ruta corregida
+      () => http.get(Uri.parse(ApiConfig.me), headers: _headers),
     );
 
     if (response.statusCode == 200) {
@@ -92,8 +105,9 @@ class ApiService {
   }
 
   Future<List<dynamic>> getTickets() async {
-    final response =
-        await http.get(Uri.parse(ApiConfig.tickets), headers: _headers);
+    final response = await _makeAuthenticatedRequest(
+        () => http.get(Uri.parse(ApiConfig.tickets), headers: _headers));
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -103,10 +117,11 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getTicketById(String id) async {
-    final response = await http.get(
+    final response = await _makeAuthenticatedRequest(() => http.get(
         Uri.parse('${ApiConfig.ticketById}$id')
             .replace(queryParameters: {'incluir_cliente': 'true'}),
-        headers: _headers);
+        headers: _headers));
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
