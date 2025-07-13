@@ -5,7 +5,7 @@ import '../models/ticket.dart';
 import '../api/api_service.dart';
 
 class TicketProvider extends ChangeNotifier {
-  final ApiService _apiService; // Dependencia de ApiService
+  final ApiService _apiService;
 
   List<Ticket> _tickets = [];
   Ticket? _ticket;

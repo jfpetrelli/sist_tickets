@@ -103,12 +103,9 @@ class ApiService {
     var response = await request();
     if (response.statusCode == 401) {
       try {
-        await refreshToken(); // Intenta refrescar el token
-        response =
-            await request(); // Reintenta la solicitud original con el nuevo token
+        await refreshToken();
+        response = await request();
       } catch (e) {
-        // Si el refresh falla, propaga la excepción para que la UI pueda reaccionar
-        // (por ejemplo, redirigiendo al login).
         rethrow;
       }
     }
@@ -149,6 +146,54 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Error al obtener ticket por ID: ${response.statusCode}');
+    }
+  }
+
+  Future<List<dynamic>> getClients() async {
+    final response = await _makeAuthenticatedRequest(
+      // Asumimos que la ruta es /clientes/
+      () => http.get(Uri.parse(ApiConfig.clients), headers: _headers),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Error al obtener clientes: ${response.statusCode}');
+    }
+  }
+
+  Future<List<dynamic>> getUsers({int? userType}) async {
+    var uri = Uri.parse(ApiConfig.users);
+    if (userType != null) {
+      uri = uri.replace(queryParameters: {'id_tipo': userType.toString()});
+    }
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(uri, headers: _headers),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Error al obtener usuarios');
+    }
+  }
+
+  Future<Map<String, dynamic>> createTicket(
+      Map<String, dynamic> ticketData) async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.post(
+        Uri.parse(ApiConfig.tickets), // Usamos la URL base de tickets
+        headers: _headers,
+        body: jsonEncode(ticketData),
+      ),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // 201 Created es también un éxito
+      return jsonDecode(response.body);
+    } else {
+      print('Error al crear el ticket: ${response.body}');
+      throw Exception('Error al crear el ticket: ${response.statusCode}');
     }
   }
 }

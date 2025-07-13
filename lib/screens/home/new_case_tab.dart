@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/constants.dart';
-
-enum NewCaseFlowStep {
-  form,
-  addDocuments,
-  registered,
-}
+import 'package:sist_tickets/models/cliente.dart';
+import 'package:sist_tickets/models/ticket.dart';
+import 'package:sist_tickets/models/usuario.dart';
+import 'package:sist_tickets/providers/client_provider.dart';
+import 'package:sist_tickets/providers/user_list_provider.dart';
+import 'package:sist_tickets/providers/user_provider.dart';
 
 class NewCaseTab extends StatefulWidget {
   const NewCaseTab({super.key});
@@ -16,14 +19,20 @@ class NewCaseTab extends StatefulWidget {
 
 class _NewCaseTabState extends State<NewCaseTab> {
   final _formKey = GlobalKey<FormState>();
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
-  final List<DocumentItem> _documents = [];
+  final _titleController = TextEditingController();
 
-  Future<void> _selectDateTime() async {
+  // Variables para guardar la selección del formulario
+  int? _selectedClientId;
+  int? _selectedCaseTypeId; // Para el tipo de caso
+  int? _selectedPriorityId; // Para la prioridad
+  int? _selectedAssignedTechnicianId; // Para el técnico asignado
+  DateTime? _selectedTentativeDate; // Para la fecha tentativa
+  bool _isSaving = false;
+
+  Future<void> _selectTentativeDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedTentativeDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
@@ -31,82 +40,112 @@ class _NewCaseTabState extends State<NewCaseTab> {
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
-        initialTime: _selectedTime ?? TimeOfDay.now(),
+        initialTime:
+            TimeOfDay.fromDateTime(_selectedTentativeDate ?? DateTime.now()),
       );
 
       if (pickedTime != null) {
         setState(() {
-          _selectedDate = pickedDate;
-          _selectedTime = pickedTime;
+          _selectedTentativeDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
         });
       }
     }
   }
 
-  void _showDocumentsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Documentos'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_documents.isNotEmpty) ...[
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _documents.length,
-                  itemBuilder: (context, index) {
-                    final doc = _documents[index];
-                    return ListTile(
-                      leading: const Icon(Icons.description),
-                      title: Text(doc.name),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            _documents.removeAt(index);
-                          });
-                          Navigator.pop(context);
-                          _showDocumentsDialog();
-                        },
-                      ),
-                    );
-                  },
-                ),
-                const Divider(),
-              ],
-              ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _documents.add(
-                      DocumentItem(
-                        name: 'Documento ${_documents.length + 1}',
-                        path: '/ruta/ejemplo',
-                      ),
-                    );
-                  });
-                  Navigator.pop(context);
-                  _showDocumentsDialog();
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Nuevo Documento'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryColor,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
+  Future<void> _saveCase() async {
+    // Valida que el formulario esté completo
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true; // Inicia el estado de carga
+    });
+
+    // Obtiene el ID del usuario que está creando el caso
+    final creatorId = context.read<UserProvider>().user?.idPersonal;
+    if (creatorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Error: No se pudo identificar al usuario creador.')),
+      );
+      setState(() {
+        _isSaving = false;
+      });
+      return;
+    }
+
+    // Prepara los datos del ticket para enviar
+    final newTicket = Ticket(
+      fecha: DateTime.now(),
+      titulo: _titleController.text,
+      idCliente: _selectedClientId!,
+      idPersonalCreador: creatorId,
+      idPersonalAsignado: _selectedAssignedTechnicianId!,
+      idTipocaso: _selectedCaseTypeId!,
+      idEstado: 1, // Estado "Pendiente"
+      idPrioridad: _selectedPriorityId!,
+      ultimaModificacion: DateTime.now(),
+      fechaTentativaInicio: _selectedTentativeDate,
+      // Los campos opcionales que no tenemos se omiten
     );
+    final ticketData = newTicket.toJson();
+
+    try {
+      await context.read<ApiService>().createTicket(ticketData);
+
+      // Muestra mensaje de éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: kSuccessColor,
+          content: Text('¡Caso creado exitosamente!'),
+        ),
+      );
+
+      // Limpia el formulario para el próximo caso
+      _formKey.currentState?.reset();
+      setState(() {
+        _titleController.clear();
+        _selectedClientId = null;
+        _selectedCaseTypeId = null;
+        _selectedPriorityId = null;
+        _selectedAssignedTechnicianId = null;
+        _selectedTentativeDate = null;
+      });
+    } catch (e) {
+      // Muestra mensaje de error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar el caso: $e')),
+      );
+    } finally {
+      // Detiene el estado de carga
+      setState(() {
+        _isSaving = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Usamos addPostFrameCallback para asegurar que el context esté disponible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Pedimos al provider que cargue los clientes al iniciar la pantalla
+      context.read<ClientProvider>().fetchClients();
+      context.read<UserListProvider>().fetchUsers(userType: 1);
+    });
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
   }
 
   @override
@@ -118,283 +157,213 @@ class _NewCaseTabState extends State<NewCaseTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Nuevo Caso',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 20),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Cliente',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                prefixIcon: const Icon(Icons.business),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese el cliente';
+
+            // Usamos un Consumer para escuchar los cambios en ClientProvider
+            Consumer<ClientProvider>(
+              builder: (context, clientProvider, child) {
+                if (clientProvider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
                 }
-                return null;
+
+                if (clientProvider.errorMessage != null) {
+                  return Center(
+                    child: Text(
+                      clientProvider.errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+                }
+
+                return DropdownButtonFormField<int>(
+                  isExpanded: true,
+                  value: _selectedClientId,
+                  decoration: InputDecoration(
+                    labelText: 'Cliente',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.business),
+                  ),
+                  // Generamos los items del dropdown a partir de la lista de clientes
+                  items: clientProvider.clients.map((Cliente client) {
+                    return DropdownMenuItem<int>(
+                      value: client.idCliente,
+                      child: Text(client.razonSocial ?? 'Nombre no disponible',
+                          overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedClientId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Por favor, seleccione un cliente';
+                    }
+                    return null;
+                  },
+                );
               },
             ),
+
             const SizedBox(height: 16),
+
             TextFormField(
-              decoration: InputDecoration(
+              controller: _titleController,
+              decoration: const InputDecoration(
                 labelText: 'Título',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                prefixIcon: const Icon(Icons.title),
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.title),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese el título';
+                  return 'Por favor, ingrese un título';
                 }
                 return null;
               },
             ),
+
             const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: _selectedCaseTypeId,
+              decoration: const InputDecoration(
+                labelText: 'Tipo de Caso',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.category),
+              ),
+              items: const [
+                // Usaremos valores fijos por ahora. El 'value' es el ID.
+                DropdownMenuItem(value: 1, child: Text('Instalación')),
+                DropdownMenuItem(value: 2, child: Text('Reparación')),
+                DropdownMenuItem(value: 3, child: Text('Mantenimiento')),
+                DropdownMenuItem(value: 4, child: Text('Consulta')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedCaseTypeId = value;
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Por favor, seleccione un tipo de caso';
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<int>(
+              value: _selectedPriorityId,
+              decoration: const InputDecoration(
+                labelText: 'Prioridad',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.priority_high),
+              ),
+              items: const [
+                // Usaremos valores fijos por ahora. El 'value' es el ID.
+                DropdownMenuItem(value: 1, child: Text('Alta')),
+                DropdownMenuItem(value: 2, child: Text('Media')),
+                DropdownMenuItem(value: 3, child: Text('Baja')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedPriorityId = value;
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Por favor, seleccione una prioridad';
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // --- Campo para Técnico Asignado ---
+            Consumer<UserListProvider>(
+              builder: (context, userListProvider, child) {
+                if (userListProvider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return DropdownButtonFormField<int>(
+                  value: _selectedAssignedTechnicianId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Técnico Asignado',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  items: userListProvider.users.map((Usuario user) {
+                    // Usa la lista de usuarios
+                    return DropdownMenuItem<int>(
+                      value: user.idPersonal,
+                      child: Text(
+                        user.nombre,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedAssignedTechnicianId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Por favor, asigne un técnico';
+                    }
+                    return null;
+                  },
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // --- Campo para Fecha Tentativa ---
             TextFormField(
-              readOnly: true,
-              onTap: _selectDateTime,
+              readOnly:
+                  true, // El campo es de solo lectura, se edita con el picker
+              onTap: _selectTentativeDate,
               decoration: InputDecoration(
-                labelText: 'Fecha y Hora',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                labelText: 'Fecha Tentativa de Inicio',
+                border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.calendar_today),
               ),
+              // Muestra la fecha formateada si ha sido seleccionada
               controller: TextEditingController(
-                text: _selectedDate != null && _selectedTime != null
-                    ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year} ${_selectedTime!.format(context)}hs'
+                text: _selectedTentativeDate != null
+                    ? DateFormat('dd/MM/yyyy HH:mm')
+                        .format(_selectedTentativeDate!)
                     : '',
               ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: 'Técnico Asignado',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                prefixIcon: const Icon(Icons.person),
-              ),
-              controller: TextEditingController(text: 'Juan Ortega'),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                labelText: 'Tipo',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                prefixIcon: const Icon(Icons.category),
-              ),
-              items: const [
-                DropdownMenuItem(
-                    value: 'instalacion', child: Text('Instalación')),
-                DropdownMenuItem(
-                    value: 'reparacion', child: Text('Reparación')),
-                DropdownMenuItem(
-                    value: 'mantenimiento', child: Text('Mantenimiento')),
-                DropdownMenuItem(value: 'consulta', child: Text('Consulta')),
-              ],
-              onChanged: (String? value) {},
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor seleccione un tipo';
+                if (_selectedTentativeDate == null) {
+                  return 'Por favor, seleccione una fecha';
                 }
                 return null;
               },
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                labelText: 'Prioridad',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                prefixIcon: const Icon(Icons.warning_amber),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'alta', child: Text('Alta')),
-                DropdownMenuItem(value: 'media', child: Text('Media')),
-                DropdownMenuItem(value: 'baja', child: Text('Baja')),
-              ],
-              onChanged: (String? value) {},
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor seleccione una prioridad';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Descripción',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
-              ),
-              maxLines: 4,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese una descripción';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Documentos (${_documents.length})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: [
-                      if (_documents.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Text('No hay documentos adjuntos'),
-                        ),
-                      if (_documents.isNotEmpty)
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _documents.length,
-                          itemBuilder: (context, index) {
-                            final doc = _documents[index];
-                            return ListTile(
-                              leading: const Icon(Icons.description),
-                              title: Text(doc.name),
-                              trailing: IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  setState(() {
-                                    _documents.removeAt(index);
-                                  });
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      const Divider(height: 1),
-                      TextButton.icon(
-                        onPressed: _showDocumentsDialog,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Agregar Documento'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {}
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Guardar Caso',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                // Llama a la nueva función. Se deshabilita si ya se está guardando.
+                onPressed: _isSaving ? null : _saveCase,
+                child: _isSaving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Guardar Caso'),
               ),
             ),
           ],
@@ -402,11 +371,4 @@ class _NewCaseTabState extends State<NewCaseTab> {
       ),
     );
   }
-}
-
-class DocumentItem {
-  final String name;
-  final String path;
-
-  DocumentItem({required this.name, required this.path});
 }
