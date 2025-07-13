@@ -23,7 +23,7 @@ class _CasesTabState extends State<CasesTab> {
   // It's the perfect place for one-time initialization like fetching data.
   late final TextEditingController _searchController;
   String _searchQuery = '';
-
+  bool _isSortAscending = true; // New state variable for sort order
   @override
   void initState() {
     super.initState();
@@ -55,38 +55,58 @@ class _CasesTabState extends State<CasesTab> {
     await Provider.of<TicketProvider>(context, listen: false).fetchTickets();
   }
 
+  // New method to toggle the sort order.
+  void _toggleSortOrder() {
+    setState(() {
+      _isSortAscending = !_isSortAscending;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // The RefreshIndicator widget adds pull-to-refresh functionality.
     return DefaultTabController(
       length: 3,
-      child: Column(
-        children: [
-          _buildSearchField(),
-          const TabBar(
-            labelColor: kPrimaryColor,
-            unselectedLabelColor: Colors.black54,
-            indicatorColor: kPrimaryColor,
-            tabs: [
-              Tab(text: 'Pendientes'),
-              Tab(text: 'En Proceso'),
-              Tab(text: 'Completados'),
-            ],
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return TabBarView(
-                  children: [
-                    _buildCasesTabView(1, constraints), // Pendientes
-                    _buildCasesTabView(2, constraints), // En Proceso
-                    _buildCasesTabView(3, constraints), // Completados
-                  ],
-                );
-              },
+      // Wrap the Column with a Scaffold to easily add a FAB.
+      child: Scaffold(
+        body: Column(
+          children: [
+            _buildSearchField(),
+            const TabBar(
+              labelColor: kPrimaryColor,
+              unselectedLabelColor: Colors.black54,
+              indicatorColor: kPrimaryColor,
+              tabs: [
+                Tab(text: 'Pendientes'),
+                Tab(text: 'En Proceso'),
+                Tab(text: 'Completados'),
+              ],
             ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return TabBarView(
+                    children: [
+                      _buildCasesTabView(1, constraints), // Pendientes
+                      _buildCasesTabView(2, constraints), // En Proceso
+                      _buildCasesTabView(3, constraints), // Completados
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        // Add the FloatingActionButton here.
+        floatingActionButton: FloatingActionButton(
+          onPressed: _toggleSortOrder,
+          tooltip: 'Ordenar por fecha',
+          shape: const CircleBorder(),
+          backgroundColor: kPrimaryColor,
+          child: Icon(
+            _isSortAscending ? Icons.arrow_downward : Icons.arrow_upward,
+            color: Colors.white,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -125,6 +145,17 @@ class _CasesTabState extends State<CasesTab> {
                     client.contains(normalizedQuery) ||
                     tech.contains(normalizedQuery);
               }).toList();
+
+              // Sorting logic is added here.
+              cases.sort((a, b) {
+                if (a.fecha == null && b.fecha == null) return 0;
+                if (a.fecha == null) return 1;
+                if (b.fecha == null) return -1;
+                return _isSortAscending
+                    ? a.fecha!.compareTo(b.fecha!)
+                    : b.fecha!.compareTo(a.fecha!);
+              });
+
               // If no cases match the search query, show a message
               if (cases.isEmpty) {
                 return const Center(

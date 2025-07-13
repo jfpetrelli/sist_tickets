@@ -4,7 +4,8 @@ import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:sist_tickets/widgets/button_widget_standard.dart';
+// The flutter_speed_dial package is no longer needed.
+import '../../models/intervencion_ticket.dart';
 
 class CaseDetailContent extends StatefulWidget {
   final String caseId;
@@ -22,55 +23,132 @@ class CaseDetailContent extends StatefulWidget {
   State<CaseDetailContent> createState() => _CaseDetailContentState();
 }
 
-class _CaseDetailContentState extends State<CaseDetailContent> {
-  // You can now introduce state variables here.
-  // For example:
-  // bool _isLoading = true;
-  // Map<String, dynamic>? _caseData;
+// Add SingleTickerProviderStateMixin to handle the animation controller.
+class _CaseDetailContentState extends State<CaseDetailContent>
+    with SingleTickerProviderStateMixin {
+  // State variable to control the visibility of the FAB menu.
+  bool _isFabMenuOpen = false;
+  // Animation controller for the FAB icon animation.
+  late AnimationController _fabAnimationController;
 
   @override
   void initState() {
     super.initState();
-    // This schedules a callback to be executed after the first frame is rendered.
-    // It safely calls the provider to fetch the initial list of tickets.
+    // Initialize the animation controller.
+    _fabAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(
+          milliseconds: 400), // Slightly longer duration for a smoother effect
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TicketProvider>(context, listen: false)
           .getTicketById(widget.caseId);
     });
   }
 
-  // void _fetchCaseDetails() {
-  //   // Example: logic to fetch data using widget.caseId
-  //   setState(() {
-  //     _isLoading = false;
-  //     _caseData = { ... }; // Your fetched data
-  //   });
-  // }
+  @override
+  void dispose() {
+    // Dispose of the controller when the widget is removed.
+    _fabAnimationController.dispose();
+    super.dispose();
+  }
+
+  // Method to toggle the FAB menu's visibility and run the animation.
+  void _toggleFabMenu() {
+    setState(() {
+      _isFabMenuOpen = !_isFabMenuOpen;
+      if (_isFabMenuOpen) {
+        _fabAnimationController.forward();
+      } else {
+        _fabAnimationController.reverse();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // If you were loading data, you could show a spinner:
-    // if (_isLoading) {
-    //   return const Center(child: CircularProgressIndicator());
-    // }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Consumer<TicketProvider>(
-        builder: (context, value, child) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(value.ticket),
-              const SizedBox(height: 24),
-              _buildDetails(value.ticket),
-              const SizedBox(height: 24),
-              _buildDocuments(value.ticket?.idCaso.toString() ?? ''),
-              const SizedBox(height: 24),
-              _buildDescription(),
-            ],
-          );
-        },
+    return Scaffold(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Consumer<TicketProvider>(
+          builder: (context, value, child) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(value.ticket),
+                const SizedBox(height: 24),
+                _buildDescription(),
+                const SizedBox(height: 24),
+                _buildDetails(value.ticket),
+                const SizedBox(height: 24),
+                _buildIntervencionesList(value.ticket?.intervenciones ?? []),
+              ],
+            );
+          },
+        ),
+      ),
+      // Replace the SpeedDial with a custom Column of FloatingActionButtons.
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // The AnimatedOpacity is replaced with individual ScaleTransitions for a staggered effect.
+          // The button closest to the main FAB will appear first.
+          ScaleTransition(
+            alignment: Alignment.bottomRight,
+            scale: CurvedAnimation(
+              parent: _fabAnimationController,
+              // This interval makes the button animate in the first 60% of the duration.
+              curve: Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+            ),
+            child: FloatingActionButton.extended(
+              heroTag: 'fab_signature',
+              onPressed: () {
+                widget.onShowConfirmationSignature();
+                _toggleFabMenu();
+              },
+              label: const Text('Ver firma'),
+              icon: const Icon(Icons.verified),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // This button will appear slightly after the first one.
+          ScaleTransition(
+            alignment: Alignment.bottomRight,
+            scale: CurvedAnimation(
+              parent: _fabAnimationController,
+              // This interval makes the button animate between 20% and 80% of the duration.
+              curve: Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+            ),
+            child: FloatingActionButton.extended(
+              heroTag: 'fab_docs',
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Acción de documentos presionada.')),
+                );
+                _toggleFabMenu();
+              },
+              label: const Text('Documentos'),
+              icon: const Icon(Icons.edit_document),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // This is the main FAB that toggles the menu.
+          FloatingActionButton(
+            shape: const CircleBorder(),
+            backgroundColor: kPrimaryColor,
+            heroTag: 'fab_main_menu',
+            onPressed: _toggleFabMenu,
+            // Use AnimatedIcon for a smooth transition between menu and close icons.
+            child: AnimatedIcon(
+              icon: AnimatedIcons.menu_close,
+              color: Colors.white,
+              progress: _fabAnimationController,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -147,12 +225,9 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      // Añadimos clipBehavior para asegurar que el contenido respete los bordes redondeados.
       clipBehavior: Clip.antiAlias,
       child: Stack(
-        // 1. Usamos un Stack para poder apilar widgets.
         children: [
-          // Este es el contenido principal de la tarjeta.
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -180,10 +255,7 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
                         '${DateFormat.Hm().format(fecha)} hs'),
                   ],
                 ),
-                // 3. Añadimos espacio extra para que el contenido no se solape con la caja flotante.
-                // Puedes ajustar este valor según el tamaño de la caja.
                 const SizedBox(height: 4),
-
                 const Divider(
                   color: Colors.grey,
                   thickness: 1,
@@ -240,18 +312,15 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
               ],
             ),
           ),
-
-          // 2. Esta es la caja flotante del técnico.
           Positioned(
-            top: 16, // Distancia desde arriba.
-            right: 16, // Distancia desde la derecha.
+            top: 16,
+            right: 16,
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
-                    // Sombra opcional para darle más profundidad.
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
                       blurRadius: 5,
@@ -306,43 +375,10 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
     );
   }
 
-  Widget _buildDocuments(String ticketId) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            StandardIconButton(
-              text: 'Documentos',
-              icon: Icons.edit_document,
-              onPressed: () {
-                // Logic for downloading documents can be implemented here.
-              },
-            ),
-            StandardIconButton(
-              text: 'Ver firma',
-              icon: Icons.verified,
-              onPressed: widget.onShowConfirmationSignature,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildDescription() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Descripción',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         const SizedBox(height: 12),
         Text(
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
@@ -353,6 +389,50 @@ class _CaseDetailContentState extends State<CaseDetailContent> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildIntervencion(TicketIntervencion? intervencion) {
+    if (intervencion == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              intervencion.detalle,
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Fecha: ${DateFormat('dd-MM-yyyy HH:mm').format(intervencion.fecha.toLocal())}',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIntervencionesList(List<TicketIntervencion> intervenciones) {
+    if (intervenciones.isEmpty) {
+      return const Text('No hay intervenciones registradas.');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: intervenciones
+          .map((intervencion) => _buildIntervencion(intervencion))
+          .toList(),
     );
   }
 }

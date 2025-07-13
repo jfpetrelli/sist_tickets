@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'cliente.dart';
+import 'intervencion_ticket.dart';
 
 class Ticket {
   final int? idCaso;
@@ -17,6 +18,7 @@ class Ticket {
   final DateTime? fechaTentativaInicio;
   final DateTime? fechaTentativaFinalizacion;
   final Cliente? cliente;
+  final List<TicketIntervencion>? intervenciones; // Lista de intervenciones
   final String? tecnico; // Cliente puede ser nulo
   final VoidCallback? onTap; // onTap puede ser nulo ahora
 
@@ -34,7 +36,8 @@ class Ticket {
     this.fechaTentativaInicio,
     this.fechaTentativaFinalizacion,
     this.cliente,
-    this.tecnico, // Cliente puede ser nulo
+    this.intervenciones,
+    this.tecnico,
     this.onTap,
   });
 
@@ -63,6 +66,10 @@ class Ticket {
       cliente: json['cliente'] != null
           ? Cliente.fromJson(json['cliente'] as Map<String, dynamic>)
           : null,
+      intervenciones: (json['intervenciones'] as List<dynamic>?)
+          ?.map((item) =>
+              TicketIntervencion.fromJson(item as Map<String, dynamic>))
+          .toList(),
       tecnico: json['tecnico'] as String, // Cliente puede ser nulo
       onTap: () {}, // Se mantiene por compatibilidad, pero no se usará
     );
