@@ -1,6 +1,6 @@
 class Cliente {
   // Atributos del cliente
-  int? idCliente;
+  int idCliente;
   String? razonSocial;
   String? domicilio;
   int? idLocalidad;
@@ -12,7 +12,7 @@ class Cliente {
   int? idTipoCliente;
 
   Cliente({
-    this.idCliente,
+    required this.idCliente,
     required this.razonSocial,
     this.domicilio,
     this.idLocalidad,
@@ -27,7 +27,7 @@ class Cliente {
   // Método para crear un objeto Cliente a partir de un Map
   factory Cliente.fromJson(Map<String, dynamic> json) {
     return Cliente(
-      idCliente: json['id_cliente'] as int?,
+      idCliente: json['id_cliente'] as int,
       razonSocial: json['razonsocial'] as String?,
       domicilio: json['domicilio'] as String?,
       idLocalidad: json['id_localidad'] as int?,

@@ -20,6 +20,7 @@ class NewCaseTab extends StatefulWidget {
 class _NewCaseTabState extends State<NewCaseTab> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _clientController = TextEditingController();
 
   // Variables para guardar la selección del formulario
   int? _selectedClientId;
@@ -112,6 +113,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
       _formKey.currentState?.reset();
       setState(() {
         _titleController.clear();
+        _clientController.clear();
         _selectedClientId = null;
         _selectedCaseTypeId = null;
         _selectedPriorityId = null;
@@ -182,32 +184,47 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   );
                 }
 
-                return DropdownButtonFormField<int>(
-                  isExpanded: true,
-                  value: _selectedClientId,
-                  decoration: InputDecoration(
-                    labelText: 'Cliente',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.business),
-                  ),
-                  // Generamos los items del dropdown a partir de la lista de clientes
-                  items: clientProvider.clients.map((Cliente client) {
-                    return DropdownMenuItem<int>(
-                      value: client.idCliente,
-                      child: Text(client.razonSocial ?? 'Nombre no disponible',
-                          overflow: TextOverflow.ellipsis),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedClientId = value;
-                    });
-                  },
+                // Wrap DropdownMenu with a FormField for validation
+                return FormField<int>(
+                  // The key from the FormField can be used to manage its state
+                  key: const ValueKey('client_dropdown'),
+                  // The validator function
                   validator: (value) {
-                    if (value == null) {
+                    // We check our state variable `_selectedClientId` directly
+                    if (_selectedClientId == null) {
                       return 'Por favor, seleccione un cliente';
                     }
                     return null;
+                  },
+                  builder: (FormFieldState<int> state) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DropdownMenu<int>(
+                          controller: _clientController,
+                          label: const Text('Cliente'),
+                          expandedInsets: EdgeInsets.zero,
+                          // Update the error text based on validation state
+                          errorText: state.errorText,
+                          dropdownMenuEntries:
+                              clientProvider.clients.map((Cliente client) {
+                            return DropdownMenuEntry<int>(
+                              value: client.idCliente,
+                              label:
+                                  client.razonSocial ?? 'Nombre no disponible',
+                            );
+                          }).toList(),
+                          onSelected: (int? value) {
+                            setState(() {
+                              _selectedClientId = value;
+                              // Tell the FormField that the value has changed
+                              state.didChange(value);
+                            });
+                          },
+                        ),
+                        // Display the error message below the DropdownMenu
+                      ],
+                    );
                   },
                 );
               },
