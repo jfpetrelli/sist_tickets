@@ -192,27 +192,28 @@ class _CaseDetailContentState extends State<CaseDetailContent>
             }(),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            () {
-              if (ticket?.idEstado == 3) {
-                return Icons.check_circle;
-              } else if (ticket?.idEstado == 2) {
-                return Icons.settings_suggest_rounded;
-              } else {
-                return Icons.hourglass_empty;
-              }
-            }(),
-            color: () {
-              if (ticket?.idEstado == 3) {
-                return kSuccessColor;
-              } else if (ticket?.idEstado == 2) {
-                return kPrimaryColor;
-              } else {
-                return Colors.orange;
-              }
-            }(),
-            size: 24,
-          ),
+          child: IconButton(
+              onPressed: VoidCallbackAction.new,
+              icon: Icon(
+                () {
+                  if (ticket?.idEstado == 3) {
+                    return Icons.check_circle;
+                  } else if (ticket?.idEstado == 2) {
+                    return Icons.settings_suggest_rounded;
+                  } else {
+                    return Icons.hourglass_empty;
+                  }
+                }(),
+                color: () {
+                  if (ticket?.idEstado == 3) {
+                    return kSuccessColor;
+                  } else if (ticket?.idEstado == 2) {
+                    return kPrimaryColor;
+                  } else {
+                    return Colors.orange;
+                  }
+                }(),
+              )),
         ),
       ],
     );

@@ -4,114 +4,212 @@ import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/models/ticket.dart';
 import 'package:sist_tickets/providers/ticket_provider.dart';
 import 'package:sist_tickets/screens/case_detail/case_detail_screen.dart';
+import 'package:table_calendar/table_calendar.dart';
 
-// The widget is now a StatefulWidget.
-// It holds the final properties that don't change over time, like the callback.
 class CasesTab extends StatefulWidget {
-  const CasesTab({
-    super.key,
-  });
+  const CasesTab({super.key});
 
-  // StatefulWidget requires creating a State object.
   @override
   State<CasesTab> createState() => _CasesTabState();
 }
 
-// The State class holds the mutable state and the build logic.
 class _CasesTabState extends State<CasesTab> {
-  // initState is called once when the widget is inserted into the widget tree.
-  // It's the perfect place for one-time initialization like fetching data.
   late final TextEditingController _searchController;
   String _searchQuery = '';
-  bool _isSortAscending = true; // New state variable for sort order
+  bool _isSortAscending = true;
+  bool _isCalendarView = false;
+
+  late final ValueNotifier<List<Ticket>> _selectedEvents;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
   @override
   void initState() {
     super.initState();
-    // This schedules a callback to be executed after the first frame is rendered.
-    // It safely calls the provider to fetch the initial list of tickets.
-
     _searchController = TextEditingController();
-
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text;
       });
     });
 
+    _selectedDay = _focusedDay;
+    _selectedEvents = ValueNotifier([]);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TicketProvider>(context, listen: false).fetchTickets();
+      final ticketProvider =
+          Provider.of<TicketProvider>(context, listen: false);
+      ticketProvider.fetchTickets().then((_) {
+        _selectedEvents.value =
+            _getEventsForDay(_selectedDay!, ticketProvider.tickets);
+      });
     });
   }
 
   @override
   void dispose() {
-    // Dispose of the controller to free up resources.
     _searchController.dispose();
+    _selectedEvents.dispose();
     super.dispose();
   }
 
-  // This function will be called when the user pulls down to refresh.
   Future<void> _refreshTickets() async {
     await Provider.of<TicketProvider>(context, listen: false).fetchTickets();
   }
 
-  // New method to toggle the sort order.
   void _toggleSortOrder() {
     setState(() {
       _isSortAscending = !_isSortAscending;
     });
   }
 
+  void _toggleView() {
+    setState(() {
+      _isCalendarView = !_isCalendarView;
+    });
+  }
+
+  List<Ticket> _getEventsForDay(DateTime day, List<Ticket> allTickets) {
+    return allTickets.where((ticket) {
+      if (ticket.fechaTentativaInicio == null) return false;
+      return isSameDay(ticket.fechaTentativaInicio, day);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final ticketProvider = Provider.of<TicketProvider>(context);
+
     return DefaultTabController(
       length: 3,
-      // Wrap the Column with a Scaffold to easily add a FAB.
       child: Scaffold(
+        appBar: AppBar(
+          title: Text(_isCalendarView ? 'Calendario de Casos' : 'Casos'),
+          actions: [
+            IconButton(
+              tooltip: _isCalendarView ? 'Ver Lista' : 'Ver Calendario',
+              icon: Icon(_isCalendarView ? Icons.list : Icons.calendar_today),
+              onPressed: _toggleView,
+            ),
+          ],
+          bottom: _isCalendarView
+              ? null
+              : const TabBar(
+                  labelColor: kPrimaryColor,
+                  unselectedLabelColor: Colors.black54,
+                  indicatorColor: kPrimaryColor,
+                  tabs: [
+                    Tab(text: 'Pendientes'),
+                    Tab(text: 'En Proceso'),
+                    Tab(text: 'Completados'),
+                  ],
+                ),
+        ),
         body: Column(
           children: [
-            _buildSearchField(),
-            const TabBar(
-              labelColor: kPrimaryColor,
-              unselectedLabelColor: Colors.black54,
-              indicatorColor: kPrimaryColor,
-              tabs: [
-                Tab(text: 'Pendientes'),
-                Tab(text: 'En Proceso'),
-                Tab(text: 'Completados'),
-              ],
-            ),
+            if (!_isCalendarView) _buildSearchField(),
             Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return TabBarView(
-                    children: [
-                      _buildCasesTabView(1, constraints), // Pendientes
-                      _buildCasesTabView(2, constraints), // En Proceso
-                      _buildCasesTabView(3, constraints), // Completados
-                    ],
-                  );
-                },
-              ),
+              child: _isCalendarView
+                  ? _buildCalendarView(ticketProvider.tickets)
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        return TabBarView(
+                          children: [
+                            _buildCasesTabView(1, constraints, ticketProvider),
+                            _buildCasesTabView(2, constraints, ticketProvider),
+                            _buildCasesTabView(3, constraints, ticketProvider),
+                          ],
+                        );
+                      },
+                    ),
             ),
           ],
         ),
-        // Add the FloatingActionButton here.
-        floatingActionButton: FloatingActionButton(
-          onPressed: _toggleSortOrder,
-          tooltip: 'Ordenar por fecha',
-          shape: const CircleBorder(),
-          backgroundColor: kPrimaryColor,
-          child: Icon(
-            _isSortAscending ? Icons.arrow_downward : Icons.arrow_upward,
-            color: Colors.white,
-          ),
-        ),
+        floatingActionButton: _isCalendarView
+            ? null
+            : FloatingActionButton(
+                onPressed: _toggleSortOrder,
+                tooltip: 'Ordenar por fecha',
+                shape: const CircleBorder(),
+                backgroundColor: kPrimaryColor,
+                child: Icon(
+                  _isSortAscending ? Icons.arrow_downward : Icons.arrow_upward,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
 
-  Widget _buildCasesTabView(int statusId, BoxConstraints constraints) {
+  Widget _buildCalendarView(List<Ticket> allTickets) {
+    return Column(
+      children: [
+        TableCalendar<Ticket>(
+          locale: 'es_ES', // For Spanish locale
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2050, 12, 31),
+          focusedDay: _focusedDay,
+          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+          calendarFormat: _calendarFormat,
+          availableCalendarFormats: const {
+            CalendarFormat.month: 'Mes',
+            CalendarFormat.twoWeeks: '2 Semanas',
+            CalendarFormat.week: 'Semana',
+          },
+          eventLoader: (day) => _getEventsForDay(day, allTickets),
+          onDaySelected: (selectedDay, focusedDay) {
+            if (!isSameDay(_selectedDay, selectedDay)) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+              _selectedEvents.value = _getEventsForDay(selectedDay, allTickets);
+            }
+          },
+          onFormatChanged: (format) {
+            if (_calendarFormat != format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            }
+          },
+          onPageChanged: (focusedDay) {
+            _focusedDay = focusedDay;
+          },
+        ),
+        const SizedBox(height: 8.0),
+        const Divider(height: 1, indent: 12, endIndent: 12),
+        Expanded(
+          child: _buildEventList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEventList() {
+    return ValueListenableBuilder<List<Ticket>>(
+      valueListenable: _selectedEvents,
+      builder: (context, value, _) {
+        if (value.isEmpty) {
+          return const Center(
+            child: Text(
+              "No hay casos para este día.",
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+            ),
+          );
+        }
+        // We wrap your list in a SingleChildScrollView to make it scrollable
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: _buildCasesList(value),
+        );
+      },
+    );
+  }
+
+  Widget _buildCasesTabView(
+      int statusId, BoxConstraints constraints, TicketProvider value) {
     return RefreshIndicator(
       onRefresh: _refreshTickets,
       child: SingleChildScrollView(
@@ -119,8 +217,8 @@ class _CasesTabState extends State<CasesTab> {
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Consumer<TicketProvider>(
-            builder: (context, value, child) {
+          child: Builder(
+            builder: (context) {
               if (value.isLoading && value.tickets.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -129,11 +227,7 @@ class _CasesTabState extends State<CasesTab> {
               final cases = value.tickets
                   .where((ticket) => ticket.idEstado == statusId)
                   .where((ticket) {
-                // Add this second .where for filtering
-                // If search is empty, show all tickets for this tab
                 if (normalizedQuery.isEmpty) return true;
-
-                // Check against multiple fields
                 final id = '#${ticket.idCaso.toString()}';
                 final title = ticket.titulo.toLowerCase();
                 final client =
@@ -146,7 +240,6 @@ class _CasesTabState extends State<CasesTab> {
                     tech.contains(normalizedQuery);
               }).toList();
 
-              // Sorting logic is added here.
               cases.sort((a, b) {
                 if (a.fecha == null && b.fecha == null) return 0;
                 if (a.fecha == null) return 1;
@@ -156,11 +249,10 @@ class _CasesTabState extends State<CasesTab> {
                     : b.fecha!.compareTo(a.fecha!);
               });
 
-              // If no cases match the search query, show a message
               if (cases.isEmpty) {
                 return const Center(
                   child: Text(
-                    'No se encontraron casos que coincidan con la búsqueda.',
+                    'No se encontraron casos que coincidan.',
                     style: TextStyle(fontSize: 16, color: Colors.black54),
                   ),
                 );
@@ -184,7 +276,6 @@ class _CasesTabState extends State<CasesTab> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
-          // Add a clear button
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear),
@@ -198,12 +289,9 @@ class _CasesTabState extends State<CasesTab> {
     );
   }
 
-  // This helper method is now part of the State class.
   Widget _buildCasesList(List<Ticket> cases) {
     return Column(
-      // Removed 'spacing: 5,' as Column doesn't have a 'spacing' property. Use SizedBox if needed.
       children: cases.map((caseItem) {
-        // Format the date as dd/MM
         String formattedDate = '';
         if (caseItem.fecha != null) {
           final date = caseItem.fecha;
@@ -257,7 +345,6 @@ class _CasesTabState extends State<CasesTab> {
                   color: Colors.black54,
                 ),
               ),
-              // Add the date at the far right
               trailing: Text(
                 formattedDate,
                 style: const TextStyle(

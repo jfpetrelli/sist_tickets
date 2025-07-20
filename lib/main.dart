@@ -7,9 +7,10 @@ import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/providers/client_provider.dart';
 import 'package:sist_tickets/providers/user_list_provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
-  runApp(const MyApp());
+  initializeDateFormatting().then((_) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {

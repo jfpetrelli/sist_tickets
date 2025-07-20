@@ -21,6 +21,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _clientController = TextEditingController();
+  var _autoCompleteKey = UniqueKey(); // Key for the Autocomplete widget
 
   // Variables para guardar la selección del formulario
   int? _selectedClientId;
@@ -57,6 +58,31 @@ class _NewCaseTabState extends State<NewCaseTab> {
         });
       }
     }
+  }
+
+  void _clearForm() {
+    // Reset the state of the form fields
+    _formKey.currentState?.reset();
+
+    setState(() {
+      // Clear text controllers and reset all selected values
+      _clientController.clear();
+      _autoCompleteKey = UniqueKey(); // Reset the Autocomplete key
+      _titleController.clear();
+      _selectedClientId = null;
+      _selectedCaseTypeId = null;
+      _selectedPriorityId = null;
+      _selectedAssignedTechnicianId = null;
+      _selectedTentativeDate = null;
+    });
+
+    // Optionally, show a confirmation message to the user
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Formulario limpiado.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _saveCase() async {
@@ -155,6 +181,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Form(
+        autovalidateMode: AutovalidateMode.onUnfocus,
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,6 +196,9 @@ class _NewCaseTabState extends State<NewCaseTab> {
             const SizedBox(height: 20),
 
             // Usamos un Consumer para escuchar los cambios en ClientProvider
+            // Usamos un Consumer para escuchar los cambios en ClientProvider
+
+            // --- Campo para Cliente (con búsqueda) ---
             Consumer<ClientProvider>(
               builder: (context, clientProvider, child) {
                 if (clientProvider.isLoading) {
@@ -184,46 +214,77 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   );
                 }
 
-                // Wrap DropdownMenu with a FormField for validation
-                return FormField<int>(
-                  // The key from the FormField can be used to manage its state
-                  key: const ValueKey('client_dropdown'),
-                  // The validator function
+                // We wrap Autocomplete in a FormField to integrate with the form's validation.
+                return FormField<String>(
                   validator: (value) {
-                    // We check our state variable `_selectedClientId` directly
                     if (_selectedClientId == null) {
-                      return 'Por favor, seleccione un cliente';
+                      return 'Por favor, seleccione un cliente de la lista';
                     }
                     return null;
                   },
-                  builder: (FormFieldState<int> state) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DropdownMenu<int>(
-                          controller: _clientController,
-                          label: const Text('Cliente'),
-                          expandedInsets: EdgeInsets.zero,
-                          // Update the error text based on validation state
-                          errorText: state.errorText,
-                          dropdownMenuEntries:
-                              clientProvider.clients.map((Cliente client) {
-                            return DropdownMenuEntry<int>(
-                              value: client.idCliente,
-                              label:
-                                  client.razonSocial ?? 'Nombre no disponible',
-                            );
-                          }).toList(),
-                          onSelected: (int? value) {
+                  builder: (FormFieldState<String> state) {
+                    return Autocomplete<Cliente>(
+                      key:
+                          _autoCompleteKey, // Use the unique key for the Autocomplete widget
+                      // This function tells Autocomplete how to display a Client object in the text field.
+                      displayStringForOption: (Cliente client) =>
+                          client.razonSocial ?? 'Nombre no disponible',
+
+                      // This builds the list of suggestions as the user types.
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<Cliente>.empty();
+                        }
+                        return clientProvider.clients.where((Cliente client) {
+                          // Filter logic: case-insensitive search.
+                          return (client.razonSocial ?? '')
+                              .toLowerCase()
+                              .contains(textEditingValue.text.toLowerCase());
+                        });
+                      },
+
+                      // This is called when a user selects an item from the suggestion list.
+                      onSelected: (Cliente selection) {
+                        setState(() {
+                          _selectedClientId = selection.idCliente;
+                          // Notify the FormField that a valid selection has been made.
+                          state.didChange(selection.razonSocial);
+                        });
+                      },
+
+                      // This builds the text field where the user will type.
+                      fieldViewBuilder:
+                          (context, controller, focusNode, onSubmitted) {
+                        // This listener handles the case where the user types something
+                        // but doesn't select an option, or clears the field.
+                        controller.addListener(() {
+                          // If the text doesn't match a selected client, reset the ID.
+                          if (_selectedClientId != null &&
+                              controller.text !=
+                                  clientProvider.clients
+                                      .firstWhere((c) =>
+                                          c.idCliente == _selectedClientId)
+                                      .razonSocial) {
                             setState(() {
-                              _selectedClientId = value;
-                              // Tell the FormField that the value has changed
-                              state.didChange(value);
+                              _selectedClientId = null;
+                              // Clear the FormField state to re-trigger validation.
+                              state.didChange(null);
                             });
-                          },
-                        ),
-                        // Display the error message below the DropdownMenu
-                      ],
+                          }
+                        });
+
+                        return TextFormField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: 'Buscar Cliente',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.search),
+                            // Display the validation error message from the FormField.
+                            errorText: state.errorText,
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -233,6 +294,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
             const SizedBox(height: 16),
 
             TextFormField(
+              autovalidateMode: AutovalidateMode.onUnfocus,
               controller: _titleController,
               decoration: const InputDecoration(
                 labelText: 'Título',
@@ -249,6 +311,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
 
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
+              autovalidateMode: AutovalidateMode.onUnfocus,
               value: _selectedCaseTypeId,
               decoration: const InputDecoration(
                 labelText: 'Tipo de Caso',
@@ -278,6 +341,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<int>(
+              autovalidateMode: AutovalidateMode.onUnfocus,
               value: _selectedPriorityId,
               decoration: const InputDecoration(
                 labelText: 'Prioridad',
@@ -312,6 +376,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 return DropdownButtonFormField<int>(
+                  autovalidateMode: AutovalidateMode.onUnfocus,
                   value: _selectedAssignedTechnicianId,
                   isExpanded: true,
                   decoration: const InputDecoration(
@@ -371,17 +436,35 @@ class _NewCaseTabState extends State<NewCaseTab> {
               },
             ),
 
+            // ... inside the build method, at the end of the Column children
+
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                // Llama a la nueva función. Se deshabilita si ya se está guardando.
-                onPressed: _isSaving ? null : _saveCase,
-                child: _isSaving
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Guardar Caso'),
-              ),
+
+            // --- Botones de Acción ---
+            Row(
+              children: [
+                // Botón para limpiar el formulario
+                OutlinedButton(
+                  onPressed: _clearForm,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(64, 52), // Ensure consistent height
+                  ),
+                  child: const Icon(Icons.refresh),
+                ),
+                const SizedBox(width: 16),
+                // Botón para guardar el caso (se expande para llenar el espacio)
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _saveCase,
+                      child: _isSaving
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Guardar Caso'),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
