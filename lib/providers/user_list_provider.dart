@@ -28,9 +28,7 @@ class UserListProvider extends ChangeNotifier {
 
       errorMessage = null;
     } catch (e) {
-      // 👇 --- INICIO DE LA MODIFICACIÓN ---
       debugPrint("❌ Error en fetchUsers: $e");
-      // --- FIN DE LA MODIFICACIÓN ---
       errorMessage = 'No se pudieron cargar los usuarios.';
       _users = [];
     }

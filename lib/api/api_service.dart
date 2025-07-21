@@ -196,4 +196,22 @@ class ApiService {
       throw Exception('Error al crear el ticket: ${response.statusCode}');
     }
   }
+
+  Future<Map<String, dynamic>> updateTicket(
+      String id, Map<String, dynamic> ticketData) async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.put(
+        Uri.parse('${ApiConfig.tickets}$id'),
+        headers: _headers,
+        body: jsonEncode(ticketData),
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print('Error al actualizar el ticket: ${response.body}');
+      throw Exception('Error al actualizar el ticket: ${response.statusCode}');
+    }
+  }
 }

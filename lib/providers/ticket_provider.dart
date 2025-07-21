@@ -46,4 +46,29 @@ class TicketProvider extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  Future<bool> updateTicket(String id, Ticket ticket) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      await _apiService.updateTicket(id, ticket.toJson());
+
+      // Actualiza el ticket en la lista local para no tener que recargar todo
+      final index = _tickets.indexWhere((t) => t.idCaso.toString() == id);
+      if (index != -1) {
+        // Obtenemos los datos actualizados para refrescar la UI localmente
+        await getTicketById(id);
+        _tickets[index] = _ticket!;
+      }
+
+      isLoading = false;
+      notifyListeners();
+      return true; // Indica que la operación fue exitosa
+    } catch (e) {
+      print('Error en updateTicket (provider): $e');
+      isLoading = false;
+      notifyListeners();
+      return false; // Indica que hubo un error
+    }
+  }
 }

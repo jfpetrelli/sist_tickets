@@ -1,9 +1,9 @@
 // lib/screens/case_detail/case_detail_screen.dart
 
 import 'package:flutter/material.dart';
-//import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature.dart';
 import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature_screen.dart';
-import 'case_detail_content.dart'; // Ruta temporal, idealmente este contenido también se mueve aquí
+import 'case_detail_content.dart';
+import 'edit_case_screen.dart'; // NUEVO: Importamos la nueva pantalla de edición.
 
 class CaseDetailScreen extends StatelessWidget {
   final String caseId;
@@ -12,24 +12,36 @@ class CaseDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // CaseDetailContent ahora vive dentro de su propio Scaffold
-    // para que pueda tener su propia AppBar y manejar su ciclo de vida.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del Caso'),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Editar Caso',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditCaseScreen(caseId: caseId),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: CaseDetailContent(
         caseId: caseId,
-        onBack: () =>
-            Navigator.pop(context), // El botón de volver ahora usa Navigator
+        onBack: () => Navigator.pop(context),
         onShowConfirmationSignature: () {
           Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      ConfirmationSignatureScreen(caseId: caseId)));
+            context,
+            MaterialPageRoute(
+              builder: (context) => ConfirmationSignatureScreen(caseId: caseId),
+            ),
+          );
         },
       ),
     );
