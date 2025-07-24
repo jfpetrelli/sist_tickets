@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
 import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-// The flutter_speed_dial package is no longer needed.
 import '../../models/intervencion_ticket.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CaseDetailContent extends StatefulWidget {
   final String caseId;
@@ -30,6 +31,42 @@ class _CaseDetailContentState extends State<CaseDetailContent>
   bool _isFabMenuOpen = false;
   // Animation controller for the FAB icon animation.
   late AnimationController _fabAnimationController;
+  Future<void> _launchMaps(String address) async {
+    if (address.isEmpty) return;
+
+    final query = Uri.encodeComponent(address);
+    Uri? appleUrl;
+    Uri? googleUrl;
+
+    // Check the platform and create the appropriate native URL
+    if (Platform.isIOS) {
+      // iOS
+      appleUrl = Uri.parse('maps://?q=$query');
+      googleUrl = Uri.parse('comgooglemaps://?q=$query');
+    } else if (Platform.isAndroid) {
+      // Android
+      googleUrl = Uri.parse('geo:0,0?q=$query');
+    }
+
+    try {
+      // Try to launch the native app URL
+      if (googleUrl != null && await canLaunchUrl(googleUrl)) {
+        // This will launch Google Maps on either platform if installed
+        await launchUrl(googleUrl);
+      } else if (appleUrl != null && await canLaunchUrl(appleUrl)) {
+        // This will launch Apple Maps on iOS as a fallback
+        await launchUrl(appleUrl);
+      } else {
+        throw 'No se pudo abrir una aplicación de mapas.';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -274,8 +311,16 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                     ticket?.fechaTentativaInicio != null
                         ? '${DateFormat('dd-MM-yyyy HH:mm').format(ticket!.fechaTentativaInicio!.toLocal())} hs'
                         : 'Fecha tentativa no asignada'),
-                _buildDetailRow(Icons.location_on,
-                    ticket?.cliente?.domicilio ?? 'Domicilio no disponible'),
+                InkWell(
+                  // Disable the tap if the address is null or empty
+                  onTap: (ticket?.cliente?.domicilio != null)
+                      ? () => _launchMaps(ticket?.cliente?.domicilio ?? '')
+                      : null,
+                  child: _buildDetailRow(Icons.location_on,
+                      ticket?.cliente?.domicilio ?? 'Domicilio no disponible'),
+                ),
+                /* _buildDetailRow(Icons.location_on,
+                    ticket?.cliente?.domicilio ?? 'Domicilio no disponible'), */
                 const SizedBox(height: 16),
                 const Divider(
                   color: Colors.grey,

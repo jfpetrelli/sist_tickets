@@ -47,6 +47,7 @@ dependencies:
   signature: ^5.4.1
   supabase_flutter: ^2.3.2
   table_calendar: ^3.2.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   build_runner: ^2.4.7
