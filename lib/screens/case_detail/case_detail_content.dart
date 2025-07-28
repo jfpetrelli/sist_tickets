@@ -103,6 +103,31 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     });
   }
 
+// ### 1. FUNCTION TO SHOW THE MODAL ###
+  // This function is called by the new FAB. It displays a modal bottom sheet
+  // containing the form for the new intervention.
+  void _showAddIntervencionModal(BuildContext context) {
+    // Close the FAB menu when opening the modal
+    if (_isFabMenuOpen) {
+      _toggleFabMenu();
+    }
+
+    showModalBottomSheet(
+      context: context,
+      // isScrollControlled allows the modal to take up more screen space,
+      // which is crucial for forms, especially when the keyboard appears.
+      isScrollControlled: true,
+      // Using a rounded shape for the top corners of the modal.
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bContext) {
+        // We pass the ticketId to the form so it knows where to associate the new intervention.
+        return _AddIntervencionForm();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,8 +155,23 @@ class _CaseDetailContentState extends State<CaseDetailContent>
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // The AnimatedOpacity is replaced with individual ScaleTransitions for a staggered effect.
-          // The button closest to the main FAB will appear first.
+          ScaleTransition(
+            alignment: Alignment.bottomRight,
+            scale: CurvedAnimation(
+              parent: _fabAnimationController,
+              // The interval is adjusted to appear after the other buttons.
+              curve: Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+            ),
+            child: FloatingActionButton.extended(
+              heroTag: 'fab_add_intervention',
+              onPressed: () {
+                // Call the function to show the modal, passing the current ticket.
+                _showAddIntervencionModal(context);
+              },
+              label: const Text('Añadir Intervención'),
+              icon: const Icon(Icons.post_add),
+            ),
+          ),
           ScaleTransition(
             alignment: Alignment.bottomRight,
             scale: CurvedAnimation(
@@ -443,27 +483,30 @@ class _CaseDetailContentState extends State<CaseDetailContent>
       return const SizedBox.shrink();
     }
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              intervencion.detalle,
-              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Fecha: ${DateFormat('dd-MM-yyyy HH:mm').format(intervencion.fecha.toLocal())}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-          ],
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                intervencion.detalle,
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Fecha: ${DateFormat('dd-MM-yyyy HH:mm').format(intervencion.fecha.toLocal())}',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -479,6 +522,307 @@ class _CaseDetailContentState extends State<CaseDetailContent>
       children: intervenciones
           .map((intervencion) => _buildIntervencion(intervencion))
           .toList(),
+    );
+  }
+}
+
+// ### 3. THE FORM WIDGET FOR THE MODAL ###
+// This is a new StatefulWidget to manage the form's state.
+class _AddIntervencionForm extends StatefulWidget {
+  // We need the ticketId to associate the new intervention.
+  //final int ticketId;
+
+  const _AddIntervencionForm(/* {required this.ticketId} */);
+
+  @override
+  State<_AddIntervencionForm> createState() => __AddIntervencionFormState();
+}
+
+class __AddIntervencionFormState extends State<_AddIntervencionForm> {
+  final _formKey = GlobalKey<FormState>();
+
+  // Controllers for text fields
+  final _detalleController = TextEditingController();
+  final _tiempoController = TextEditingController();
+
+  // State variables for dropdowns and date pickers
+  int? _selectedTipoIntervencion;
+  int? _selectedContacto;
+  DateTime? _selectedFecha;
+  DateTime? _selectedFechaVencimiento;
+
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _detalleController.dispose();
+    _tiempoController.dispose();
+    super.dispose();
+  }
+
+  // Helper method to show a date and time picker.
+  Future<void> _selectDateTime(BuildContext context,
+      {required bool isVencimiento}) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate == null) return;
+
+    if (!mounted) return;
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(DateTime.now()),
+    );
+    if (pickedTime == null) return;
+
+    final selectedDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
+    setState(() {
+      if (isVencimiento) {
+        _selectedFechaVencimiento = selectedDateTime;
+      } else {
+        _selectedFecha = selectedDateTime;
+      }
+    });
+  }
+
+  // Method to handle form submission
+  void _submitForm() async {
+    // First, validate the form.
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Create the new intervention object from the form data.
+      final newIntervencion = TicketIntervencion(
+        //idCaso: widget.ticketId,
+        fechaVencimiento: _selectedFechaVencimiento!,
+        fecha: _selectedFecha!,
+        idTipoIntervencion: _selectedTipoIntervencion!,
+        detalle: _detalleController.text,
+        // Ensure tiempoUtilizado is parsed correctly.
+        tiempoUtilizado: int.tryParse(_tiempoController.text) ?? 0,
+        idContacto: _selectedContacto!,
+      );
+
+      try {
+        // ### 4. CALL THE PROVIDER TO SAVE THE DATA ###
+        // You'll need to implement the `addIntervencion` method in your TicketProvider.
+        /* await Provider.of<TicketProvider>(context, listen: false)
+            .addIntervencion(newIntervencion); */
+
+        if (mounted) {
+          // Close the modal on success.
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Intervención añadida con éxito'),
+              backgroundColor: kSuccessColor,
+            ),
+          );
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // IMPORTANT: In a real app, you would fetch these lists from your provider/API.
+    // For now, we're using dummy data.
+    final List<DropdownMenuItem<int>> dummyTipos = [
+      const DropdownMenuItem(value: 1, child: Text('Soporte Técnico')),
+      const DropdownMenuItem(value: 2, child: Text('Mantenimiento')),
+      const DropdownMenuItem(value: 3, child: Text('Instalación')),
+    ];
+    final List<DropdownMenuItem<int>> dummyContactos = [
+      const DropdownMenuItem(value: 101, child: Text('Juan Pérez')),
+      const DropdownMenuItem(value: 102, child: Text('Maria Gómez')),
+    ];
+
+    // This Padding ensures the content is not hidden by the keyboard.
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16,
+        right: 16,
+        top: 16,
+      ),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Añadir Nueva Intervención',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 24),
+
+              // --- Form Fields ---
+
+              // Detail Text Field
+              TextFormField(
+                controller: _detalleController,
+                decoration: const InputDecoration(
+                  labelText: 'Detalle de la intervención',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: 4,
+                validator: (value) => (value?.isEmpty ?? true)
+                    ? 'El detalle es obligatorio'
+                    : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Date Fields
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () =>
+                          _selectDateTime(context, isVencimiento: false),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Fecha Intervención',
+                          border: const OutlineInputBorder(),
+                          errorText:
+                              (_formKey.currentState?.validate() ?? false) &&
+                                      _selectedFecha == null
+                                  ? 'Requerido'
+                                  : null,
+                        ),
+                        child: Text(
+                          _selectedFecha != null
+                              ? DateFormat('dd/MM/yyyy HH:mm')
+                                  .format(_selectedFecha!)
+                              : 'Seleccionar...',
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () =>
+                          _selectDateTime(context, isVencimiento: true),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Fecha Vencimiento',
+                          border: const OutlineInputBorder(),
+                          errorText:
+                              (_formKey.currentState?.validate() ?? false) &&
+                                      _selectedFechaVencimiento == null
+                                  ? 'Requerido'
+                                  : null,
+                        ),
+                        child: Text(
+                          _selectedFechaVencimiento != null
+                              ? DateFormat('dd/MM/yyyy HH:mm')
+                                  .format(_selectedFechaVencimiento!)
+                              : 'Seleccionar...',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Dropdowns
+              DropdownButtonFormField<int>(
+                value: _selectedTipoIntervencion,
+                items: dummyTipos,
+                onChanged: (value) =>
+                    setState(() => _selectedTipoIntervencion = value),
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de Intervención',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value == null ? 'Seleccione un tipo' : null,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: _selectedContacto,
+                items: dummyContactos,
+                onChanged: (value) => setState(() => _selectedContacto = value),
+                decoration: const InputDecoration(
+                  labelText: 'Contacto',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value == null ? 'Seleccione un contacto' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Time Used
+              TextFormField(
+                controller: _tiempoController,
+                decoration: const InputDecoration(
+                  labelText: 'Tiempo Utilizado (minutos)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value?.isEmpty ?? true) return 'El tiempo es obligatorio';
+                  if (int.tryParse(value!) == null)
+                    return 'Ingrese un número válido';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onPressed: _isLoading ? null : _submitForm,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text('Guardar Intervención',
+                          style: TextStyle(color: Colors.white)),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
