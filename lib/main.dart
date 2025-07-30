@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sist_tickets/providers/adjunto_provider.dart';
 import 'package:sist_tickets/screens/splash/splash_screen.dart'; // Importa la nueva pantalla
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/providers/ticket_provider.dart';
@@ -21,6 +22,9 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<ApiService>(create: (_) => ApiService()),
+        ChangeNotifierProvider(
+          create: (context) => AdjuntoProvider(context.read<ApiService>()),
+        ),
         ChangeNotifierProvider(create: (context) => UserProvider()),
         ChangeNotifierProvider(
           create: (context) => UserListProvider(context.read<ApiService>()),

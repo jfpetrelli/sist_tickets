@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
+import 'package:sist_tickets/screens/case_detail/case_documents_page.dart';
 import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
@@ -172,6 +173,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
               icon: const Icon(Icons.post_add),
             ),
           ),
+          const SizedBox(height: 16),
           ScaleTransition(
             alignment: Alignment.bottomRight,
             scale: CurvedAnimation(
@@ -201,9 +203,12 @@ class _CaseDetailContentState extends State<CaseDetailContent>
             child: FloatingActionButton.extended(
               heroTag: 'fab_docs',
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Acción de documentos presionada.')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CaseDocumentsPage(caseId: widget.caseId),
+                  ),
                 );
                 _toggleFabMenu();
               },
@@ -660,10 +665,6 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
       const DropdownMenuItem(value: 2, child: Text('Mantenimiento')),
       const DropdownMenuItem(value: 3, child: Text('Instalación')),
     ];
-    final List<DropdownMenuItem<int>> dummyContactos = [
-      const DropdownMenuItem(value: 101, child: Text('Juan Pérez')),
-      const DropdownMenuItem(value: 102, child: Text('Maria Gómez')),
-    ];
 
     // This Padding ensures the content is not hidden by the keyboard.
     return Padding(
@@ -770,18 +771,7 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
                 validator: (value) =>
                     value == null ? 'Seleccione un tipo' : null,
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                value: _selectedContacto,
-                items: dummyContactos,
-                onChanged: (value) => setState(() => _selectedContacto = value),
-                decoration: const InputDecoration(
-                  labelText: 'Contacto',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    value == null ? 'Seleccione un contacto' : null,
-              ),
+
               const SizedBox(height: 16),
 
               // Time Used
@@ -794,8 +784,9 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value?.isEmpty ?? true) return 'El tiempo es obligatorio';
-                  if (int.tryParse(value!) == null)
+                  if (int.tryParse(value!) == null) {
                     return 'Ingrese un número válido';
+                  }
                   return null;
                 },
               ),

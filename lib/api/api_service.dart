@@ -214,4 +214,21 @@ class ApiService {
       throw Exception('Error al actualizar el ticket: ${response.statusCode}');
     }
   }
+
+  Future<List<dynamic>> getAdjuntosByTicket(String ticketId) async {
+    print('Fetching adjuntos for ticket ID: $ticketId');
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(
+        Uri.parse('${ApiConfig.adjuntosByTicket}$ticketId'),
+        headers: _headers,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+          'Error al obtener adjuntos del ticket: ${response.statusCode}');
+    }
+  }
 }
