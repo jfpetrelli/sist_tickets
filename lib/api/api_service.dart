@@ -231,4 +231,28 @@ class ApiService {
           'Error al obtener adjuntos del ticket: ${response.statusCode}');
     }
   }
+
+  //post para subir un adjunto
+  Future<Map<String, dynamic>> uploadAdjunto(
+      String ticketId, String filePath) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiConfig.adjuntosByTicket}$ticketId'),
+    );
+    request.headers.addAll(_headers);
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        filePath,
+      ),
+    );
+    final response = await request.send();
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = await response.stream.bytesToString();
+      return jsonDecode(responseData);
+    } else {
+      throw Exception(
+          'Error al subir el adjunto: ${response.statusCode}, ${response.reasonPhrase}');
+    }
+  }
 }

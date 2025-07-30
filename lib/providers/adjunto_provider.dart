@@ -37,4 +37,14 @@ class AdjuntoProvider extends ChangeNotifier {
       throw Exception('No se pudo descargar el adjunto.');
     }
   } */
+
+  // post para subir un adjunto
+  Future<void> uploadAdjunto(String ticketId, String filePath) async {
+    try {
+      await _apiService.uploadAdjunto(ticketId, filePath);
+    } catch (e) {
+      print('Error al subir el adjunto: $e');
+      throw Exception('No se pudo subir el adjunto.');
+    }
+  }
 }
