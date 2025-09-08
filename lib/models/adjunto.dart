@@ -1,4 +1,5 @@
 class Adjunto {
+  final int idAdjunto;
   final int idCaso;
   final int? idIntervencion;
   final int idUsuarioAutor;
@@ -7,6 +8,7 @@ class Adjunto {
   final DateTime fecha;
 
   Adjunto({
+    required this.idAdjunto,
     required this.idCaso,
     this.idIntervencion,
     required this.idUsuarioAutor,
@@ -17,6 +19,7 @@ class Adjunto {
 
   factory Adjunto.fromJson(Map<String, dynamic> json) {
     return Adjunto(
+      idAdjunto: json['id_adjunto'],
       idCaso: json['id_caso'],
       idIntervencion: json['id_intervencion'],
       idUsuarioAutor: json['id_usuario_autor'],

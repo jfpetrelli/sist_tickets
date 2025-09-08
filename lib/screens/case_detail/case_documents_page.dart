@@ -138,6 +138,8 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final documento = provider.adjuntos[index];
+              final downloadProgress =
+                  provider.downloadProgress[documento.idCaso];
               return Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -163,18 +165,17 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
                     'Subido el: ${DateFormat('dd/MM/yyyy HH:mm').format(documento.fecha.toLocal())}',
                     style: TextStyle(color: Colors.grey[600]),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.download_for_offline_outlined,
-                        color: Colors.blueGrey),
-                    onPressed: () {
-                      // TODO: Implement file download/view logic
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Descargando ${documento.filename}...'),
+                  trailing: downloadProgress != null
+                      ? CircularProgressIndicator(
+                          value: downloadProgress,
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.download_for_offline_outlined,
+                              color: Colors.blueGrey),
+                          onPressed: () {
+                            provider.downloadAdjunto(documento);
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
               );
             },

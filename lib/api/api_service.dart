@@ -6,10 +6,14 @@ import 'package:sist_tickets/models/usuario.dart';
 import 'api_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+//For downloading files.
+
+import 'package:dio/dio.dart';
 
 class ApiService {
   String? _token;
   final _storage = const FlutterSecureStorage();
+  final Dio _dio = Dio();
 
   Map<String, String> get _headers {
     return {
@@ -253,6 +257,24 @@ class ApiService {
     } else {
       throw Exception(
           'Error al subir el adjunto: ${response.statusCode}, ${response.reasonPhrase}');
+    }
+  }
+
+  // Método para descargar un adjunto usando DIO Recibe el filepath por parametro
+  Future<void> downloadAdjunto(int adjuntoId, String savePath,
+      {required Function(int, int) onReceiveProgress}) async {
+    try {
+      await _dio.download(
+        '${ApiConfig.downloadAdjunto}$adjuntoId',
+        savePath,
+        onReceiveProgress: onReceiveProgress,
+        options: Options(
+          headers: _headers,
+        ),
+      );
+    } catch (e) {
+      print('Error downloading file: $e');
+      throw Exception('Failed to download file.');
     }
   }
 }
