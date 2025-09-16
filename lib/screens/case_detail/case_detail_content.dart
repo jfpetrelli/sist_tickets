@@ -115,16 +115,13 @@ class _CaseDetailContentState extends State<CaseDetailContent>
 
     showModalBottomSheet(
       context: context,
-      // isScrollControlled allows the modal to take up more screen space,
-      // which is crucial for forms, especially when the keyboard appears.
       isScrollControlled: true,
-      // Using a rounded shape for the top corners of the modal.
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (bContext) {
-        // We pass the ticketId to the form so it knows where to associate the new intervention.
-        return _AddIntervencionForm();
+        // Pass the caseId to the form
+        return _AddIntervencionForm(ticketId: widget.caseId);
       },
     );
   }
@@ -548,11 +545,10 @@ class _CaseDetailContentState extends State<CaseDetailContent>
 
 // ### 3. THE FORM WIDGET FOR THE MODAL ###
 // This is a new StatefulWidget to manage the form's state.
-class _AddIntervencionForm extends StatefulWidget {
-  // We need the ticketId to associate the new intervention.
-  //final int ticketId;
 
-  const _AddIntervencionForm(/* {required this.ticketId} */);
+class _AddIntervencionForm extends StatefulWidget {
+  final String ticketId;
+  const _AddIntervencionForm({required this.ticketId});
 
   @override
   State<_AddIntervencionForm> createState() => __AddIntervencionFormState();
@@ -564,10 +560,10 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
   // Controllers for text fields
   final _detalleController = TextEditingController();
   final _tiempoController = TextEditingController();
+  final _contactoController = TextEditingController();
 
   // State variables for dropdowns and date pickers
   int? _selectedTipoIntervencion;
-  int? _selectedContacto;
   DateTime? _selectedFecha;
   DateTime? _selectedFechaVencimiento;
 
@@ -577,6 +573,7 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
   void dispose() {
     _detalleController.dispose();
     _tiempoController.dispose();
+    _contactoController.dispose();
     super.dispose();
   }
 
@@ -626,29 +623,32 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
 
       // Create the new intervention object from the form data.
       final newIntervencion = TicketIntervencion(
-        //idCaso: widget.ticketId,
         fechaVencimiento: _selectedFechaVencimiento!,
         fecha: _selectedFecha!,
         idTipoIntervencion: _selectedTipoIntervencion!,
         detalle: _detalleController.text,
-        // Ensure tiempoUtilizado is parsed correctly.
         tiempoUtilizado: int.tryParse(_tiempoController.text) ?? 0,
-        idContacto: _selectedContacto!,
+        idContacto: _contactoController.text,
       );
 
       try {
-        // ### 4. CALL THE PROVIDER TO SAVE THE DATA ###
-        // You'll need to implement the `addIntervencion` method in your TicketProvider.
-        /* await Provider.of<TicketProvider>(context, listen: false)
-            .addIntervencion(newIntervencion); */
-
-        if (mounted) {
-          // Close the modal on success.
+        final ticketProvider =
+            Provider.of<TicketProvider>(context, listen: false);
+        final success = await ticketProvider.addIntervencion(
+            int.parse(widget.ticketId), newIntervencion);
+        if (success && mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Intervención añadida con éxito'),
               backgroundColor: kSuccessColor,
+            ),
+          );
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error al guardar la intervención'),
+              backgroundColor: Colors.red,
             ),
           );
         }
@@ -715,6 +715,18 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
                 maxLines: 4,
                 validator: (value) => (value?.isEmpty ?? true)
                     ? 'El detalle es obligatorio'
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              // Contact Text Field
+              TextFormField(
+                controller: _contactoController,
+                decoration: const InputDecoration(
+                  labelText: 'ID de Contacto',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) => (value?.isEmpty ?? true)
+                    ? 'El ID de contacto es obligatorio'
                     : null,
               ),
               const SizedBox(height: 16),

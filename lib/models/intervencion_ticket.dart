@@ -6,7 +6,7 @@ class TicketIntervencion {
   final int idTipoIntervencion;
   final String detalle;
   final int tiempoUtilizado;
-  final int idContacto;
+  final String idContacto;
 
   TicketIntervencion({
     this.idCaso,
@@ -29,7 +29,7 @@ class TicketIntervencion {
       idTipoIntervencion: json['id_tipo_intervencion'] as int,
       detalle: json['detalle'] as String,
       tiempoUtilizado: json['tiempo_utilizado'] as int,
-      idContacto: json['id_contacto'] as int,
+      idContacto: json['id_contacto'] as String,
     );
   }
 

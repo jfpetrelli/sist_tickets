@@ -47,8 +47,8 @@ class ApiService {
         final storedAccessToken = await _storage.read(key: 'access_token');
         final storedRefreshToken = await _storage.read(key: 'refresh_token');
         debugPrint('--- VERIFICACIÓN DE TOKENS EN STORAGE ---');
-        debugPrint('✅ Access Token guardado: $storedAccessToken');
-        debugPrint('🔑 Refresh Token guardado: $storedRefreshToken');
+        debugPrint('Access Token guardado: $storedAccessToken');
+        debugPrint('Refresh Token guardado: $storedRefreshToken');
         debugPrint('-----------------------------------------');
       }
       return data;
@@ -147,6 +147,7 @@ class ApiService {
         headers: _headers));
 
     if (response.statusCode == 200) {
+      print('Response body: ${response.body}');
       return jsonDecode(response.body);
     } else {
       throw Exception('Error al obtener ticket por ID: ${response.statusCode}');
@@ -275,6 +276,26 @@ class ApiService {
     } catch (e) {
       print('Error downloading file: $e');
       throw Exception('Failed to download file.');
+    }
+  }
+
+  // Guarda una nueva intervención para un ticket
+  Future<Map<String, dynamic>> addIntervencion(
+      int ticketId, Map<String, dynamic> intervencionData) async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.post(
+        Uri.parse('${ApiConfig.ticketIntervenciones}$ticketId/intervenciones'),
+        headers: _headers,
+        body: jsonEncode(intervencionData),
+      ),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      print('Error al guardar la intervención: [31m${response.body}[0m');
+      throw Exception(
+          'Error al guardar la intervención: ${response.statusCode}');
     }
   }
 }

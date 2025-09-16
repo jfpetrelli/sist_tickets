@@ -2,9 +2,30 @@
 
 import 'package:flutter/foundation.dart';
 import '../models/ticket.dart';
+import '../models/intervencion_ticket.dart';
 import '../api/api_service.dart';
 
 class TicketProvider extends ChangeNotifier {
+  // Método para guardar una nueva intervención en un ticket
+  Future<bool> addIntervencion(
+      int ticketId, TicketIntervencion intervencion) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      await _apiService.addIntervencion(ticketId, intervencion.toJson());
+      // Actualiza el ticket localmente
+      await getTicketById(ticketId.toString());
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print('Error en addIntervencion: $e');
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   final ApiService _apiService;
 
   List<Ticket> _tickets = [];
