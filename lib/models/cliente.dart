@@ -4,6 +4,8 @@ class Cliente {
   String? razonSocial;
   String? domicilio;
   int? idLocalidad;
+  String? nombreLocalidad;
+  String? nombreProvincia;
   String? codigoPostal;
   String? telefono;
   String? telefonoMovil;
@@ -16,6 +18,8 @@ class Cliente {
     required this.razonSocial,
     this.domicilio,
     this.idLocalidad,
+    this.nombreLocalidad,
+    this.nombreProvincia,
     this.codigoPostal,
     this.telefono,
     this.telefonoMovil,
@@ -31,6 +35,8 @@ class Cliente {
       razonSocial: json['razonsocial'] as String?,
       domicilio: json['domicilio'] as String?,
       idLocalidad: json['id_localidad'] as int?,
+      nombreLocalidad: json['nombre_localidad'] as String?,
+      nombreProvincia: json['nombre_provincia'] as String?,
       codigoPostal: json['codigopostal'] as String?,
       telefono: json['telefono'] as String?,
       telefonoMovil: json['telefonomovil'] as String?,
@@ -47,6 +53,8 @@ class Cliente {
       'razonsocial': razonSocial,
       'domicilio': domicilio,
       'id_localidad': idLocalidad,
+      'nombre_localidad': nombreLocalidad,
+      'nombre_provincia': nombreProvincia,
       'codigopostal': codigoPostal,
       'telefono': telefono,
       'telefonomovil': telefonoMovil,

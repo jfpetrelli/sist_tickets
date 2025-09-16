@@ -357,12 +357,27 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                         ? '${DateFormat('dd-MM-yyyy HH:mm').format(ticket!.fechaTentativaInicio!.toLocal())} hs'
                         : 'Fecha tentativa no asignada'),
                 InkWell(
-                  // Disable the tap if the address is null or empty
                   onTap: (ticket?.cliente?.domicilio != null)
-                      ? () => _launchMaps(ticket?.cliente?.domicilio ?? '')
+                      ? () {
+                          final address = [
+                            ticket?.cliente?.domicilio,
+                            ticket?.cliente?.nombreLocalidad?.toString(),
+                            ticket?.cliente?.nombreProvincia?.toString()
+                          ].where((s) => s != null).join(', ');
+                          _launchMaps(address);
+                        }
                       : null,
-                  child: _buildDetailRow(Icons.location_on,
-                      ticket?.cliente?.domicilio ?? 'Domicilio no disponible'),
+                  child: () {
+                    final address = [
+                      ticket?.cliente?.domicilio,
+                      ticket?.cliente?.nombreLocalidad?.toString(),
+                      ticket?.cliente?.nombreProvincia?.toString()
+                    ].where((s) => s != null).join(', ');
+                    return _buildDetailRow(
+                      Icons.location_on,
+                      address.isEmpty ? 'Domicilio no disponible' : address,
+                    );
+                  }(),
                 ),
                 /* _buildDetailRow(Icons.location_on,
                     ticket?.cliente?.domicilio ?? 'Domicilio no disponible'), */
