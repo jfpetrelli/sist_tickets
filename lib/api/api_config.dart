@@ -1,7 +1,14 @@
 class ApiConfig {
   // static const String baseUrl = 'http://192.168.0.157:8080'; // Para dispositivo físico
+<<<<<<< Updated upstream
   static const String baseUrl = 'http://10.0.2.2:8000'; // Para emulador Android
   //static const String baseUrl ='http://localhost:8000'; // Para web o desarrollo local
+=======
+
+  //static const String baseUrl = 'http://10.0.2.2:8000'; // Para emulador Android
+  static const String baseUrl =
+      'http://localhost:8000'; // Para web o desarrollo local
+>>>>>>> Stashed changes
   //static const String baseUrl = 'http://192.168.1.6:8000'; // Para emulador iOS
   // Auth endpoints
   static const String login = '$baseUrl/jwt/login';
