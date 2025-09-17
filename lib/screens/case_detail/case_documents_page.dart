@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sist_tickets/constants.dart'; // Assuming you have your constants here
 import 'package:sist_tickets/providers/adjunto_provider.dart';
-import 'package:sist_tickets/models/adjunto.dart';
 
 class CaseDocumentsPage extends StatefulWidget {
   final String caseId;

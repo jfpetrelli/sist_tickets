@@ -6,6 +6,7 @@ import 'package:sist_tickets/models/ticket.dart';
 import 'package:sist_tickets/models/usuario.dart';
 import 'package:sist_tickets/providers/ticket_provider.dart';
 import 'package:sist_tickets/providers/user_list_provider.dart';
+import 'package:sist_tickets/providers/tipos_caso_provider.dart';
 
 class EditCaseScreen extends StatefulWidget {
   final String caseId;
@@ -44,6 +45,10 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
     final ticketProvider = Provider.of<TicketProvider>(context, listen: false);
     final userListProvider =
         Provider.of<UserListProvider>(context, listen: false);
+    final tiposCasoProvider =
+        Provider.of<TiposCasoProvider>(context, listen: false);
+
+    await tiposCasoProvider.fetchTiposCaso();
 
     await userListProvider.fetchUsers(userType: 1);
     await ticketProvider.getTicketById(widget.caseId);
@@ -211,29 +216,40 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        DropdownButtonFormField<int>(
-                          value: _selectedCaseTypeId,
-                          decoration: const InputDecoration(
-                            labelText: 'Tipo de Caso',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.category),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                                value: 1, child: Text('Instalación')),
-                            DropdownMenuItem(
-                                value: 2, child: Text('Reparación')),
-                            DropdownMenuItem(
-                                value: 3, child: Text('Mantenimiento')),
-                            DropdownMenuItem(value: 4, child: Text('Consulta')),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedCaseTypeId = value;
-                            });
+                        Consumer<TiposCasoProvider>(
+                          builder: (context, tiposCasoProvider, child) {
+                            if (tiposCasoProvider.isLoading) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            if (tiposCasoProvider.errorMessage != null) {
+                              return Text(
+                                tiposCasoProvider.errorMessage ?? '',
+                                style: const TextStyle(color: Colors.red),
+                              );
+                            }
+                            return DropdownButtonFormField<int>(
+                              value: _selectedCaseTypeId,
+                              decoration: const InputDecoration(
+                                labelText: 'Tipo de Caso',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.category),
+                              ),
+                              items: tiposCasoProvider.tiposCaso
+                                  .map((tipo) => DropdownMenuItem<int>(
+                                        value: tipo.id,
+                                        child: Text(tipo.nombre),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCaseTypeId = value;
+                                });
+                              },
+                              validator: (value) =>
+                                  value == null ? 'Seleccione un tipo' : null,
+                            );
                           },
-                          validator: (value) =>
-                              value == null ? 'Seleccione un tipo' : null,
                         ),
                         const SizedBox(height: 16),
 

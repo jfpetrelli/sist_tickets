@@ -154,6 +154,17 @@ class ApiService {
     }
   }
 
+  Future<List<dynamic>> getTiposCaso() async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(Uri.parse(ApiConfig.tiposCaso), headers: _headers),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Error al obtener tipos de caso: ${response.statusCode}');
+    }
+  }
+
   Future<List<dynamic>> getClients() async {
     final response = await _makeAuthenticatedRequest(
       // Asumimos que la ruta es /clientes/

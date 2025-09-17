@@ -9,6 +9,7 @@ import 'package:sist_tickets/models/usuario.dart';
 import 'package:sist_tickets/providers/client_provider.dart';
 import 'package:sist_tickets/providers/user_list_provider.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
+import 'package:sist_tickets/providers/tipos_caso_provider.dart';
 
 class NewCaseTab extends StatefulWidget {
   const NewCaseTab({super.key});
@@ -167,6 +168,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
       // Pedimos al provider que cargue los clientes al iniciar la pantalla
       context.read<ClientProvider>().fetchClients();
       context.read<UserListProvider>().fetchUsers(userType: 1);
+      context.read<TiposCasoProvider>().fetchTiposCaso();
     });
   }
 
@@ -310,31 +312,43 @@ class _NewCaseTabState extends State<NewCaseTab> {
             ),
 
             const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              autovalidateMode: AutovalidateMode.onUnfocus,
-              value: _selectedCaseTypeId,
-              decoration: const InputDecoration(
-                labelText: 'Tipo de Caso',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.category),
-              ),
-              items: const [
-                // Usaremos valores fijos por ahora. El 'value' es el ID.
-                DropdownMenuItem(value: 1, child: Text('Instalación')),
-                DropdownMenuItem(value: 2, child: Text('Reparación')),
-                DropdownMenuItem(value: 3, child: Text('Mantenimiento')),
-                DropdownMenuItem(value: 4, child: Text('Consulta')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedCaseTypeId = value;
-                });
-              },
-              validator: (value) {
-                if (value == null) {
-                  return 'Por favor, seleccione un tipo de caso';
+            Consumer<TiposCasoProvider>(
+              builder: (context, tiposCasoProvider, child) {
+                if (tiposCasoProvider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
                 }
-                return null;
+                if (tiposCasoProvider.errorMessage != null) {
+                  return Text(
+                    tiposCasoProvider.errorMessage ?? '',
+                    style: const TextStyle(color: Colors.red),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  autovalidateMode: AutovalidateMode.onUnfocus,
+                  value: _selectedCaseTypeId,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de Caso',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.category),
+                  ),
+                  items: tiposCasoProvider.tiposCaso
+                      .map((tipo) => DropdownMenuItem<int>(
+                            value: tipo.id,
+                            child: Text(tipo.nombre),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCaseTypeId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Por favor, seleccione un tipo de caso';
+                    }
+                    return null;
+                  },
+                );
               },
             ),
 

@@ -6,6 +6,8 @@ import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../providers/tipos_caso_provider.dart';
+import '../../models/tipo_caso.dart';
 import '../../models/intervencion_ticket.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -300,165 +302,167 @@ class _CaseDetailContentState extends State<CaseDetailContent>
 
   Widget _buildDetails(Ticket? ticket) {
     DateTime fecha = ticket?.fecha?.toLocal() ?? DateTime.now();
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Detalles',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Column(
+    return Consumer<TiposCasoProvider>(
+      builder: (context, tiposCasoProvider, child) {
+        String tipoCasoNombre = '';
+        if (ticket?.idTipocaso != null &&
+            tiposCasoProvider.tiposCaso.isNotEmpty) {
+          final tipo = tiposCasoProvider.tiposCaso.firstWhere(
+            (t) => t.id == ticket!.idTipocaso,
+            orElse: () => TipoCaso(id: 0, nombre: '', color: 0),
+          );
+          tipoCasoNombre = tipo.nombre;
+        }
+        String prioridadTexto = '';
+        switch (ticket?.idPrioridad) {
+          case 1:
+            prioridadTexto = 'Baja';
+            break;
+          case 2:
+            prioridadTexto = 'Media';
+            break;
+          case 3:
+            prioridadTexto = 'Alta';
+            break;
+          default:
+            prioridadTexto = 'Sin prioridad';
+        }
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDetailRow(
-                        Icons.calendar_today,
-                        ticket?.fecha != null
-                            ? DateFormat('dd-MM-yyyy')
-                                .format(ticket!.fecha!.toLocal())
-                            : 'Fecha no disponible'),
-                    const SizedBox(height: 4),
-                    _buildDetailRow(Icons.access_time,
-                        '${DateFormat.Hm().format(fecha)} hs'),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Divider(
-                  color: Colors.grey,
-                  thickness: 1,
-                ),
-                const Text(
-                  'Visita técnica',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildDetailRow(
-                    Icons.date_range_rounded,
-                    ticket?.fechaTentativaInicio != null
-                        ? '${DateFormat('dd-MM-yyyy HH:mm').format(ticket!.fechaTentativaInicio!.toLocal())} hs'
-                        : 'Fecha tentativa no asignada'),
-                InkWell(
-                  onTap: (ticket?.cliente?.domicilio != null)
-                      ? () {
-                          final address = [
-                            ticket?.cliente?.domicilio,
-                            ticket?.cliente?.nombreLocalidad?.toString(),
-                            ticket?.cliente?.nombreProvincia?.toString()
-                          ].where((s) => s != null).join(', ');
-                          _launchMaps(address);
-                        }
-                      : null,
-                  child: () {
-                    final address = [
-                      ticket?.cliente?.domicilio,
-                      ticket?.cliente?.nombreLocalidad?.toString(),
-                      ticket?.cliente?.nombreProvincia?.toString()
-                    ].where((s) => s != null).join(', ');
-                    return _buildDetailRow(
-                      Icons.location_on,
-                      address.isEmpty ? 'Domicilio no disponible' : address,
-                    );
-                  }(),
-                ),
-                /* _buildDetailRow(Icons.location_on,
-                    ticket?.cliente?.domicilio ?? 'Domicilio no disponible'), */
-                const SizedBox(height: 16),
-                const Divider(
-                  color: Colors.grey,
-                  thickness: 1,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
                     const Text(
-                      'Calificación',
+                      'Detalles',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildDetailRow(
+                            Icons.calendar_today,
+                            ticket?.fecha != null
+                                ? DateFormat('dd-MM-yyyy')
+                                    .format(ticket!.fecha!.toLocal())
+                                : 'Fecha no disponible'),
+                        const SizedBox(height: 4),
+                        _buildDetailRow(Icons.access_time,
+                            '${DateFormat.Hm().format(fecha)} hs'),
+                        const SizedBox(height: 4),
+                        _buildDetailRow(
+                            Icons.category,
+                            tipoCasoNombre.isNotEmpty
+                                ? tipoCasoNombre
+                                : 'Tipo de caso no disponible'),
+                        const SizedBox(height: 4),
+                        _buildDetailRow(Icons.priority_high, prioridadTexto),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Divider(
+                      color: Colors.grey,
+                      thickness: 1,
+                    ),
+                    const Text(
+                      'Visita técnica',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: kSuccessColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '9/10',
-                        style: TextStyle(
-                          color: kSuccessColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    const SizedBox(height: 16),
+                    _buildDetailRow(
+                        Icons.date_range_rounded,
+                        ticket?.fechaTentativaInicio != null
+                            ? '${DateFormat('dd-MM-yyyy HH:mm').format(ticket!.fechaTentativaInicio!.toLocal())} hs'
+                            : 'Fecha tentativa no asignada'),
+                    InkWell(
+                      onTap: (ticket?.cliente?.domicilio != null)
+                          ? () {
+                              final address = [
+                                ticket?.cliente?.domicilio,
+                                ticket?.cliente?.nombreLocalidad?.toString(),
+                                ticket?.cliente?.nombreProvincia?.toString()
+                              ].where((s) => s != null).join(', ');
+                              _launchMaps(address);
+                            }
+                          : null,
+                      child: () {
+                        final address = [
+                          ticket?.cliente?.domicilio,
+                          ticket?.cliente?.nombreLocalidad?.toString(),
+                          ticket?.cliente?.nombreProvincia?.toString()
+                        ].where((s) => s != null).join(', ');
+                        return _buildDetailRow(
+                          Icons.location_on,
+                          address.isEmpty ? 'Domicilio no disponible' : address,
+                        );
+                      }(),
                     ),
+                    /* _buildDetailRow(Icons.location_on,
+                        ticket?.cliente?.domicilio ?? 'Domicilio no disponible'), */
+                    const SizedBox(height: 16),
                   ],
                 ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
-                    )
-                  ]),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.person_outline,
-                    size: 24,
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Técnico',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  Text(
-                    ticket?.tecnico ?? 'Técnico no asignado',
-                    softWrap: true,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                ],
               ),
-            ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        )
+                      ]),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.person_outline,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Técnico',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      Text(
+                        ticket?.tecnico ?? 'Técnico no asignado',
+                        softWrap: true,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -512,16 +516,61 @@ class _CaseDetailContentState extends State<CaseDetailContent>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Detalle en negrita
               Text(
                 intervencion.detalle,
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 8),
-              Text(
-                'Fecha: ${DateFormat('dd-MM-yyyy HH:mm').format(intervencion.fecha.toLocal())}',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              // División horizontal pequeña
+              const Divider(
+                color: Colors.grey,
+                thickness: 0.7,
+                height: 16,
               ),
-              const SizedBox(height: 8),
+              // Datos de la intervención en una sola línea
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Tooltip(
+                    message: 'Fecha',
+                    child: const Icon(Icons.calendar_today,
+                        size: 18, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    DateFormat('dd-MM-yyyy HH:mm')
+                        .format(intervencion.fecha.toLocal()),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 18),
+                  Tooltip(
+                    message: 'Tipo de intervención',
+                    child:
+                        const Icon(Icons.build, size: 18, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${intervencion.idTipoIntervencion}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 18),
+                  Tooltip(
+                    message: 'Tiempo utilizado',
+                    child:
+                        const Icon(Icons.timer, size: 18, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${intervencion.tiempoUtilizado} minutos',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -536,9 +585,19 @@ class _CaseDetailContentState extends State<CaseDetailContent>
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: intervenciones
-          .map((intervencion) => _buildIntervencion(intervencion))
-          .toList(),
+      children: [
+        const Text(
+          'Trazabilidad',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...intervenciones
+            .map((intervencion) => _buildIntervencion(intervencion))
+            .toList(),
+      ],
     );
   }
 }
