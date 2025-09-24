@@ -19,6 +19,7 @@ class NewCaseTab extends StatefulWidget {
 }
 
 class _NewCaseTabState extends State<NewCaseTab> {
+  final _descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _clientController = TextEditingController();
@@ -70,6 +71,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
       _clientController.clear();
       _autoCompleteKey = UniqueKey(); // Reset the Autocomplete key
       _titleController.clear();
+      _descriptionController.clear();
       _selectedClientId = null;
       _selectedCaseTypeId = null;
       _selectedPriorityId = null;
@@ -113,6 +115,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
     final newTicket = Ticket(
       fecha: DateTime.now(),
       titulo: _titleController.text,
+      descripcion: _descriptionController.text,
       idCliente: _selectedClientId!,
       idPersonalCreador: creatorId,
       idPersonalAsignado: _selectedAssignedTechnicianId!,
@@ -140,6 +143,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
       _formKey.currentState?.reset();
       setState(() {
         _titleController.clear();
+        _descriptionController.clear();
         _clientController.clear();
         _selectedClientId = null;
         _selectedCaseTypeId = null;
@@ -175,6 +179,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
   @override
   void dispose() {
     _titleController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -293,6 +298,26 @@ class _NewCaseTabState extends State<NewCaseTab> {
               },
             ),
 
+            const SizedBox(height: 16),
+
+            // Campo para Descripción (textarea)
+            TextFormField(
+              controller: _descriptionController,
+              minLines: 1,
+              maxLines: 6,
+              decoration: const InputDecoration(
+                labelText: 'Descripción',
+                border: OutlineInputBorder(),
+                alignLabelWithHint: false,
+                prefixIcon: Icon(Icons.description),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor, ingrese una descripción';
+                }
+                return null;
+              },
+            ),
             const SizedBox(height: 16),
 
             TextFormField(

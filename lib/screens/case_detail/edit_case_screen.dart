@@ -85,6 +85,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
     final updatedTicket = Ticket(
       idCaso: _ticket!.idCaso,
       titulo: _titleController.text,
+      descripcion: _ticket!.descripcion,
       idCliente: _ticket!.idCliente,
       idPersonalCreador: _ticket!.idPersonalCreador,
       idPersonalAsignado: _selectedAssignedTechnicianId!,

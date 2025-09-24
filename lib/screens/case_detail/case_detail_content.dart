@@ -30,6 +30,61 @@ class CaseDetailContent extends StatefulWidget {
 // Add SingleTickerProviderStateMixin to handle the animation controller.
 class _CaseDetailContentState extends State<CaseDetailContent>
     with SingleTickerProviderStateMixin {
+  // Controla si se muestra el menú de cambio de estado
+  bool _showEstadoFabMenu = false;
+
+  void _toggleEstadoFabMenu() {
+    setState(() {
+      _showEstadoFabMenu = !_showEstadoFabMenu;
+    });
+  }
+
+  Future<void> _cambiarEstado(Ticket? ticket, int nuevoEstado) async {
+    if (ticket == null) return;
+    final provider = Provider.of<TicketProvider>(context, listen: false);
+    setState(() {
+      _showEstadoFabMenu = false;
+    });
+    // Opcional: mostrar feedback
+
+    final updatedTicket = Ticket(
+      idCaso: ticket.idCaso,
+      fecha: ticket.fecha,
+      titulo: ticket.titulo,
+      descripcion: ticket.descripcion,
+      idCliente: ticket.idCliente,
+      idPersonalCreador: ticket.idPersonalCreador,
+      idPersonalAsignado: ticket.idPersonalAsignado,
+      idTipocaso: ticket.idTipocaso,
+      idEstado: nuevoEstado,
+      idPrioridad: ticket.idPrioridad,
+      ultimaModificacion: DateTime.now(),
+      fechaTentativaInicio: ticket.fechaTentativaInicio,
+      tecnico: ticket.tecnico,
+      cliente: ticket.cliente,
+      intervenciones: ticket.intervenciones,
+    );
+    await provider.updateTicket(ticket.idCaso.toString(), updatedTicket);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(
+              'Estado actualizado a [1m${_nombreEstado(nuevoEstado)}[0m')),
+    );
+  }
+
+  String _nombreEstado(int estado) {
+    switch (estado) {
+      case 1:
+        return 'Pendiente';
+      case 2:
+        return 'En Proceso';
+      case 3:
+        return 'Finalizado';
+      default:
+        return 'Desconocido';
+    }
+  }
+
   // State variable to control the visibility of the FAB menu.
   bool _isFabMenuOpen = false;
   // Animation controller for the FAB icon animation.
@@ -140,7 +195,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
               children: [
                 _buildHeader(value.ticket),
                 const SizedBox(height: 24),
-                _buildDescription(),
+                _buildDescription(value.ticket?.descripcion ?? ''),
                 const SizedBox(height: 24),
                 _buildDetails(value.ticket),
                 const SizedBox(height: 24),
@@ -259,43 +314,94 @@ class _CaseDetailContentState extends State<CaseDetailContent>
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: () {
-              if (ticket?.idEstado == 3) {
-                return kSuccessColor.withOpacity(0.2);
-              } else if (ticket?.idEstado == 2) {
-                return kPrimaryColor.withOpacity(0.2);
-              } else {
-                return Colors.orange.withOpacity(0.2);
-              }
-            }(),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-              onPressed: VoidCallbackAction.new,
-              icon: Icon(
+        if (ticket != null)
+          PopupMenuButton<int>(
+            shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(15.0), // Adjust radius as needed
+            ),
+            tooltip: 'Cambiar estado',
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: () {
+                  if (ticket.idEstado == 3) {
+                    return kSuccessColor.withOpacity(0.2);
+                  } else if (ticket.idEstado == 2) {
+                    return kPrimaryColor.withOpacity(0.2);
+                  } else {
+                    return Colors.orange.withOpacity(0.2);
+                  }
+                }(),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
                 () {
-                  if (ticket?.idEstado == 3) {
+                  if (ticket.idEstado == 3) {
                     return Icons.check_circle;
-                  } else if (ticket?.idEstado == 2) {
+                  } else if (ticket.idEstado == 2) {
                     return Icons.settings_suggest_rounded;
                   } else {
                     return Icons.hourglass_empty;
                   }
                 }(),
                 color: () {
-                  if (ticket?.idEstado == 3) {
+                  if (ticket.idEstado == 3) {
                     return kSuccessColor;
-                  } else if (ticket?.idEstado == 2) {
+                  } else if (ticket.idEstado == 2) {
                     return kPrimaryColor;
                   } else {
                     return Colors.orange;
                   }
                 }(),
-              )),
-        ),
+                size: 32,
+              ),
+            ),
+            onSelected: (value) => _cambiarEstado(ticket, value),
+            itemBuilder: (context) {
+              final List<PopupMenuEntry<int>> items = [];
+              if (ticket.idEstado == 1) {
+                items.add(
+                  PopupMenuItem(
+                    value: 2,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.settings_suggest_rounded,
+                            color: kPrimaryColor),
+                        SizedBox(width: 8),
+                        Text('En Proceso'),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              if (ticket.idEstado == 2) {
+                items.addAll([
+                  PopupMenuItem(
+                    value: 1,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.hourglass_empty, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Text('Pendiente'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 3,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.check_circle, color: kSuccessColor),
+                        SizedBox(width: 8),
+                        Text('Completado'),
+                      ],
+                    ),
+                  ),
+                ]);
+              }
+              return items;
+            },
+          ),
       ],
     );
   }
@@ -482,13 +588,13 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     );
   }
 
-  Widget _buildDescription() {
+  Widget _buildDescription(String descripcion) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 12),
         Text(
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+          descripcion,
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[700],

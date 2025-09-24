@@ -8,6 +8,7 @@ class Ticket {
   final int? idCaso;
   final DateTime? fecha;
   final String titulo;
+  final String descripcion;
   final int idCliente;
   final int idPersonalCreador;
   final int idPersonalAsignado;
@@ -26,6 +27,7 @@ class Ticket {
     this.idCaso,
     this.fecha,
     required this.titulo,
+    required this.descripcion,
     required this.idCliente,
     required this.idPersonalCreador,
     required this.idPersonalAsignado,
@@ -48,6 +50,7 @@ class Ticket {
           ? null
           : DateTime.parse(json['fecha'] as String),
       titulo: json['titulo'] as String,
+      descripcion: json['descripcion'] as String,
       idCliente: json['id_cliente'] as int,
       idPersonalCreador: json['id_personal_creador'] as int,
       idPersonalAsignado: json['id_personal_asignado'] as int,
@@ -80,6 +83,7 @@ class Ticket {
       'id_caso': idCaso,
       'fecha': fecha?.toIso8601String(),
       'titulo': titulo,
+      'descripcion': descripcion,
       'id_cliente': idCliente,
       'id_personal_creador': idPersonalCreador,
       'id_personal_asignado': idPersonalAsignado,
