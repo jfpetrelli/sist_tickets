@@ -67,8 +67,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     await provider.updateTicket(ticket.idCaso.toString(), updatedTicket);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(
-              'Estado actualizado a [1m${_nombreEstado(nuevoEstado)}[0m')),
+          content: Text('Estado actualizado a ${_nombreEstado(nuevoEstado)}')),
     );
   }
 

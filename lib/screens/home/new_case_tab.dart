@@ -409,22 +409,46 @@ class _NewCaseTabState extends State<NewCaseTab> {
             const SizedBox(height: 16),
 
             // --- Campo para Técnico Asignado ---
-            Consumer<UserListProvider>(
-              builder: (context, userListProvider, child) {
+            Consumer2<UserListProvider, UserProvider>(
+              builder: (context, userListProvider, userProvider, child) {
                 if (userListProvider.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
+
+                final currentUser = userProvider.user;
+                List<Usuario> availableUsers;
+
+                // Si el usuario es tipo 1 (técnico), solo puede asignarse a sí mismo
+                if (currentUser?.idTipo == 1) {
+                  availableUsers = currentUser != null ? [currentUser] : [];
+                  // Auto-seleccionar al usuario actual si no hay una selección previa
+                  if (_selectedAssignedTechnicianId == null &&
+                      currentUser != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        _selectedAssignedTechnicianId = currentUser.idPersonal;
+                      });
+                    });
+                  }
+                } else {
+                  // Si es tipo 2 (administrador), mostrar todos los técnicos
+                  availableUsers = userListProvider.users;
+                }
+
                 return DropdownButtonFormField<int>(
                   autovalidateMode: AutovalidateMode.onUnfocus,
                   value: _selectedAssignedTechnicianId,
                   isExpanded: true,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Técnico Asignado',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.person),
+                    // Mostrar ayuda si es usuario tipo 1
+                    helperText: currentUser?.idTipo == 1
+                        ? 'Solo puedes asignarte casos a ti mismo'
+                        : null,
                   ),
-                  items: userListProvider.users.map((Usuario user) {
-                    // Usa la lista de usuarios
+                  items: availableUsers.map((Usuario user) {
                     return DropdownMenuItem<int>(
                       value: user.idPersonal,
                       child: Text(

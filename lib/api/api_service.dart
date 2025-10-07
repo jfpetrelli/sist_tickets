@@ -6,6 +6,7 @@ import 'package:sist_tickets/models/usuario.dart';
 import 'api_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 //For downloading files.
 
 import 'package:dio/dio.dart';
@@ -15,6 +16,64 @@ class ApiService {
   final _storage = const FlutterSecureStorage();
   final Dio _dio = Dio();
 
+  // Métodos auxiliares para storage que funcionen en web y móvil
+  Future<void> _writeSecurely(String key, String value) async {
+    try {
+      if (kIsWeb) {
+        // En web, usar SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(key, value);
+        debugPrint('✅ Token guardado en SharedPreferences (Web)');
+      } else {
+        // En móvil, usar FlutterSecureStorage
+        await _storage.write(key: key, value: value);
+        debugPrint('✅ Token guardado en SecureStorage (Mobile)');
+      }
+    } catch (e) {
+      debugPrint('💥 Error al guardar en storage: $e');
+      throw e;
+    }
+  }
+
+  Future<String?> _readSecurely(String key) async {
+    try {
+      if (kIsWeb) {
+        // En web, usar SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        final value = prefs.getString(key);
+        debugPrint(
+            '📦 Token leído de SharedPreferences (Web): ${value != null ? "Encontrado" : "No encontrado"}');
+        return value;
+      } else {
+        // En móvil, usar FlutterSecureStorage
+        final value = await _storage.read(key: key);
+        debugPrint(
+            '📦 Token leído de SecureStorage (Mobile): ${value != null ? "Encontrado" : "No encontrado"}');
+        return value;
+      }
+    } catch (e) {
+      debugPrint('💥 Error al leer de storage: $e');
+      return null;
+    }
+  }
+
+  Future<void> _deleteSecurely(String key) async {
+    try {
+      if (kIsWeb) {
+        // En web, usar SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(key);
+        debugPrint('🗑️ Token eliminado de SharedPreferences (Web)');
+      } else {
+        // En móvil, usar FlutterSecureStorage
+        await _storage.delete(key: key);
+        debugPrint('🗑️ Token eliminado de SecureStorage (Mobile)');
+      }
+    } catch (e) {
+      debugPrint('💥 Error al eliminar de storage: $e');
+    }
+  }
+
   Map<String, String> get _headers {
     return {
       'Content-Type': 'application/json',
@@ -22,46 +81,75 @@ class ApiService {
     };
   }
 
-  void setToken(String token) {
-    _token = token;
-    _storage.write(key: 'access_token', value: token);
+  void setToken(String token) async {
+    try {
+      debugPrint('💾 Guardando token en storage...');
+      _token = token;
+      await _writeSecurely('access_token', token);
+      debugPrint('✅ Token guardado exitosamente');
+    } catch (e) {
+      debugPrint('💥 Error al guardar token: $e');
+      // Aunque falle el storage, mantenemos el token en memoria
+      _token = token;
+    }
   }
 
   // Modifica el login para que espere ambos tokens y los guarde
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse(ApiConfig.login),
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: {'username': email, 'password': password},
-    );
+    try {
+      debugPrint('🚀 Iniciando login request a: ${ApiConfig.login}');
+      debugPrint('📝 Headers: application/x-www-form-urlencoded');
+      debugPrint('👤 Usuario: $email');
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['access_token'] != null && data['refresh_token'] != null) {
-        setToken(data['access_token']);
-        await _storage.write(
-            key: 'refresh_token', value: data['refresh_token']);
+      final response = await http.post(
+        Uri.parse(ApiConfig.login),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {'username': email, 'password': password},
+      );
+
+      debugPrint('📡 Response status: ${response.statusCode}');
+      debugPrint('📄 Response body: ${response.body}');
+      debugPrint('🔗 Response headers: ${response.headers}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['access_token'] != null && data['refresh_token'] != null) {
+          setToken(data['access_token']);
+          await _writeSecurely('refresh_token', data['refresh_token']);
+        }
+        if (kDebugMode) {
+          // Esto asegura que el código solo se ejecute en modo debug
+          final storedAccessToken = await _readSecurely('access_token');
+          final storedRefreshToken = await _readSecurely('refresh_token');
+          debugPrint('--- VERIFICACIÓN DE TOKENS EN STORAGE ---');
+          debugPrint('Access Token guardado: $storedAccessToken');
+          debugPrint('Refresh Token guardado: $storedRefreshToken');
+          debugPrint('-----------------------------------------');
+        }
+        return data;
+      } else {
+        debugPrint('❌ Login falló con código: ${response.statusCode}');
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Error en el inicio de sesión');
       }
-      if (kDebugMode) {
-        // Esto asegura que el código solo se ejecute en modo debug
-        final storedAccessToken = await _storage.read(key: 'access_token');
-        final storedRefreshToken = await _storage.read(key: 'refresh_token');
-        debugPrint('--- VERIFICACIÓN DE TOKENS EN STORAGE ---');
-        debugPrint('Access Token guardado: $storedAccessToken');
-        debugPrint('Refresh Token guardado: $storedRefreshToken');
-        debugPrint('-----------------------------------------');
-      }
-      return data;
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Error en el inicio de sesión');
+    } catch (e) {
+      debugPrint('💥 Excepción durante login: $e');
+      rethrow;
     }
   }
 
-  void clearToken() {
-    _token = null;
-    _storage.delete(key: 'access_token');
-    _storage.delete(key: 'refresh_token');
+  void clearToken() async {
+    try {
+      debugPrint('🗑️ Limpiando tokens...');
+      _token = null;
+      await _deleteSecurely('access_token');
+      await _deleteSecurely('refresh_token');
+      debugPrint('✅ Tokens limpiados exitosamente');
+    } catch (e) {
+      debugPrint('💥 Error al limpiar tokens: $e');
+      // Aunque falle el storage, limpiamos el token en memoria
+      _token = null;
+    }
   }
 
   void logout() {
@@ -69,35 +157,52 @@ class ApiService {
   }
 
   Future<bool> tryLoadToken() async {
-    final storedToken = await _storage.read(key: 'access_token');
-    if (storedToken != null) {
-      _token = storedToken;
-      return true;
+    try {
+      debugPrint('🔑 Intentando cargar token desde storage...');
+      final storedToken = await _readSecurely('access_token');
+      debugPrint('📦 Token encontrado: ${storedToken != null ? "Sí" : "No"}');
+      if (storedToken != null) {
+        _token = storedToken;
+        debugPrint('✅ Token cargado exitosamente');
+        return true;
+      }
+      debugPrint('❌ No hay token guardado');
+      return false;
+    } catch (e) {
+      debugPrint('💥 Error al cargar token desde storage: $e');
+      return false;
     }
-    return false;
   }
 
   // Modifica refreshToken para que envíe el token en el cuerpo
   Future<void> refreshToken() async {
-    final refreshToken = await _storage.read(key: 'refresh_token');
+    try {
+      debugPrint('🔄 Intentando renovar token...');
+      final refreshToken = await _readSecurely('refresh_token');
 
-    if (refreshToken == null) {
-      throw Exception('No hay token de refresh para renovar la sesión.');
-    }
+      if (refreshToken == null) {
+        throw Exception('No hay token de refresh para renovar la sesión.');
+      }
 
-    final response = await http.post(
-      Uri.parse(ApiConfig.refresh),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(
-          {'refresh_token': refreshToken}), // Envía el token en el body
-    );
+      final response = await http.post(
+        Uri.parse(ApiConfig.refresh),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(
+            {'refresh_token': refreshToken}), // Envía el token en el body
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setToken(data['access_token']);
-    } else {
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setToken(data['access_token']);
+        debugPrint('✅ Token renovado exitosamente');
+      } else {
+        clearToken();
+        throw Exception('Sesión expirada.');
+      }
+    } catch (e) {
+      debugPrint('💥 Error al renovar token: $e');
       clearToken();
-      throw Exception('Sesión expirada.');
+      rethrow;
     }
   }
 
@@ -128,9 +233,17 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getTickets() async {
-    final response = await _makeAuthenticatedRequest(
-        () => http.get(Uri.parse(ApiConfig.tickets), headers: _headers));
+  Future<List<dynamic>> getTickets([String? idPersonalAsignado]) async {
+    Uri uri;
+    if (idPersonalAsignado != null) {
+      uri = Uri.parse(
+          '${ApiConfig.tickets}?id_personal_asignado=$idPersonalAsignado');
+    } else {
+      uri = Uri.parse(ApiConfig.tickets);
+    }
+
+    final response =
+        await _makeAuthenticatedRequest(() => http.get(uri, headers: _headers));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

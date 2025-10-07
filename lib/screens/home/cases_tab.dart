@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/models/ticket.dart';
 import 'package:sist_tickets/providers/ticket_provider.dart';
+import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/screens/case_detail/case_detail_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -40,7 +41,8 @@ class _CasesTabState extends State<CasesTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ticketProvider =
           Provider.of<TicketProvider>(context, listen: false);
-      ticketProvider.fetchTickets().then((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      ticketProvider.fetchTickets(userProvider.user).then((_) {
         _selectedEvents.value =
             _getEventsForDay(_selectedDay!, ticketProvider.tickets);
       });
@@ -55,7 +57,9 @@ class _CasesTabState extends State<CasesTab> {
   }
 
   Future<void> _refreshTickets() async {
-    await Provider.of<TicketProvider>(context, listen: false).fetchTickets();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await Provider.of<TicketProvider>(context, listen: false)
+        .fetchTickets(userProvider.user);
   }
 
   void _toggleSortOrder() {

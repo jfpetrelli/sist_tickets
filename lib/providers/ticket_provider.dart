@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/ticket.dart';
 import '../models/intervencion_ticket.dart';
+import '../models/usuario.dart';
 import '../api/api_service.dart';
 
 class TicketProvider extends ChangeNotifier {
@@ -38,11 +39,18 @@ class TicketProvider extends ChangeNotifier {
   // El constructor ahora requiere una instancia de ApiService
   TicketProvider(this._apiService);
 
-  Future<void> fetchTickets() async {
+  Future<void> fetchTickets(Usuario? currentUser) async {
     isLoading = true;
     notifyListeners();
     try {
-      final responseData = await _apiService.getTickets();
+      String? idPersonalAsignado;
+      // Solo enviar el id del usuario si es tipo 1 (técnico)
+      if (currentUser != null && currentUser.idTipo == 1) {
+        idPersonalAsignado = currentUser.idPersonal.toString();
+      }
+      // Si es tipo 2 (administrador), no envía parámetro para obtener todos los tickets
+
+      final responseData = await _apiService.getTickets(idPersonalAsignado);
       // La conversión de JSON a Ticket se hace aquí
       print('Response data: $responseData');
       _tickets = responseData.map((data) => Ticket.fromJson(data)).toList();
