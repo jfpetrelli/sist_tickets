@@ -6,8 +6,11 @@ import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/screens/home/cases_tab.dart';
 import 'package:sist_tickets/screens/home/new_case_tab.dart';
 import 'package:sist_tickets/screens/home/profile_tab.dart';
+
 import 'package:sist_tickets/screens/login/login_screen.dart';
 import 'package:sist_tickets/widgets/app_template.dart';
+import 'package:sist_tickets/screens/clientes/clientes_screen.dart';
+import 'package:sist_tickets/screens/usuarios/usuarios_screen.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -74,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
           color: kPrimaryColor,
           child: Column(
             children: [
-              // --- INICIO DE LA MODIFICACIÓN ---
               Consumer<UserProvider>(
                 builder: (context, userProvider, child) {
                   final user = userProvider.user;
@@ -114,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-              // --- FIN DE LA MODIFICACIÓN ---
               const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Divider(color: Colors.white24)),
@@ -137,12 +138,55 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.pop(context);
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.bar_chart, color: Colors.white),
-                title: const Text('Reportes',
-                    style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
+              const Divider(color: Colors.white24),
+              Consumer<UserProvider>(
+                builder: (context, userProvider, child) {
+                  if (userProvider.user?.idTipo == 1) {
+                    return Column(
+                      children: [
+                        ListTile(
+                          leading:
+                              const Icon(Icons.people, color: Colors.white),
+                          title: const Text('Usuarios',
+                              style: TextStyle(color: Colors.white)),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UsuariosScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading:
+                              const Icon(Icons.business, color: Colors.white),
+                          title: const Text('Clientes',
+                              style: TextStyle(color: Colors.white)),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ClientesScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading:
+                              const Icon(Icons.bar_chart, color: Colors.white),
+                          title: const Text('Reportes',
+                              style: TextStyle(color: Colors.white)),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
                 },
               ),
               const Padding(

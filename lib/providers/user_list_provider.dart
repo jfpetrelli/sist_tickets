@@ -5,6 +5,57 @@ import '../models/usuario.dart';
 import '../api/api_service.dart';
 
 class UserListProvider extends ChangeNotifier {
+  Future<void> addUserWithPassword(
+      Usuario nuevoUsuario, String password) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final data = _usuarioToJson(nuevoUsuario);
+      data.remove('id_personal');
+      data['password'] = password;
+      print(data);
+      final response = await _apiService.createUser(data);
+      final usuarioCreado = Usuario.fromJson(response);
+      _users.add(usuarioCreado);
+      errorMessage = null;
+    } catch (e) {
+      print('Error en addUserWithPassword: $e');
+      errorMessage = 'No se pudo agregar el usuario.';
+    }
+    isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> addUser(Usuario nuevoUsuario) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final response =
+          await _apiService.createUser(_usuarioToJson(nuevoUsuario));
+      final usuarioCreado = Usuario.fromJson(response);
+      _users.add(usuarioCreado);
+      errorMessage = null;
+    } catch (e) {
+      print('Error en addUser: $e');
+      errorMessage = 'No se pudo agregar el usuario.';
+    }
+    isLoading = false;
+    notifyListeners();
+  }
+
+  Map<String, dynamic> _usuarioToJson(Usuario usuario) {
+    return {
+      'id_personal': usuario.idPersonal,
+      'id_sucursal': usuario.idSucursal,
+      'id_tipo': usuario.idTipo,
+      'nombre': usuario.nombre,
+      'telefono_movil': usuario.telefonoMovil,
+      'email': usuario.email,
+      'fecha_ingreso': usuario.fechaIngreso?.toIso8601String(),
+      'fecha_egreso': usuario.fechaEgreso?.toIso8601String(),
+    };
+  }
+
   final ApiService _apiService;
 
   List<Usuario> _users = [];
@@ -15,7 +66,7 @@ class UserListProvider extends ChangeNotifier {
 
   UserListProvider(this._apiService);
 
-  Future<void> fetchUsers({required int userType}) async {
+  Future<void> fetchUsers({int? userType}) async {
     isLoading = true;
     notifyListeners();
     try {

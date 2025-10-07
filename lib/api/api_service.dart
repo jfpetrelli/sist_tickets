@@ -12,6 +12,39 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 
 class ApiService {
+  Future<Map<String, dynamic>> createUser(Map<String, dynamic> userData) async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.post(
+        Uri.parse(ApiConfig.users),
+        headers: _headers,
+        body: jsonEncode(userData),
+      ),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      print('Error al crear el usuario:${response.body}');
+      throw Exception('Error al crear el usuario: ${response.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> createClient(
+      Map<String, dynamic> clientData) async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.post(
+        Uri.parse(ApiConfig.clients),
+        headers: _headers,
+        body: jsonEncode(clientData),
+      ),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      print('Error al crear el cliente: ${response.body}');
+      throw Exception('Error al crear el cliente: ${response.statusCode}');
+    }
+  }
+
   String? _token;
   final _storage = const FlutterSecureStorage();
   final Dio _dio = Dio();
@@ -31,7 +64,7 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('💥 Error al guardar en storage: $e');
-      throw e;
+      rethrow;
     }
   }
 

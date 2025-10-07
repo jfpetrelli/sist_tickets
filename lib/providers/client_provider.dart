@@ -5,6 +5,21 @@ import '../models/cliente.dart';
 import '../api/api_service.dart';
 
 class ClientProvider extends ChangeNotifier {
+  Future<void> addClient(Cliente nuevoCliente) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiService.createClient(nuevoCliente.toJson());
+      final clienteCreado = Cliente.fromJson(response);
+      _clients.add(clienteCreado);
+      errorMessage = null;
+    } catch (e) {
+      errorMessage = 'No se pudo agregar el cliente.';
+    }
+    isLoading = false;
+    notifyListeners();
+  }
+
   final ApiService _apiService;
 
   List<Cliente> _clients = [];
