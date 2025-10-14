@@ -141,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Divider(color: Colors.white24),
               Consumer<UserProvider>(
                 builder: (context, userProvider, child) {
-                  if (userProvider.user?.idTipo == 1) {
+                  if (userProvider.user?.idTipo == 2) {
                     return Column(
                       children: [
                         ListTile(

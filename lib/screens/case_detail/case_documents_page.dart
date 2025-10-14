@@ -32,31 +32,56 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
     });
   }
 
-  // Option 1: Pick from device files
-  Future<void> _pickFromFiles() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      allowMultiple: false,
-    );
+  // Option 1: Pick files (documents, etc.) - Compatible con Web y Mobile
+  Future<void> _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
 
-    if (result != null) {
-      List<String> paths = result.paths.map((path) => path!).toList();
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
 
-      await Provider.of<AdjuntoProvider>(context, listen: false)
-          .uploadAdjunto(widget.caseId, paths[0]);
+      if (file.bytes != null) {
+        // Web: usar bytes directamente
+        await Provider.of<AdjuntoProvider>(context, listen: false)
+            .uploadAdjuntoFromBytes(widget.caseId, file.name, file.bytes!);
+      } else if (file.path != null) {
+        // Mobile: leer archivo desde path
+        await _uploadFromPath(file.path!, file.name);
+      } else {
+        print('Error: No se pudo obtener el archivo seleccionado.');
+      }
     } else {
       print('User canceled the file picker.');
     }
   }
 
-  // Option 2: Pick from gallery (photos and videos)
+  // Option 2: Pick from gallery (photos and videos) - Compatible con Web y Mobile
   Future<void> _pickFromGallery() async {
-    final XFile? media = await _picker.pickMedia();
+    final XFile? media = await _picker.pickImage(source: ImageSource.gallery);
 
     if (media != null) {
+      // Leer los bytes del archivo
+      final bytes = await media.readAsBytes();
+      final fileName = media.name;
+
       await Provider.of<AdjuntoProvider>(context, listen: false)
-          .uploadAdjunto(widget.caseId, media.path);
+          .uploadAdjuntoFromBytes(widget.caseId, fileName, bytes);
     } else {
       print('User canceled the gallery picker.');
+    }
+  }
+
+  // Método auxiliar para mobile - leer archivo desde path
+  Future<void> _uploadFromPath(String path, String fileName) async {
+    try {
+      // En mobile, podemos leer el archivo desde el path
+      final XFile file = XFile(path);
+      final bytes = await file.readAsBytes();
+
+      await Provider.of<AdjuntoProvider>(context, listen: false)
+          .uploadAdjuntoFromBytes(widget.caseId, fileName, bytes);
+    } catch (e) {
+      print('Error al leer archivo desde path: $e');
+      throw Exception('No se pudo leer el archivo seleccionado.');
     }
   }
 
@@ -81,7 +106,7 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
                 title: const Text('Archivos del dispositivo'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _pickFromFiles();
+                  _pickFile();
                 },
               ),
             ],
@@ -182,6 +207,7 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_add_document',
         onPressed: () {
           _showAttachmentOptions();
         },

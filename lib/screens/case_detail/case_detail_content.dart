@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
 import 'package:sist_tickets/screens/case_detail/case_documents_page.dart';
@@ -84,6 +85,19 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     }
   }
 
+  void abrirWhatsAppWeb(String telefono, String mensaje) async {
+    // Codifica el mensaje para que sea seguro en una URL
+    final String textoCodificado = Uri.encodeComponent(mensaje);
+
+    // Construye la URL final
+    final Uri url = Uri.parse('https://wa.me/$telefono?text=$textoCodificado');
+
+    // Lanza la URL
+    if (!await launchUrl(url)) {
+      throw Exception('No se pudo lanzar $url');
+    }
+  }
+
   // State variable to control the visibility of the FAB menu.
   bool _isFabMenuOpen = false;
   // Animation controller for the FAB icon animation.
@@ -92,34 +106,57 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     if (address.isEmpty) return;
 
     final query = Uri.encodeComponent(address);
-    Uri? appleUrl;
-    Uri? googleUrl;
-
-    // Check the platform and create the appropriate native URL
-    if (Platform.isIOS) {
-      // iOS
-      appleUrl = Uri.parse('maps://?q=$query');
-      googleUrl = Uri.parse('comgooglemaps://?q=$query');
-    } else if (Platform.isAndroid) {
-      // Android
-      googleUrl = Uri.parse('geo:0,0?q=$query');
-    }
+    Uri mapUrl;
 
     try {
-      // Try to launch the native app URL
-      if (googleUrl != null && await canLaunchUrl(googleUrl)) {
-        // This will launch Google Maps on either platform if installed
-        await launchUrl(googleUrl);
-      } else if (appleUrl != null && await canLaunchUrl(appleUrl)) {
-        // This will launch Apple Maps on iOS as a fallback
-        await launchUrl(appleUrl);
+      // Check if running on web (Chrome/Firefox/Safari)
+      if (kIsWeb) {
+        // For web platforms, use Google Maps web URL
+        mapUrl =
+            Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
       } else {
-        throw 'No se pudo abrir una aplicación de mapas.';
+        // For mobile platforms, use native URLs
+        if (Platform.isIOS) {
+          // iOS - try Apple Maps first, then Google Maps
+          final appleUrl = Uri.parse('maps://?q=$query');
+          final googleUrl = Uri.parse('comgooglemaps://?q=$query');
+
+          if (await canLaunchUrl(appleUrl)) {
+            mapUrl = appleUrl;
+          } else if (await canLaunchUrl(googleUrl)) {
+            mapUrl = googleUrl;
+          } else {
+            // Fallback to web version on iOS
+            mapUrl = Uri.parse(
+                'https://www.google.com/maps/search/?api=1&query=$query');
+          }
+        } else if (Platform.isAndroid) {
+          // Android - try Google Maps native app
+          final androidUrl = Uri.parse('geo:0,0?q=$query');
+
+          if (await canLaunchUrl(androidUrl)) {
+            mapUrl = androidUrl;
+          } else {
+            // Fallback to web version on Android
+            mapUrl = Uri.parse(
+                'https://www.google.com/maps/search/?api=1&query=$query');
+          }
+        } else {
+          // Other platforms (Windows, Linux, macOS desktop)
+          mapUrl = Uri.parse(
+              'https://www.google.com/maps/search/?api=1&query=$query');
+        }
       }
+
+      // Launch the URL
+      await launchUrl(mapUrl,
+          mode: kIsWeb
+              ? LaunchMode.platformDefault
+              : LaunchMode.externalApplication);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text('Error al abrir mapas: ${e.toString()}')),
         );
       }
     }
@@ -269,6 +306,29 @@ class _CaseDetailContentState extends State<CaseDetailContent>
               icon: const Icon(Icons.edit_document),
             ),
           ),
+          const SizedBox(height: 16),
+          Consumer<TicketProvider>(
+            builder: (context, ticketProvider, child) {
+              final ticket = ticketProvider.ticket;
+              final telefono = ticket?.cliente?.telefono ?? '';
+              return ScaleTransition(
+                alignment: Alignment.bottomRight,
+                scale: CurvedAnimation(
+                  parent: _fabAnimationController,
+                  curve: Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+                ),
+                child: FloatingActionButton.extended(
+                  heroTag: 'fab_whatsapp',
+                  onPressed: () {
+                    abrirWhatsAppWeb(telefono, 'HOLA JUAN CRUZ');
+                  },
+                  label: const Text('Enviar Mensaje'),
+                  icon: const Icon(Icons.message),
+                ),
+              );
+            },
+          ),
+
           const SizedBox(height: 16),
           // This is the main FAB that toggles the menu.
           FloatingActionButton(

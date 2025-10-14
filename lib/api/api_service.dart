@@ -7,7 +7,8 @@ import 'api_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-//For downloading files.
+import 'package:url_launcher/url_launcher.dart';
+//For downloading files
 
 import 'package:dio/dio.dart';
 
@@ -344,7 +345,7 @@ class ApiService {
       Map<String, dynamic> ticketData) async {
     final response = await _makeAuthenticatedRequest(
       () => http.post(
-        Uri.parse(ApiConfig.tickets), // Usamos la URL base de tickets
+        Uri.parse(ApiConfig.ticketById), // Usamos la URL base de tickets
         headers: _headers,
         body: jsonEncode(ticketData),
       ),
@@ -363,7 +364,7 @@ class ApiService {
       String id, Map<String, dynamic> ticketData) async {
     final response = await _makeAuthenticatedRequest(
       () => http.put(
-        Uri.parse('${ApiConfig.tickets}$id'),
+        Uri.parse('${ApiConfig.ticketById}$id'),
         headers: _headers,
         body: jsonEncode(ticketData),
       ),
@@ -394,20 +395,24 @@ class ApiService {
     }
   }
 
-  //post para subir un adjunto
+  //post para subir un adjunto - Compatible con Web y Mobile
   Future<Map<String, dynamic>> uploadAdjunto(
-      String ticketId, String filePath) async {
+      String ticketId, String fileName, List<int> fileBytes) async {
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${ApiConfig.adjuntosByTicket}$ticketId'),
     );
     request.headers.addAll(_headers);
+
+    // Crear MultipartFile desde bytes (funciona tanto en web como mobile)
     request.files.add(
-      await http.MultipartFile.fromPath(
+      http.MultipartFile.fromBytes(
         'file',
-        filePath,
+        fileBytes,
+        filename: fileName,
       ),
     );
+
     final response = await request.send();
     if (response.statusCode == 200 || response.statusCode == 201) {
       final responseData = await response.stream.bytesToString();
@@ -416,6 +421,20 @@ class ApiService {
       throw Exception(
           'Error al subir el adjunto: ${response.statusCode}, ${response.reasonPhrase}');
     }
+  }
+
+  // Método para compatibilidad hacia atrás - NO usar en web
+  @Deprecated('Use uploadAdjunto con bytes para compatibilidad web')
+  Future<Map<String, dynamic>> uploadAdjuntoFromPath(
+      String ticketId, String filePath) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+          'File path uploads no están soportados en Flutter Web. Use uploadAdjunto con bytes en su lugar.');
+    }
+
+    // Este método solo debe usarse desde código que ya maneja la plataforma
+    throw UnsupportedError(
+        'Este método requiere implementación específica de plataforma.');
   }
 
   // Método para descargar un adjunto usando DIO Recibe el filepath por parametro
@@ -433,6 +452,58 @@ class ApiService {
     } catch (e) {
       print('Error downloading file: $e');
       throw Exception('Failed to download file.');
+    }
+  }
+
+  // Método para descargar archivos en Flutter Web
+  Future<void> downloadAdjuntoWeb(int adjuntoId, String fileName) async {
+    if (!kIsWeb) {
+      throw UnsupportedError('Este método solo está disponible en Flutter Web');
+    }
+
+    try {
+      debugPrint('🌐 Iniciando descarga en web: $fileName');
+
+      // Realizar la petición con los headers de autenticación
+      final response = await http.get(
+        Uri.parse('${ApiConfig.downloadAdjunto}$adjuntoId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        // En Flutter Web, necesitamos crear un blob y descargarlo
+        // Por simplicidad, abrimos en nueva ventana para que el usuario descargue
+        final downloadUrl = '${ApiConfig.downloadAdjunto}$adjuntoId';
+
+        // Crear URL que incluya el token como query parameter para web
+        final token = _token;
+        final uriWithAuth = token != null
+            ? Uri.parse('$downloadUrl?access_token=$token')
+            : Uri.parse(downloadUrl);
+
+        await launchUrl(
+          uriWithAuth,
+          mode: LaunchMode.externalApplication,
+        );
+
+        debugPrint('✅ Descarga iniciada en web');
+      } else {
+        throw Exception('Error al obtener el archivo: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('💥 Error descargando archivo en web: $e');
+
+      // Como fallback, intentar abrir la URL directamente
+      try {
+        final downloadUrl = '${ApiConfig.downloadAdjunto}$adjuntoId';
+        await launchUrl(
+          Uri.parse(downloadUrl),
+          mode: LaunchMode.externalApplication,
+        );
+        debugPrint('📁 Usando descarga fallback');
+      } catch (fallbackError) {
+        throw Exception('No se pudo descargar el archivo: $e');
+      }
     }
   }
 

@@ -148,6 +148,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_add_cliente',
         shape: const CircleBorder(),
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 6,
