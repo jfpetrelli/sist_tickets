@@ -479,7 +479,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
   }
 
   Widget _buildDetails(Ticket? ticket) {
-    DateTime fecha = ticket?.fecha?.toLocal() ?? DateTime.now();
+  // (fecha ya no se usa)
     return Consumer<TiposCasoProvider>(
       builder: (context, tiposCasoProvider, child) {
         String tipoCasoNombre = '';
@@ -530,14 +530,11 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildDetailRow(
-                            Icons.calendar_today,
-                            ticket?.fecha != null
-                                ? DateFormat('dd-MM-yyyy')
-                                    .format(ticket!.fecha!.toLocal())
-                                : 'Fecha no disponible'),
-                        const SizedBox(height: 4),
-                        _buildDetailRow(Icons.access_time,
-                            '${DateFormat.Hm().format(fecha)} hs'),
+                          Icons.calendar_today,
+                          ticket?.fecha != null
+                              ? '${DateFormat('dd-MM-yyyy').format(ticket?.fecha?.toLocal() ?? DateTime.now())} - ${DateFormat.Hm().format(ticket?.fecha?.toLocal() ?? DateTime.now())} hs'
+                              : 'Fecha y hora no disponible',
+                        ),
                         const SizedBox(height: 4),
                         _buildDetailRow(
                             Icons.category,
@@ -560,12 +557,13 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     _buildDetailRow(
                         Icons.date_range_rounded,
                         ticket?.fechaTentativaInicio != null
                             ? '${DateFormat('dd-MM-yyyy HH:mm').format(ticket!.fechaTentativaInicio!.toLocal())} hs'
                             : 'Fecha tentativa no asignada'),
+                            const SizedBox(height: 8),
                     InkWell(
                       onTap: (ticket?.cliente?.domicilio != null)
                           ? () {

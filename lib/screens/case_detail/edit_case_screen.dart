@@ -7,6 +7,8 @@ import 'package:sist_tickets/models/usuario.dart';
 import 'package:sist_tickets/providers/ticket_provider.dart';
 import 'package:sist_tickets/providers/user_list_provider.dart';
 import 'package:sist_tickets/providers/tipos_caso_provider.dart';
+import 'package:sist_tickets/providers/user_provider.dart';
+import 'package:sist_tickets/models/intervencion_ticket.dart';
 
 class EditCaseScreen extends StatefulWidget {
   final String caseId;
@@ -82,6 +84,27 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
       _isSaving = true;
     });
 
+    final prevTechnicianId = _ticket!.idPersonalAsignado;
+    final userListProvider = context.read<UserListProvider>();
+    final prevTechnician = userListProvider.users.firstWhere(
+      (u) => u.idPersonal == prevTechnicianId,
+      orElse: () => Usuario(
+        idPersonal: prevTechnicianId,
+        idSucursal: 0,
+        idTipo: 1,
+        nombre: 'Desconocido',
+      ),
+    );
+    final newTechnician = userListProvider.users.firstWhere(
+      (u) => u.idPersonal == _selectedAssignedTechnicianId,
+      orElse: () => Usuario(
+        idPersonal: _selectedAssignedTechnicianId ?? 0,
+        idSucursal: 0,
+        idTipo: 1,
+        nombre: 'Desconocido',
+      ),
+    );
+
     final updatedTicket = Ticket(
       idCaso: _ticket!.idCaso,
       titulo: _titleController.text,
@@ -100,6 +123,25 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
     final success = await context
         .read<TicketProvider>()
         .updateTicket(widget.caseId, updatedTicket);
+
+    // Si cambió el técnico asignado, crear intervención automática
+    if (prevTechnicianId != _selectedAssignedTechnicianId) {
+      final userProvider = context.read<UserProvider>();
+      final usuario = userProvider.user;
+      final now = DateTime.now();
+      final detalleMsg = 'Cambio de técnico asignado: ${prevTechnician.nombre} → ${newTechnician.nombre}';
+      final intervencion = TicketIntervencion(
+        idCaso: _ticket!.idCaso,
+        idIntervencion: null,
+        fechaVencimiento: now, // El modelo requiere DateTime
+        fecha: now,
+        idTipoIntervencion: 4, // Actualización de datos
+        detalle: detalleMsg,
+        tiempoUtilizado: 0, // null no permitido, se usa 0
+        idContacto: usuario?.idPersonal.toString() ?? '',
+      );
+      await context.read<TicketProvider>().addIntervencion(_ticket!.idCaso!, intervencion);
+    }
 
     if (mounted) {
       if (success) {
