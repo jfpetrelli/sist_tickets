@@ -17,15 +17,12 @@ class TiposCasoProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      debugPrint("🔄 Buscando tipos de caso");
       final responseData = await _apiService.getTiposCaso();
-
-      debugPrint("✅ Respuesta de la API recibida: $responseData");
       _tiposCaso = responseData.map((data) => TipoCaso.fromJson(data)).toList();
 
       errorMessage = null;
     } catch (e) {
-      debugPrint("❌ Error en fetchTiposCaso: $e");
+      debugPrint("Error en fetchTiposCaso: $e");
       errorMessage = 'No se pudieron cargar los tipos de caso.';
       _tiposCaso = [];
     }

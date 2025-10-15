@@ -70,16 +70,11 @@ class UserListProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      // 👇 --- INICIO DE LA MODIFICACIÓN ---
-      debugPrint("🔄 Buscando usuarios con tipo: $userType");
       final responseData = await _apiService.getUsers(userType: userType);
-
-      debugPrint("✅ Respuesta de la API recibida: $responseData");
       _users = responseData.map((data) => Usuario.fromJson(data)).toList();
-
       errorMessage = null;
     } catch (e) {
-      debugPrint("❌ Error en fetchUsers: $e");
+      debugPrint("Error en fetchUsers: $e");
       errorMessage = 'No se pudieron cargar los usuarios.';
       _users = [];
     }

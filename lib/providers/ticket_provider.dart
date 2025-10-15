@@ -51,8 +51,6 @@ class TicketProvider extends ChangeNotifier {
       // Si es tipo 2 (administrador), no envía parámetro para obtener todos los tickets
 
       final responseData = await _apiService.getTickets(idPersonalAsignado);
-      // La conversión de JSON a Ticket se hace aquí
-      print('Response data: $responseData');
       _tickets = responseData.map((data) => Ticket.fromJson(data)).toList();
     } catch (e) {
       print('Error en fetchTickets: $e');

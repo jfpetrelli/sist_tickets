@@ -8,7 +8,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-//For downloading files
 
 import 'package:dio/dio.dart';
 
@@ -117,12 +116,12 @@ class ApiService {
 
   void setToken(String token) async {
     try {
-      debugPrint('💾 Guardando token en storage...');
+      debugPrint('Guardando token en storage...');
       _token = token;
       await _writeSecurely('access_token', token);
       debugPrint('✅ Token guardado exitosamente');
     } catch (e) {
-      debugPrint('💥 Error al guardar token: $e');
+      debugPrint('Error al guardar token: $e');
       // Aunque falle el storage, mantenemos el token en memoria
       _token = token;
     }
@@ -131,8 +130,6 @@ class ApiService {
   // Modifica el login para que espere ambos tokens y los guarde
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      debugPrint('🚀 Iniciando login request a: ${ApiConfig.login}');
-      debugPrint('📝 Headers: application/x-www-form-urlencoded');
       debugPrint('👤 Usuario: $email');
 
       final response = await http.post(
@@ -141,33 +138,20 @@ class ApiService {
         body: {'username': email, 'password': password},
       );
 
-      debugPrint('📡 Response status: ${response.statusCode}');
-      debugPrint('📄 Response body: ${response.body}');
-      debugPrint('🔗 Response headers: ${response.headers}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['access_token'] != null && data['refresh_token'] != null) {
           setToken(data['access_token']);
           await _writeSecurely('refresh_token', data['refresh_token']);
         }
-        if (kDebugMode) {
-          // Esto asegura que el código solo se ejecute en modo debug
-          final storedAccessToken = await _readSecurely('access_token');
-          final storedRefreshToken = await _readSecurely('refresh_token');
-          debugPrint('--- VERIFICACIÓN DE TOKENS EN STORAGE ---');
-          debugPrint('Access Token guardado: $storedAccessToken');
-          debugPrint('Refresh Token guardado: $storedRefreshToken');
-          debugPrint('-----------------------------------------');
-        }
         return data;
       } else {
-        debugPrint('❌ Login falló con código: ${response.statusCode}');
+        debugPrint('Login falló con código: ${response.statusCode}');
         final error = jsonDecode(response.body);
         throw Exception(error['detail'] ?? 'Error en el inicio de sesión');
       }
     } catch (e) {
-      debugPrint('💥 Excepción durante login: $e');
+      debugPrint('Excepción durante login: $e');
       rethrow;
     }
   }
@@ -180,7 +164,7 @@ class ApiService {
       await _deleteSecurely('refresh_token');
       debugPrint('✅ Tokens limpiados exitosamente');
     } catch (e) {
-      debugPrint('💥 Error al limpiar tokens: $e');
+      debugPrint('Error al limpiar tokens: $e');
       // Aunque falle el storage, limpiamos el token en memoria
       _token = null;
     }
@@ -200,7 +184,6 @@ class ApiService {
         debugPrint('✅ Token cargado exitosamente');
         return true;
       }
-      debugPrint('❌ No hay token guardado');
       return false;
     } catch (e) {
       debugPrint('💥 Error al cargar token desde storage: $e');
@@ -294,7 +277,6 @@ class ApiService {
         headers: _headers));
 
     if (response.statusCode == 200) {
-      print('Response body: ${response.body}');
       return jsonDecode(response.body);
     } else {
       throw Exception('Error al obtener ticket por ID: ${response.statusCode}');

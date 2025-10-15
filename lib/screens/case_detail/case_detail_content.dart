@@ -7,6 +7,7 @@ import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../providers/user_provider.dart';
 import '../../providers/tipos_caso_provider.dart';
 import '../../models/tipo_caso.dart';
 import '../../models/intervencion_ticket.dart';
@@ -43,11 +44,12 @@ class _CaseDetailContentState extends State<CaseDetailContent>
   Future<void> _cambiarEstado(Ticket? ticket, int nuevoEstado) async {
     if (ticket == null) return;
     final provider = Provider.of<TicketProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     setState(() {
       _showEstadoFabMenu = false;
     });
-    // Opcional: mostrar feedback
 
+    // Actualizar el ticket
     final updatedTicket = Ticket(
       idCaso: ticket.idCaso,
       fecha: ticket.fecha,
@@ -66,9 +68,26 @@ class _CaseDetailContentState extends State<CaseDetailContent>
       intervenciones: ticket.intervenciones,
     );
     await provider.updateTicket(ticket.idCaso.toString(), updatedTicket);
+
+    // Crear intervención automática por cambio de estado
+    final now = DateTime.now();
+    final usuario = userProvider.user;
+    final intervencion = TicketIntervencion(
+      idCaso: ticket.idCaso,
+      idIntervencion: null,
+      fechaVencimiento: now, // El modelo requiere DateTime, se usa now aunque conceptualmente es null
+      fecha: now,
+      idTipoIntervencion: 4, // Actualización de datos
+      detalle: 'Cambio de estado a ${_nombreEstado(nuevoEstado)}',
+      tiempoUtilizado: 0, // null no permitido, se usa 0
+      idContacto: usuario?.idPersonal.toString() ?? '',
+    );
+    await provider.addIntervencion(ticket.idCaso!, intervencion);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text('Estado actualizado a ${_nombreEstado(nuevoEstado)}')),
+        content: Text('Estado actualizado a ${_nombreEstado(nuevoEstado)}'),
+      ),
     );
   }
 
@@ -197,11 +216,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     });
   }
 
-// ### 1. FUNCTION TO SHOW THE MODAL ###
-  // This function is called by the new FAB. It displays a modal bottom sheet
-  // containing the form for the new intervention.
   void _showAddIntervencionModal(BuildContext context) {
-    // Close the FAB menu when opening the modal
     if (_isFabMenuOpen) {
       _toggleFabMenu();
     }
@@ -282,12 +297,10 @@ class _CaseDetailContentState extends State<CaseDetailContent>
             ),
           ),
           const SizedBox(height: 16),
-          // This button will appear slightly after the first one.
           ScaleTransition(
             alignment: Alignment.bottomRight,
             scale: CurvedAnimation(
               parent: _fabAnimationController,
-              // This interval makes the button animate between 20% and 80% of the duration.
               curve: Interval(0.0, 0.6, curve: Curves.easeOutCubic),
             ),
             child: FloatingActionButton.extended(
@@ -903,6 +916,7 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
       const DropdownMenuItem(value: 1, child: Text('Soporte Técnico')),
       const DropdownMenuItem(value: 2, child: Text('Mantenimiento')),
       const DropdownMenuItem(value: 3, child: Text('Instalación')),
+      const DropdownMenuItem(value: 4, child: Text('Actualizacion de datos')),
     ];
 
     // This Padding ensures the content is not hidden by the keyboard.
