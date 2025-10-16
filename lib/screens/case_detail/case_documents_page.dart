@@ -32,6 +32,21 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
     });
   }
 
+  Future<void> _openCamera() async {
+    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+
+    if (photo != null) {
+      // Leer los bytes del archivo
+      final bytes = await photo.readAsBytes();
+      final fileName = photo.name;
+
+      await Provider.of<AdjuntoProvider>(context, listen: false)
+          .uploadAdjuntoFromBytes(widget.caseId, fileName, bytes);
+    } else {
+      print('User canceled the camera.');
+    }
+  }
+
   // Option 1: Pick files (documents, etc.) - Compatible con Web y Mobile
   Future<void> _pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -99,6 +114,14 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
                 onTap: () {
                   Navigator.of(context).pop();
                   _pickFromGallery();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Cámara'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _openCamera();
                 },
               ),
               ListTile(
