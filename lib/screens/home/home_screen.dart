@@ -8,6 +8,7 @@ import 'package:sist_tickets/screens/home/new_case_tab.dart';
 import 'package:sist_tickets/screens/home/profile_tab.dart';
 
 import 'package:sist_tickets/screens/login/login_screen.dart';
+import 'package:sist_tickets/screens/reports/reports_content.dart';
 import 'package:sist_tickets/widgets/app_template.dart';
 import 'package:sist_tickets/screens/clientes/clientes_screen.dart';
 import 'package:sist_tickets/screens/usuarios/usuarios_screen.dart';
@@ -181,6 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(color: Colors.white)),
                           onTap: () {
                             Navigator.pop(context);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ReportsContent()));
                           },
                         ),
                       ],

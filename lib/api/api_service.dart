@@ -508,4 +508,18 @@ class ApiService {
           'Error al guardar la intervención: ${response.statusCode}');
     }
   }
+
+  Future<Map<String, dynamic>> getTicketStats() async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(Uri.parse(ApiConfig.ticketStats), headers: _headers),
+    );
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+          'Error al obtener estadísticas de tickets: ${response.statusCode}');
+    }
+  }
 }

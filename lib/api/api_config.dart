@@ -16,6 +16,7 @@ class ApiConfig {
   static const String tickets = '$baseUrl/tickets/filter/';
   static const String ticketById = '$baseUrl/tickets/';
   static const String ticketIntervenciones = '$baseUrl/ticket_intervencion/';
+  static const String ticketStats = '$baseUrl/tickets/stats/all/';
 
   // User endpoints
   static const String users = '$baseUrl/usuarios/';
