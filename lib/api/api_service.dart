@@ -9,10 +9,10 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
-import 'package:image_picker/image_picker.dart'; // Para XFile
-import 'package:http_parser/http_parser.dart'; // Para MediaType
 
 class ApiService {
+  String? getToken() => _token;
+
   Future<Map<String, dynamic>> createUser(Map<String, dynamic> userData) async {
     final response = await _makeAuthenticatedRequest(
       () => http.post(
@@ -541,76 +541,73 @@ class ApiService {
     }
   }
 
-  Future<Usuario> uploadProfilePhoto(int userId, XFile imageFile) async {
-    // Construimos la URL específica para la foto de perfil del usuario
-    final uri = Uri.parse('${ApiConfig.users}$userId/profile_photo');
-
-    // Usamos MultipartRequest para enviar archivos
+  // --- NUEVO MÉTODO PARA SUBIR FOTO ---
+  Future<Usuario> uploadProfilePhoto(
+      int userId, Uint8List imageBytes, String fileName) async {
+    final uri =
+        Uri.parse('${ApiConfig.baseUrl}/usuarios/$userId/profile_photo');
     final request = http.MultipartRequest('POST', uri);
 
-    // Añadimos el token de autenticación
-    if (_token != null) {
-      request.headers['Authorization'] = 'Bearer $_token';
-    } else {
-      throw Exception('Token no disponible para la solicitud autenticada.');
-    }
+    // Adjuntar las cabeceras de autorización
+    request.headers.addAll(_headers);
 
-    // Leemos los bytes del archivo
-    final bytes = await imageFile.readAsBytes();
-
-    // Extraemos la extensión/tipo de imagen
-    final mimeType = imageFile.mimeType ?? 'image/jpeg';
-    final fileType = mimeType.split('/').last;
-
-    // Creamos el MultipartFile
+    // Crear el MultipartFile desde los bytes
     final multipartFile = http.MultipartFile.fromBytes(
-      'file', // El nombre del campo que espera el backend
-      bytes,
-      filename: imageFile.name,
-      contentType: MediaType('image', fileType), // Ej: 'image/jpeg'
+      'file', // El nombre del campo esperado por el backend FastAPI (UploadFile = File(...))
+      imageBytes,
+      filename: fileName,
+      // Puedes especificar contentType si es necesario, ej: contentType: MediaType('image', 'jpeg')
     );
 
+    // Añadir el archivo a la petición
     request.files.add(multipartFile);
 
     try {
+      // Enviar la petición
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // El backend debe devolver el objeto Usuario actualizado
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-        return Usuario.fromJson(data);
+        // Decodificar la respuesta JSON y convertirla a un objeto Usuario
+        final responseData = jsonDecode(response.body);
+        return Usuario.fromJson(responseData);
       } else {
+        // Manejar errores
         print('Error al subir foto: ${response.statusCode} - ${response.body}');
         throw Exception(
-            'Error al subir la foto de perfil: ${response.statusCode}');
+            'Error al subir la foto de perfil: ${response.reasonPhrase}');
       }
     } catch (e) {
       print('Excepción al subir foto: $e');
-      rethrow;
+      throw Exception('Error de conexión al subir la foto.');
     }
   }
+  // --- FIN NUEVO MÉTODO PARA SUBIR FOTO ---
 
-  /// Elimina la foto de perfil de un usuario.
+  // --- NUEVO MÉTODO PARA BORRAR FOTO ---
   Future<Usuario> deleteProfilePhoto(int userId) async {
-    final uri = Uri.parse('${ApiConfig.users}$userId/profile_photo');
+    final uri =
+        Uri.parse('${ApiConfig.baseUrl}/usuarios/$userId/profile_photo');
 
+    // Usar _makeAuthenticatedRequest para manejar posible refresco de token
     final response = await _makeAuthenticatedRequest(
       () => http.delete(
         uri,
-        headers: _headers,
+        headers: _headers, // _headers ahora NO incluye Content-Type por defecto
       ),
     );
 
     if (response.statusCode == 200) {
-      // El backend debe devolver el objeto Usuario actualizado (sin foto)
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      return Usuario.fromJson(data);
+      // Decodificar la respuesta JSON y convertirla a un objeto Usuario
+      final responseData = jsonDecode(response.body);
+      return Usuario.fromJson(responseData);
     } else {
+      // Manejar errores
       print(
           'Error al eliminar foto: ${response.statusCode} - ${response.body}');
       throw Exception(
-          'Error al eliminar la foto de perfil: ${response.statusCode}');
+          'Error al eliminar la foto de perfil: ${response.reasonPhrase}');
     }
   }
+  // --- FIN NUEVO MÉTODO PARA BORRAR FOTO ---
 }
