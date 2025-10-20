@@ -138,6 +138,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
         onPressed: () {
           _showAddUsuarioModal(context);
         },
+        // ignore: sort_child_properties_last
         child: const Icon(Icons.add, color: Colors.white, size: 32),
         tooltip: 'Agregar usuario',
       ),

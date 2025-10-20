@@ -8,8 +8,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart'; // Para XFile
+import 'package:http_parser/http_parser.dart'; // Para MediaType
 
 class ApiService {
   Future<Map<String, dynamic>> createUser(Map<String, dynamic> userData) async {
@@ -520,6 +521,96 @@ class ApiService {
     } else {
       throw Exception(
           'Error al obtener estadísticas de tickets: ${response.statusCode}');
+    }
+  }
+
+  Future<String> getProfilePhotoUrl(int userId) async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(
+        Uri.parse(
+            ApiConfig.userProfilePhoto.replaceFirst('{id}', userId.toString())),
+        headers: _headers,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      // Devuelve la URL completa de la imagen
+      return ApiConfig.userProfilePhoto.replaceFirst('{id}', userId.toString());
+    } else {
+      throw Exception('Failed to load profile photo');
+    }
+  }
+
+  Future<Usuario> uploadProfilePhoto(int userId, XFile imageFile) async {
+    // Construimos la URL específica para la foto de perfil del usuario
+    final uri = Uri.parse('${ApiConfig.users}$userId/profile_photo');
+
+    // Usamos MultipartRequest para enviar archivos
+    final request = http.MultipartRequest('POST', uri);
+
+    // Añadimos el token de autenticación
+    if (_token != null) {
+      request.headers['Authorization'] = 'Bearer $_token';
+    } else {
+      throw Exception('Token no disponible para la solicitud autenticada.');
+    }
+
+    // Leemos los bytes del archivo
+    final bytes = await imageFile.readAsBytes();
+
+    // Extraemos la extensión/tipo de imagen
+    final mimeType = imageFile.mimeType ?? 'image/jpeg';
+    final fileType = mimeType.split('/').last;
+
+    // Creamos el MultipartFile
+    final multipartFile = http.MultipartFile.fromBytes(
+      'file', // El nombre del campo que espera el backend
+      bytes,
+      filename: imageFile.name,
+      contentType: MediaType('image', fileType), // Ej: 'image/jpeg'
+    );
+
+    request.files.add(multipartFile);
+
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // El backend debe devolver el objeto Usuario actualizado
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        return Usuario.fromJson(data);
+      } else {
+        print('Error al subir foto: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Error al subir la foto de perfil: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Excepción al subir foto: $e');
+      rethrow;
+    }
+  }
+
+  /// Elimina la foto de perfil de un usuario.
+  Future<Usuario> deleteProfilePhoto(int userId) async {
+    final uri = Uri.parse('${ApiConfig.users}$userId/profile_photo');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.delete(
+        uri,
+        headers: _headers,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      // El backend debe devolver el objeto Usuario actualizado (sin foto)
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return Usuario.fromJson(data);
+    } else {
+      print(
+          'Error al eliminar foto: ${response.statusCode} - ${response.body}');
+      throw Exception(
+          'Error al eliminar la foto de perfil: ${response.statusCode}');
     }
   }
 }

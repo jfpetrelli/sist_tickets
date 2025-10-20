@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:sist_tickets/api/api_config.dart';
 
 class ProfileTab extends StatelessWidget {
   final VoidCallback onLogout;
@@ -17,6 +18,11 @@ class ProfileTab extends StatelessWidget {
       builder: (context, userProvider, child) {
         final user = userProvider.user;
 
+        // Construye la URL de la foto de perfil
+        final profileImageUrl = user?.idPersonal != null
+            ? '${ApiConfig.baseUrl}/usuarios/${user!.idPersonal}/profile_photo'
+            : null;
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -31,7 +37,7 @@ class ProfileTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              _buildProfileCard(user?.nombre, user?.email),
+              _buildProfileCard(user?.nombre, user?.email, profileImageUrl),
               const SizedBox(height: 20),
               _buildStatsSection(),
               const SizedBox(height: 20),
@@ -43,7 +49,7 @@ class ProfileTab extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileCard(String? name, String? email) {
+  Widget _buildProfileCard(String? name, String? email, String? imageUrl) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -62,14 +68,17 @@ class ProfileTab extends StatelessWidget {
         ),
         child: Column(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 50,
               backgroundColor: Colors.white,
-              child: Icon(Icons.person, size: 50, color: kPrimaryColor),
+              backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+              child: imageUrl == null
+                  ? const Icon(Icons.person, size: 50, color: kPrimaryColor)
+                  : null,
             ),
             const SizedBox(height: 15),
             Text(
-              name ?? 'Nombre de Usuario', // Muestra el nombre del usuario
+              name ?? 'Nombre de Usuario',
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -78,7 +87,7 @@ class ProfileTab extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              email ?? 'email@example.com', // Muestra el email del usuario
+              email ?? 'email@example.com',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white.withOpacity(0.9),

@@ -7,6 +7,7 @@ class Usuario {
   final String? email;
   final DateTime? fechaIngreso;
   final DateTime? fechaEgreso;
+  final String? profilePhotoUrl;
 
   Usuario({
     required this.idPersonal,
@@ -17,6 +18,7 @@ class Usuario {
     this.email,
     this.fechaIngreso,
     this.fechaEgreso,
+    this.profilePhotoUrl,
   });
 
   factory Usuario.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ class Usuario {
       fechaEgreso: json['fecha_egreso'] != null
           ? DateTime.parse(json['fecha_egreso'])
           : null,
+      profilePhotoUrl: json['profile_photo_url'],
     );
   }
 }

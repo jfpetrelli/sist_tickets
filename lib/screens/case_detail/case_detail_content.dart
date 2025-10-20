@@ -35,6 +35,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
   // Controla si se muestra el menú de cambio de estado
   bool _showEstadoFabMenu = false;
 
+  // ignore: unused_element
   void _toggleEstadoFabMenu() {
     setState(() {
       _showEstadoFabMenu = !_showEstadoFabMenu;
@@ -75,7 +76,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     final intervencion = TicketIntervencion(
       idCaso: ticket.idCaso,
       idIntervencion: null,
-      fechaVencimiento: now, // El modelo requiere DateTime, se usa now aunque conceptualmente es null
+      fechaVencimiento:
+          now, // El modelo requiere DateTime, se usa now aunque conceptualmente es null
       fecha: now,
       idTipoIntervencion: 4, // Actualización de datos
       detalle: 'Cambio de estado a ${_nombreEstado(nuevoEstado)}',
@@ -479,7 +481,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
   }
 
   Widget _buildDetails(Ticket? ticket) {
-  // (fecha ya no se usa)
+    // (fecha ya no se usa)
     return Consumer<TiposCasoProvider>(
       builder: (context, tiposCasoProvider, child) {
         String tipoCasoNombre = '';
@@ -563,7 +565,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                         ticket?.fechaTentativaInicio != null
                             ? '${DateFormat('dd-MM-yyyy HH:mm').format(ticket!.fechaTentativaInicio!.toLocal())} hs'
                             : 'Fecha tentativa no asignada'),
-                            const SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     InkWell(
                       onTap: (ticket?.cliente?.domicilio != null)
                           ? () {
