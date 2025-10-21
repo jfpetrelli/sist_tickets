@@ -1,4 +1,4 @@
-// ignore: unnecessary_import
+// ignore_for_file: unnecessary_import
 import 'dart:typed_data'; // Necesario para Uint8List
 import 'package:flutter/foundation.dart'; // Necesario para kIsWeb
 import 'package:flutter/material.dart';
@@ -26,6 +26,101 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false; // Estado para indicar si se está subiendo
+  Map<String, int>?
+      _userStats; // Estado para guardar las estadísticas del usuario
+  bool _isLoadingStats = true; // Estado para la carga de estadísticas
+
+  @override
+  void initState() {
+    super.initState();
+    // Llamar a _fetchUserStats después de que el widget se construya
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchUserStats();
+    });
+  }
+
+  // --- Función para obtener y filtrar estadísticas ---
+  Future<void> _fetchUserStats() async {
+    setState(() {
+      _isLoadingStats = true;
+      _userStats = null; // Limpiar stats anteriores
+    });
+    try {
+      final apiService = context.read<ApiService>();
+      final currentUser = context.read<UserProvider>().user;
+
+      if (currentUser == null) {
+        throw Exception("Usuario no disponible");
+      }
+
+      final allStats = await apiService.getTicketStats();
+      final List<dynamic>? statsPorTecnico =
+          allStats['tickets_por_tecnico_y_estado'];
+
+      if (statsPorTecnico != null) {
+        final userSpecificStats = statsPorTecnico.firstWhere(
+          (stat) => stat['id_personal_asignado'] == currentUser.idPersonal,
+          orElse: () => null, // Devuelve null si no se encuentra el usuario
+        );
+
+        if (userSpecificStats != null) {
+          setState(() {
+            _userStats = {
+              'pendientes': userSpecificStats['pendientes'] ?? 0,
+              'en_progreso': userSpecificStats['en_progreso'] ?? 0,
+              'finalizados': userSpecificStats['finalizados'] ?? 0,
+              'cancelados': userSpecificStats['cancelados'] ?? 0,
+            };
+          });
+        } else {
+          // Si el usuario no tiene estadísticas, inicializamos a 0
+          setState(() {
+            _userStats = {
+              'pendientes': 0,
+              'en_progreso': 0,
+              'finalizados': 0,
+              'cancelados': 0,
+            };
+          });
+        }
+      } else {
+        // Si no hay datos por técnico, inicializamos a 0
+        setState(() {
+          _userStats = {
+            'pendientes': 0,
+            'en_progreso': 0,
+            'finalizados': 0,
+            'cancelados': 0,
+          };
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar estadísticas: $e'),
+            backgroundColor: kErrorColor,
+          ),
+        );
+      }
+      // Inicializar a 0 en caso de error
+      setState(() {
+        _userStats = {
+          'pendientes': 0,
+          'en_progreso': 0,
+          'finalizados': 0,
+          'cancelados': 0,
+        };
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingStats = false;
+        });
+      }
+    }
+  }
+  // --- FIN Nueva función ---
 
   // --- Función para mostrar opciones de imagen ---
   void _showImagePickerOptions(BuildContext context, Usuario user) {
@@ -84,7 +179,7 @@ class _ProfileTabState extends State<ProfileTab> {
         final Uint8List imageBytes = await image.readAsBytes();
         final String fileName = image.name;
 
-        // Llamar al método de ApiService (que crearemos luego)
+        // Llamar al método de ApiService
         final updatedUser = await apiService.uploadProfilePhoto(
             // ignore: unnecessary_cast
             user.idPersonal,
@@ -120,7 +215,7 @@ class _ProfileTabState extends State<ProfileTab> {
       final apiService = context.read<ApiService>();
       final userProvider = context.read<UserProvider>();
 
-      // Llamar al método de ApiService (que crearemos luego)
+      // Llamar al método de ApiService
       final updatedUser = await apiService.deleteProfilePhoto(user.idPersonal);
 
       // Actualizar el UserProvider
@@ -170,7 +265,7 @@ class _ProfileTabState extends State<ProfileTab> {
               const SizedBox(height: 20),
               _buildStatsSection(),
               const SizedBox(height: 20),
-              _buildSettingsSection(),
+              _buildSettingsSection(), // Mantenemos la sección de configuración
             ],
           ),
         );
@@ -179,22 +274,25 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Widget _buildProfileCard(BuildContext context, Usuario? user) {
-    // Obtener el token actual del ApiService
-    final apiService =
-        context.read<ApiService>(); // Obtener instancia de ApiService
-    final String? currentToken =
-        apiService.getToken(); // Método getter simple para el token
+    final apiService = context.read<ApiService>();
+    final String? currentToken = apiService.getToken();
 
-    // Construir la URL del ENDPOINT que sirve la imagen
     String? profileImageEndpointUrl;
     if (user?.idPersonal != null &&
         user?.profilePhotoUrl != null &&
         user!.profilePhotoUrl!.isNotEmpty) {
       profileImageEndpointUrl =
           '${ApiConfig.baseUrl}/usuarios/${user.idPersonal}/profile_photo';
-      print(
-          "URL del endpoint de imagen de perfil: $profileImageEndpointUrl"); // Log para depuración
+      print("URL del endpoint de imagen de perfil: $profileImageEndpointUrl");
     }
+
+    // --- Extraer valores de _userStats o mostrar '...' si está cargando ---
+    final String casosCompletados =
+        _isLoadingStats ? '...' : (_userStats?['finalizados'] ?? 0).toString();
+    final String casosPendientes =
+        _isLoadingStats ? '...' : (_userStats?['pendientes'] ?? 0).toString();
+    final String casosEnProgreso =
+        _isLoadingStats ? '...' : (_userStats?['en_progreso'] ?? 0).toString();
 
     return Card(
       elevation: 4,
@@ -214,31 +312,24 @@ class _ProfileTabState extends State<ProfileTab> {
         ),
         child: Column(
           children: [
-            // --- Widget de Foto de Perfil con Botón ---
             Stack(
               alignment: Alignment.bottomRight,
               children: [
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.white,
-                  // Usar NetworkImage con headers si la URL del endpoint existe Y tenemos token
                   backgroundImage: (profileImageEndpointUrl != null &&
                           currentToken != null)
                       ? NetworkImage(
                           profileImageEndpointUrl,
-                          headers: {
-                            'Authorization': 'Bearer $currentToken'
-                          }, // <- Pasar el token aquí
+                          headers: {'Authorization': 'Bearer $currentToken'},
                         )
-                      : null, // Si no hay URL o token, no establece backgroundImage
-                  child:
-                      (profileImageEndpointUrl == null || currentToken == null)
-                          ? const Icon(Icons.person,
-                              size: 50,
-                              color: kPrimaryColor) // Ícono por defecto
-                          : null, // Si hay imagen y token, no muestra el ícono
+                      : null,
+                  child: (profileImageEndpointUrl == null ||
+                          currentToken == null)
+                      ? const Icon(Icons.person, size: 50, color: kPrimaryColor)
+                      : null,
                 ),
-                // --- El resto del Stack (indicador de carga y botón de edición) permanece igual ---
                 if (_isUploading)
                   const Positioned(
                       bottom: 0,
@@ -276,7 +367,6 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
               ],
             ),
-            // --- El resto del Card permanece igual ---
             const SizedBox(height: 15),
             Text(
               user?.nombre ?? 'Nombre de Usuario',
@@ -294,13 +384,54 @@ class _ProfileTabState extends State<ProfileTab> {
                 color: Colors.white.withOpacity(0.9),
               ),
             ),
+            if (user?.idTipo == 2) // Chequear si es Admin (tipo 2)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25), // Un fondo sutil
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Administrador',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            if (user?.idTipo == 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25), // Un fondo sutil
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Técnico',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('Casos\nCompletados', '45'),
-                _buildStatItem('Casos\nPendientes', '12'),
-                _buildStatItem('Valoración\nPromedio', '4.8'),
+                // --- Usar los valores de _userStats ---
+                _buildStatItem('Casos\nCompletados', casosCompletados),
+                _buildStatItem('Casos\nPendientes', casosPendientes),
+                _buildStatItem('Casos\nEn Progreso', casosEnProgreso),
               ],
             ),
           ],
@@ -309,7 +440,6 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  // ... (El resto de los métodos _buildStatItem, _buildStatsSection, _buildSettingsSection, _buildStatRow, _buildSettingTile permanecen igual) ...
   Widget _buildStatItem(String label, String value) {
     return Column(
       children: [
