@@ -8,6 +8,7 @@ import 'package:sist_tickets/api/api_config.dart';
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
 import '../../api/api_service.dart'; // Importar ApiService
+import 'change_password_screen.dart';
 import '../../models/usuario.dart'; // Importar Usuario
 
 class ProfileTab extends StatefulWidget {
@@ -121,6 +122,8 @@ class _ProfileTabState extends State<ProfileTab> {
     }
   }
   // --- FIN Nueva función ---
+
+  // Eliminado: diálogo y lógica inline de cambio de contraseña. Ahora se usa una pantalla dedicada.
 
   // --- Función para mostrar opciones de imagen ---
   void _showImagePickerOptions(BuildContext context, Usuario user) {
@@ -544,7 +547,13 @@ class _ProfileTabState extends State<ProfileTab> {
               _buildSettingTile(
                 'Cambiar Contraseña',
                 Icons.lock_outline,
-                () => print('Cambiar Contraseña'),
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ChangePasswordScreen(),
+                    ),
+                  );
+                },
               ),
               const Divider(height: 1),
               _buildSettingTile(

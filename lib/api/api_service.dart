@@ -49,7 +49,8 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> updateUser(int userId, Map<String, dynamic> userData) async {
+  Future<Map<String, dynamic>> updateUser(
+      int userId, Map<String, dynamic> userData) async {
     final url = Uri.parse('${ApiConfig.users}$userId');
     print('Updating user at: $url');
     print('Data: ${jsonEncode(userData)}');
@@ -66,8 +67,42 @@ class ApiService {
       print('User updated successfully');
       return jsonDecode(response.body);
     } else {
-      print('Error al actualizar usuario: ${response.statusCode} - ${response.body}');
-      throw Exception('Error al actualizar el usuario: ${response.reasonPhrase}');
+      print(
+          'Error al actualizar usuario: ${response.statusCode} - ${response.body}');
+      throw Exception(
+          'Error al actualizar el usuario: ${response.reasonPhrase}');
+    }
+  }
+
+  Future<Map<String, dynamic>> userChangePassword(
+    int userId,
+    String oldPassword,
+    String newPassword,
+  ) async {
+    final url = Uri.parse('${ApiConfig.users}$userId/change_password');
+    print(url);
+
+    print('Changing password for user: $userId');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.put(
+        url,
+        headers: _headers,
+        body: jsonEncode({
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        }),
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      print('Password changed successfully');
+      return jsonDecode(response.body);
+    } else {
+      print(
+          'Error al cambiar contraseña: ${response.statusCode} - ${response.body}');
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['detail'] ?? 'Error al cambiar la contraseña');
     }
   }
 
@@ -88,13 +123,16 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> updateClient(int clientId, Map<String, dynamic> clientData) async {
-    final url = Uri.parse('${ApiConfig.clients}$clientId'); // Asume /clientes/{id}
+  Future<Map<String, dynamic>> updateClient(
+      int clientId, Map<String, dynamic> clientData) async {
+    final url =
+        Uri.parse('${ApiConfig.clients}$clientId'); // Asume /clientes/{id}
     print('Updating client at: $url');
     print('Data: ${jsonEncode(clientData)}');
 
     final response = await _makeAuthenticatedRequest(
-      () => http.put( // O http.patch si tu backend usa PATCH
+      () => http.put(
+        // O http.patch si tu backend usa PATCH
         url,
         headers: _headers,
         body: jsonEncode(clientData),
@@ -104,8 +142,10 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      print('Error al actualizar cliente: ${response.statusCode} - ${response.body}');
-      throw Exception('Error al actualizar el cliente: ${response.reasonPhrase}');
+      print(
+          'Error al actualizar cliente: ${response.statusCode} - ${response.body}');
+      throw Exception(
+          'Error al actualizar el cliente: ${response.reasonPhrase}');
     }
   }
 
@@ -170,8 +210,6 @@ class ApiService {
       debugPrint('💥 Error al eliminar de storage: $e');
     }
   }
-
-
 
   // Modifica el login para que espere ambos tokens y los guarde
   Future<Map<String, dynamic>> login(String email, String password) async {

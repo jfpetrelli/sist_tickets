@@ -110,7 +110,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 160),
+                        const SizedBox(height: 80),
+                        // Logo de la compañía
+                        // Logo de la compañía circular
+                        ClipOval(
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            color: Colors.white,
+                            child: Image.asset(
+                              'assets/cif.png',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(
+                                  Icons.business,
+                                  size: 120,
+                                  color: kPrimaryColor,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         const Text(
                           'Iniciar Sesión',
                           style: TextStyle(
@@ -119,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 16),
                         if (_errorMessage != null)
                           Container(
                             padding: const EdgeInsets.all(12),
@@ -283,61 +306,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                'O continuar con',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildSocialButton('google'),
-                            _buildSocialButton('facebook'),
-                            _buildSocialButton('apple'),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '¿No tienes una cuenta?',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {},
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.only(left: 8),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text(
-                                'Regístrate',
-                                style: TextStyle(
-                                  color: kPrimaryColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
@@ -355,36 +323,5 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Widget _buildSocialButton(String type) {
-    final iconPath = 'assets/icons/$type.png';
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Image.asset(
-            iconPath,
-            width: 24,
-            height: 24,
-            // Esto es útil si los iconos no se cargan
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 24,
-              );
-            },
-          ),
-        ),
-      ),
-    );
   }
 }
