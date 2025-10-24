@@ -5,6 +5,7 @@ import '../models/usuario.dart';
 import '../api/api_service.dart';
 
 class UserListProvider extends ChangeNotifier {
+  
   Future<void> addUserWithPassword(
       Usuario nuevoUsuario, String password) async {
     isLoading = true;
@@ -80,5 +81,32 @@ class UserListProvider extends ChangeNotifier {
     }
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<bool> updateUser(Usuario usuarioActualizado) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final userData = usuarioActualizado.toJson();
+
+      // Llamar al método de ApiService que agregamos
+      await _apiService.updateUser(usuarioActualizado.idPersonal, userData);
+
+      // Actualizar la lista local para reflejar el cambio inmediatamente
+      final index = _users.indexWhere((u) => u.idPersonal == usuarioActualizado.idPersonal);
+      if (index != -1) {
+        _users[index] = usuarioActualizado;
+      }
+      errorMessage = null;
+      isLoading = false;
+      notifyListeners();
+      return true; // Indicar éxito
+    } catch (e) {
+      errorMessage = 'No se pudo actualizar el usuario: ${e.toString()}';
+      isLoading = false;
+      notifyListeners();
+      print('Error en updateUser Provider: $e'); // Log para depuración
+      return false; // Indicar fallo
+    }
   }
 }

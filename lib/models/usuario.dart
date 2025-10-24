@@ -38,4 +38,19 @@ class Usuario {
       profilePhotoUrl: json['profile_photo_url'],
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'id_sucursal': idSucursal,
+      'id_tipo': idTipo,
+      'nombre': nombre,
+      'telefono_movil': telefonoMovil,
+      'email': email,
+      // Convertir DateTime a String ISO 8601 si no es nulo
+      // El backend (Python) entenderá este formato
+      'fecha_ingreso': fechaIngreso?.toIso8601String(),
+      'fecha_egreso': fechaEgreso?.toIso8601String(),
+      'profile_photo_url': profilePhotoUrl,
+      // No incluimos 'id_personal' porque se usa en la URL del endpoint (ej: /usuarios/123)
+    };
+  }
 }

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_list_provider.dart';
-
 import '../../models/usuario.dart';
-
-// import '../../providers/usuario_provider.dart'; // Debes crear este provider similar a ClientProvider
+import 'edit_usuario_screen.dart';
 
 class UsuariosScreen extends StatefulWidget {
   const UsuariosScreen({super.key});
@@ -25,6 +23,24 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
         return const _AddUsuarioForm();
       },
     );
+  }
+
+  Future<void> _refreshUsuarios() async {
+    await Provider.of<UserListProvider>(context, listen: false)
+        .fetchUsers(userType: null);
+  }
+
+  void _navigateToEditUsuario(BuildContext context, Usuario usuario) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        // Pasa el usuario a la nueva pantalla
+        builder: (context) => EditUsuarioScreen(usuario: usuario),
+      ),
+    ).then((_) {
+      // Refresca la lista cuando se vuelve de la pantalla de edición
+      _refreshUsuarios();
+    });
   }
 
   String _search = '';
@@ -94,34 +110,36 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: ListTile(
-                                dense: true,
-                                visualDensity:
-                                    const VisualDensity(vertical: -4),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 0),
-                                leading: Container(
-                                  alignment: Alignment.center,
-                                  width: 40,
-                                  child: const Icon(Icons.person,
-                                      color: Colors.blueAccent),
-                                ),
-                                title: Text(
-                                  usuario.nombre,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14),
-                                ),
-                                subtitle: Text(
-                                  [usuario.email, usuario.telefonoMovil]
-                                      .where((e) => (e ?? '').isNotEmpty)
-                                      .join(' | '),
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.black54),
-                                ),
-                                trailing: Text('Tipo: ${usuario.idTipo}',
+                                  dense: true,
+                                  visualDensity:
+                                      const VisualDensity(vertical: -4),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 0),
+                                  leading: Container(
+                                    alignment: Alignment.center,
+                                    width: 40,
+                                    child: const Icon(Icons.person,
+                                        color: Colors.blueAccent),
+                                  ),
+                                  title: Text(
+                                    usuario.nombre,
                                     style: const TextStyle(
-                                        fontSize: 12, color: Colors.black87)),
-                              ),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  ),
+                                  subtitle: Text(
+                                    [usuario.email, usuario.telefonoMovil]
+                                        .where((e) => (e ?? '').isNotEmpty)
+                                        .join(' | '),
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.black54),
+                                  ),
+                                  trailing: Text('Tipo: ${usuario.idTipo}',
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.black87)),
+                                  onTap: () {
+                                    _navigateToEditUsuario(context, usuario);
+                                  }),
                             );
                           },
                         ),

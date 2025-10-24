@@ -13,6 +13,26 @@ import 'package:dio/dio.dart';
 class ApiService {
   String? getToken() => _token;
 
+  Map<String, String> get _headers {
+    return {
+      'Content-Type': 'application/json',
+      if (_token != null) 'Authorization': 'Bearer $_token',
+    };
+  }
+
+  void setToken(String token) async {
+    try {
+      debugPrint('Guardando token en storage...');
+      _token = token;
+      await _writeSecurely('access_token', token);
+      debugPrint('✅ Token guardado exitosamente');
+    } catch (e) {
+      debugPrint('Error al guardar token: $e');
+      // Aunque falle el storage, mantenemos el token en memoria
+      _token = token;
+    }
+  }
+
   Future<Map<String, dynamic>> createUser(Map<String, dynamic> userData) async {
     final response = await _makeAuthenticatedRequest(
       () => http.post(
@@ -26,6 +46,28 @@ class ApiService {
     } else {
       print('Error al crear el usuario:${response.body}');
       throw Exception('Error al crear el usuario: ${response.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateUser(int userId, Map<String, dynamic> userData) async {
+    final url = Uri.parse('${ApiConfig.users}$userId');
+    print('Updating user at: $url');
+    print('Data: ${jsonEncode(userData)}');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.put(
+        url,
+        headers: _headers,
+        body: jsonEncode(userData),
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      print('User updated successfully');
+      return jsonDecode(response.body);
+    } else {
+      print('Error al actualizar usuario: ${response.statusCode} - ${response.body}');
+      throw Exception('Error al actualizar el usuario: ${response.reasonPhrase}');
     }
   }
 
@@ -129,25 +171,7 @@ class ApiService {
     }
   }
 
-  Map<String, String> get _headers {
-    return {
-      'Content-Type': 'application/json',
-      if (_token != null) 'Authorization': 'Bearer $_token',
-    };
-  }
 
-  void setToken(String token) async {
-    try {
-      debugPrint('Guardando token en storage...');
-      _token = token;
-      await _writeSecurely('access_token', token);
-      debugPrint('✅ Token guardado exitosamente');
-    } catch (e) {
-      debugPrint('Error al guardar token: $e');
-      // Aunque falle el storage, mantenemos el token en memoria
-      _token = token;
-    }
-  }
 
   // Modifica el login para que espere ambos tokens y los guarde
   Future<Map<String, dynamic>> login(String email, String password) async {
