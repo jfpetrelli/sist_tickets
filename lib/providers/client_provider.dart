@@ -45,4 +45,28 @@ class ClientProvider extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  Future<bool> updateClient(Cliente clienteActualizado) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      // Llamar al método de ApiService (que crearemos en el paso 4)
+      await _apiService.updateClient(clienteActualizado.idCliente, clienteActualizado.toJson());
+
+      // Actualizar la lista local
+      final index = _clients.indexWhere((c) => c.idCliente == clienteActualizado.idCliente);
+      if (index != -1) {
+        _clients[index] = clienteActualizado;
+      }
+      errorMessage = null;
+      isLoading = false;
+      notifyListeners();
+      return true; // Indicar éxito
+    } catch (e) {
+      errorMessage = 'No se pudo actualizar el cliente: ${e.toString()}';
+      isLoading = false;
+      notifyListeners();
+      return false; // Indicar fallo
+    }
+  }
 }

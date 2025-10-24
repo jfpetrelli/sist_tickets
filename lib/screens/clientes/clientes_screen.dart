@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/client_provider.dart';
 import '../../models/cliente.dart';
+import 'edit_cliente_screen.dart';
 
 class ClientesScreen extends StatefulWidget {
   const ClientesScreen({super.key});
@@ -24,6 +25,21 @@ class _ClientesScreenState extends State<ClientesScreen> {
         return const _AddClienteForm();
       },
     );
+  }
+
+  // --- NUEVA FUNCIÓN DE NAVEGACIÓN ---
+  void _navigateToEditCliente(BuildContext context, Cliente cliente) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        // Pasa el cliente a la nueva pantalla
+        builder: (context) => EditClienteScreen(cliente: cliente), 
+      ),
+    ).then((_) {
+      // Opcional: Si quieres que la lista se refresque automáticamente
+      // al volver de la pantalla de edición, descomenta la siguiente línea:
+      // _refreshClientes();
+    });
   }
 
   String _search = '';
@@ -137,6 +153,12 @@ class _ClientesScreenState extends State<ClientesScreen> {
                                         ),
                                       )
                                     : null,
+                                
+                                // --- MODIFICACIÓN: ACCIÓN AL TOCAR ---
+                                onTap: () {
+                                  _navigateToEditCliente(context, cliente);
+                                },
+                                // --- FIN DE LA MODIFICACIÓN ---
                               ),
                             );
                           },
@@ -162,7 +184,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
   }
 }
 
-// Formulario para agregar un nuevo cliente (estructura base, igual a intervención)
+// Formulario para agregar un nuevo cliente (sin cambios)
 class _AddClienteForm extends StatefulWidget {
   const _AddClienteForm();
 

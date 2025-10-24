@@ -46,6 +46,27 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> updateClient(int clientId, Map<String, dynamic> clientData) async {
+    final url = Uri.parse('${ApiConfig.clients}$clientId'); // Asume /clientes/{id}
+    print('Updating client at: $url');
+    print('Data: ${jsonEncode(clientData)}');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.put( // O http.patch si tu backend usa PATCH
+        url,
+        headers: _headers,
+        body: jsonEncode(clientData),
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print('Error al actualizar cliente: ${response.statusCode} - ${response.body}');
+      throw Exception('Error al actualizar el cliente: ${response.reasonPhrase}');
+    }
+  }
+
   String? _token;
   final _storage = const FlutterSecureStorage();
   final Dio _dio = Dio();
