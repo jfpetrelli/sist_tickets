@@ -27,6 +27,10 @@ class _ClientesScreenState extends State<ClientesScreen> {
     );
   }
 
+  Future<void> _refreshClientes() async {
+    await Provider.of<ClientProvider>(context, listen: false).fetchClients();
+  }
+
   // --- NUEVA FUNCIÓN DE NAVEGACIÓN ---
   void _navigateToEditCliente(BuildContext context, Cliente cliente) {
     Navigator.push(
@@ -36,9 +40,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
         builder: (context) => EditClienteScreen(cliente: cliente), 
       ),
     ).then((_) {
-      // Opcional: Si quieres que la lista se refresque automáticamente
-      // al volver de la pantalla de edición, descomenta la siguiente línea:
-      // _refreshClientes();
+      _refreshClientes();
     });
   }
 
@@ -50,9 +52,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
         Provider.of<ClientProvider>(context, listen: false).fetchClients());
   }
 
-  Future<void> _refreshClientes() async {
-    await Provider.of<ClientProvider>(context, listen: false).fetchClients();
-  }
+
 
   @override
   Widget build(BuildContext context) {
