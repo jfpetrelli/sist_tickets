@@ -29,7 +29,8 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
   late TextEditingController _idSucursalController;
   late TextEditingController _idTipoController;
   DateTime? _fechaIngreso; // Usamos DateTime? para el DatePicker
-  DateTime? _fechaEgreso;
+  bool _activo = true; // Toggle de estado activo (1/0)
+  DateTime? _fechaEgreso; // Se carga automáticamente al desactivar
 
   // Formateador de fecha
   final DateFormat _dateFormatter = DateFormat('dd/MM/yyyy');
@@ -39,12 +40,16 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     super.initState();
     // Inicializar controladores con los datos del usuario
     _nombreController = TextEditingController(text: widget.usuario.nombre);
-    _telefonoMovilController = TextEditingController(text: widget.usuario.telefonoMovil ?? '');
+    _telefonoMovilController =
+        TextEditingController(text: widget.usuario.telefonoMovil ?? '');
     _emailController = TextEditingController(text: widget.usuario.email ?? '');
-    _idSucursalController = TextEditingController(text: widget.usuario.idSucursal.toString());
-    _idTipoController = TextEditingController(text: widget.usuario.idTipo.toString());
+    _idSucursalController =
+        TextEditingController(text: widget.usuario.idSucursal.toString());
+    _idTipoController =
+        TextEditingController(text: widget.usuario.idTipo.toString());
     _fechaIngreso = widget.usuario.fechaIngreso;
     _fechaEgreso = widget.usuario.fechaEgreso;
+    _activo = widget.usuario.activo == true;
   }
 
   @override
@@ -60,24 +65,19 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
 
   // --- Selección de Fecha ---
   Future<void> _selectDate(BuildContext context, bool isIngreso) async {
+    // Solo manejamos fecha de ingreso, el parámetro se mantiene para mínima intrusión
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: (isIngreso ? _fechaIngreso : _fechaEgreso) ?? DateTime.now(),
+      initialDate: _fechaIngreso ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != (isIngreso ? _fechaIngreso : _fechaEgreso)) {
+    if (picked != null && picked != _fechaIngreso) {
       setState(() {
-        if (isIngreso) {
-          _fechaIngreso = picked;
-        } else {
-          _fechaEgreso = picked;
-        }
+        _fechaIngreso = picked;
       });
     }
   }
-
-  
 
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) {
@@ -92,18 +92,25 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     final updatedUsuario = Usuario(
       idPersonal: widget.usuario.idPersonal, // Mantener el ID original
       nombre: _nombreController.text,
-      telefonoMovil: _telefonoMovilController.text.isNotEmpty ? _telefonoMovilController.text : null,
+      telefonoMovil: _telefonoMovilController.text.isNotEmpty
+          ? _telefonoMovilController.text
+          : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      idSucursal: int.tryParse(_idSucursalController.text) ?? widget.usuario.idSucursal,
+      idSucursal:
+          int.tryParse(_idSucursalController.text) ?? widget.usuario.idSucursal,
       idTipo: int.tryParse(_idTipoController.text) ?? widget.usuario.idTipo,
       fechaIngreso: _fechaIngreso,
+      // Si el usuario pasa de activo a inactivo, cargar fecha de egreso = NOW
+      // Si ya estaba inactivo o pasa a activo, mantener el valor existente
       fechaEgreso: _fechaEgreso,
-      profilePhotoUrl: widget.usuario.profilePhotoUrl, // Mantener URL de foto existente
+      profilePhotoUrl:
+          widget.usuario.profilePhotoUrl, // Mantener URL de foto existente
+      activo: _activo,
     );
 
     try {
-
-      final success = await context.read<UserListProvider>().updateUser(updatedUsuario);
+      final success =
+          await context.read<UserListProvider>().updateUser(updatedUsuario);
 
       if (mounted) {
         if (success) {
@@ -118,21 +125,22 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
           // Si falla, mostramos el error que guardó el provider
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.read<UserListProvider>().errorMessage ?? 'Error al actualizar el usuario.'),
+              content: Text(context.read<UserListProvider>().errorMessage ??
+                  'Error al actualizar el usuario.'),
               backgroundColor: kErrorColor,
             ),
           );
         }
       }
     } catch (e) {
-       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(
-             content: Text('Error inesperado: ${e.toString()}'),
-             backgroundColor: kErrorColor,
-           ),
-         );
-       }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error inesperado: ${e.toString()}'),
+            backgroundColor: kErrorColor,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -188,6 +196,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                 },
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -196,7 +205,9 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value != null && value.isNotEmpty && !value.contains('@')) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      !value.contains('@')) {
                     return 'Ingrese un email válido';
                   }
                   return null; // Email es opcional pero si se ingresa, debe ser válido
@@ -216,13 +227,13 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _idSucursalController,
-                      decoration: const InputDecoration(
-                        labelText: 'ID Sucursal',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                       validator: (value) {
+                        controller: _idSucursalController,
+                        decoration: const InputDecoration(
+                          labelText: 'ID Sucursal',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Requerido';
                           }
@@ -230,19 +241,18 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                             return 'Número inválido';
                           }
                           return null;
-                       }
-                    ),
+                        }),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextFormField(
-                      controller: _idTipoController,
-                      decoration: const InputDecoration(
-                        labelText: 'ID Tipo',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
+                        controller: _idTipoController,
+                        decoration: const InputDecoration(
+                          labelText: 'ID Tipo',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Requerido';
                           }
@@ -250,51 +260,51 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                             return 'Número inválido';
                           }
                           return null;
-                       }
-                    ),
+                        }),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              // --- Campos de Fecha ---
+              // --- Campo de Fecha de Ingreso y estado Activo ---
               Row(
                 children: [
                   Expanded(
                     child: InkWell(
                       onTap: () => _selectDate(context, true),
                       child: InputDecorator(
-                         decoration: const InputDecoration(
-                           labelText: 'Fecha Ingreso',
-                           border: OutlineInputBorder(),
-                         ),
-                         child: Text(
-                           _fechaIngreso != null
-                             ? _dateFormatter.format(_fechaIngreso!)
-                             : 'Seleccionar...',
-                           style: const TextStyle(fontSize: 16),
-                         ),
-                       ),
+                        decoration: const InputDecoration(
+                          labelText: 'Fecha Ingreso',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(
+                          _fechaIngreso != null
+                              ? _dateFormatter.format(_fechaIngreso!)
+                              : 'Seleccionar...',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                   Expanded(
-                    child: InkWell(
-                      onTap: () => _selectDate(context, false),
-                      child: InputDecorator(
-                         decoration: InputDecoration(
-                           labelText: 'Fecha Egreso',
-                           border: const OutlineInputBorder(),
-                         ),
-                         child: Text(
-                           _fechaEgreso != null
-                             ? _dateFormatter.format(_fechaEgreso!)
-                             : 'Opcional...',
-                           style: TextStyle(
-                             fontSize: 16,
-                             color: _fechaEgreso == null ? Colors.grey[600] : null,
-                           ),
-                         ),
-                       ),
+                  Expanded(
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      title: const Text('Activo'),
+                      value: _activo,
+                      onChanged: (val) {
+                        setState(() {
+                          // Si pasa de ACTIVO (true) a INACTIVO (false), cargar fecha de egreso = NOW
+                          if (_activo == true && val == false) {
+                            _fechaEgreso = DateTime.now();
+                          }
+                          // Si pasa de INACTIVO a ACTIVO, limpiar fecha de egreso
+                          else if (_activo == false && val == true) {
+                            _fechaEgreso = null;
+                          }
+                          _activo = val;
+                        });
+                      },
+                      activeColor: Theme.of(context).primaryColor,
                     ),
                   ),
                 ],

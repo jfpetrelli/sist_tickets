@@ -20,6 +20,7 @@ class EditClienteScreen extends StatefulWidget {
 class _EditClienteScreenState extends State<EditClienteScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false; // Para el indicador de guardado
+  bool _activo = true; // Toggle de estado activo
 
   // Controladores para cada campo del cliente
   late TextEditingController _razonSocialController;
@@ -38,17 +39,27 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
   void initState() {
     super.initState();
     // Inicializar controladores con los datos del cliente
-    _razonSocialController = TextEditingController(text: widget.cliente.razonSocial ?? '');
-    _domicilioController = TextEditingController(text: widget.cliente.domicilio ?? '');
-    _idLocalidadController = TextEditingController(text: widget.cliente.idLocalidad?.toString() ?? '');
-    _nombreLocalidadController = TextEditingController(text: widget.cliente.nombreLocalidad ?? '');
-    _nombreProvinciaController = TextEditingController(text: widget.cliente.nombreProvincia ?? '');
-    _codigoPostalController = TextEditingController(text: widget.cliente.codigoPostal ?? '');
-    _telefonoController = TextEditingController(text: widget.cliente.telefono ?? '');
-    _telefonoMovilController = TextEditingController(text: widget.cliente.telefonoMovil ?? '');
+    _razonSocialController =
+        TextEditingController(text: widget.cliente.razonSocial ?? '');
+    _domicilioController =
+        TextEditingController(text: widget.cliente.domicilio ?? '');
+    _idLocalidadController = TextEditingController(
+        text: widget.cliente.idLocalidad?.toString() ?? '');
+    _nombreLocalidadController =
+        TextEditingController(text: widget.cliente.nombreLocalidad ?? '');
+    _nombreProvinciaController =
+        TextEditingController(text: widget.cliente.nombreProvincia ?? '');
+    _codigoPostalController =
+        TextEditingController(text: widget.cliente.codigoPostal ?? '');
+    _telefonoController =
+        TextEditingController(text: widget.cliente.telefono ?? '');
+    _telefonoMovilController =
+        TextEditingController(text: widget.cliente.telefonoMovil ?? '');
     _emailController = TextEditingController(text: widget.cliente.email ?? '');
     _cuitController = TextEditingController(text: widget.cliente.cuit ?? '');
-    _idTipoClienteController = TextEditingController(text: widget.cliente.idTipoCliente?.toString() ?? '');
+    _idTipoClienteController = TextEditingController(
+        text: widget.cliente.idTipoCliente?.toString() ?? '');
+    _activo = widget.cliente.activo;
   }
 
   @override
@@ -81,21 +92,35 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
     final updatedCliente = Cliente(
       idCliente: widget.cliente.idCliente, // Mantener el ID original
       razonSocial: _razonSocialController.text,
-      domicilio: _domicilioController.text.isNotEmpty ? _domicilioController.text : null,
-      idLocalidad: int.tryParse(_idLocalidadController.text),
-      nombreLocalidad: _nombreLocalidadController.text.isNotEmpty ? _nombreLocalidadController.text : null,
-      nombreProvincia: _nombreProvinciaController.text.isNotEmpty ? _nombreProvinciaController.text : null,
-      codigoPostal: _codigoPostalController.text.isNotEmpty ? _codigoPostalController.text : null,
-      telefono: _telefonoController.text.isNotEmpty ? _telefonoController.text : null,
-      telefonoMovil: _telefonoMovilController.text.isNotEmpty ? _telefonoMovilController.text : null,
+      domicilio: _domicilioController.text.isNotEmpty
+          ? _domicilioController.text
+          : null,
+      // ID Localidad ya no es editable desde esta pantalla; preservamos el valor original
+      idLocalidad: widget.cliente.idLocalidad,
+      nombreLocalidad: _nombreLocalidadController.text.isNotEmpty
+          ? _nombreLocalidadController.text
+          : null,
+      nombreProvincia: _nombreProvinciaController.text.isNotEmpty
+          ? _nombreProvinciaController.text
+          : null,
+      codigoPostal: _codigoPostalController.text.isNotEmpty
+          ? _codigoPostalController.text
+          : null,
+      telefono:
+          _telefonoController.text.isNotEmpty ? _telefonoController.text : null,
+      telefonoMovil: _telefonoMovilController.text.isNotEmpty
+          ? _telefonoMovilController.text
+          : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
       cuit: _cuitController.text.isNotEmpty ? _cuitController.text : null,
       idTipoCliente: int.tryParse(_idTipoClienteController.text),
+      activo: _activo,
     );
 
     try {
       // Llamar al provider para actualizar el cliente
-      final success = await context.read<ClientProvider>().updateClient(updatedCliente);
+      final success =
+          await context.read<ClientProvider>().updateClient(updatedCliente);
 
       if (mounted) {
         if (success) {
@@ -116,14 +141,14 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
         }
       }
     } catch (e) {
-       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(
-             content: Text('Error: ${e.toString()}'),
-             backgroundColor: kErrorColor,
-           ),
-         );
-       }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: kErrorColor,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -142,7 +167,8 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
         foregroundColor: Colors.white,
         actions: [
           _isLoading
-              ? const Padding( // Muestra el indicador de carga si está guardando
+              ? const Padding(
+                  // Muestra el indicador de carga si está guardando
                   padding: EdgeInsets.all(16.0),
                   child: SizedBox(
                     width: 20,
@@ -179,6 +205,7 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
                 },
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _domicilioController,
                 decoration: const InputDecoration(
@@ -189,29 +216,29 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
               ),
               const SizedBox(height: 16),
               Row(
-                 children: [
-                   Expanded(
-                     child: TextFormField(
-                       controller: _nombreLocalidadController,
-                       decoration: const InputDecoration(
-                         labelText: 'Localidad',
-                         border: OutlineInputBorder(),
-                       ),
-                     ),
-                   ),
-                   const SizedBox(width: 8),
-                   Expanded(
-                     child: TextFormField(
-                       controller: _nombreProvinciaController,
-                       decoration: const InputDecoration(
-                         labelText: 'Provincia',
-                         border: OutlineInputBorder(),
-                       ),
-                     ),
-                   ),
-                 ],
-               ),
-               const SizedBox(height: 16),
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _nombreLocalidadController,
+                      decoration: const InputDecoration(
+                        labelText: 'Localidad',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _nombreProvinciaController,
+                      decoration: const InputDecoration(
+                        labelText: 'Provincia',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _codigoPostalController,
                 decoration: const InputDecoration(
@@ -221,30 +248,30 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
               ),
               const SizedBox(height: 16),
               Row(
-                 children: [
-                   Expanded(
-                     child: TextFormField(
-                       controller: _telefonoController,
-                       decoration: const InputDecoration(
-                         labelText: 'Teléfono Fijo',
-                         border: OutlineInputBorder(),
-                       ),
-                       keyboardType: TextInputType.phone,
-                     ),
-                   ),
-                   const SizedBox(width: 8),
-                   Expanded(
-                     child: TextFormField(
-                       controller: _telefonoMovilController,
-                       decoration: const InputDecoration(
-                         labelText: 'Teléfono Móvil',
-                         border: OutlineInputBorder(),
-                       ),
-                       keyboardType: TextInputType.phone,
-                     ),
-                   ),
-                 ],
-               ),
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _telefonoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Teléfono Fijo',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _telefonoMovilController,
+                      decoration: const InputDecoration(
+                        labelText: 'Teléfono Móvil',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
@@ -254,7 +281,9 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value != null && value.isNotEmpty && !value.contains('@')) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      !value.contains('@')) {
                     return 'Ingrese un email válido';
                   }
                   return null; // Email es opcional pero si se ingresa, debe ser válido
@@ -268,24 +297,36 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-               const SizedBox(height: 16),
-               TextFormField(
-                 controller: _idLocalidadController,
-                 decoration: const InputDecoration(
-                   labelText: 'ID Localidad (Opcional)',
-                   border: OutlineInputBorder(),
-                 ),
-                 keyboardType: TextInputType.number,
-               ),
-               const SizedBox(height: 16),
-               TextFormField(
-                 controller: _idTipoClienteController,
-                 decoration: const InputDecoration(
-                   labelText: 'ID Tipo Cliente (Opcional)',
-                   border: OutlineInputBorder(),
-                 ),
-                 keyboardType: TextInputType.number,
-               ),
+              const SizedBox(height: 16),
+              // ID Tipo Cliente + Toggle Activo lado a lado
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _idTipoClienteController,
+                      decoration: const InputDecoration(
+                        labelText: 'ID Tipo Cliente (Opcional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      title: const Text('Activo'),
+                      value: _activo,
+                      onChanged: (val) {
+                        setState(() {
+                          _activo = val;
+                        });
+                      },
+                      activeColor: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
               // --- Botón de Guardar ---
               SizedBox(

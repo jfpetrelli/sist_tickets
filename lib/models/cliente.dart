@@ -12,6 +12,7 @@ class Cliente {
   String? email;
   String? cuit;
   int? idTipoCliente;
+  bool activo; // Campo para indicar si el cliente está activo
 
   Cliente({
     required this.idCliente,
@@ -26,6 +27,7 @@ class Cliente {
     this.email,
     this.cuit,
     this.idTipoCliente,
+    this.activo = true, // Por defecto activo
   });
 
   // Método para crear un objeto Cliente a partir de un Map
@@ -43,6 +45,7 @@ class Cliente {
       email: json['email'] as String?,
       cuit: json['cuit'] as String?,
       idTipoCliente: json['id_tipocliente'] as int?,
+      activo: json['activo'] == 1 || json['activo'] == true,
     );
   }
 
@@ -61,6 +64,7 @@ class Cliente {
       'email': email,
       'cuit': cuit,
       'id_tipocliente': idTipoCliente,
+      'activo': activo ? 1 : 0,
     };
   }
 }

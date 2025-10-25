@@ -8,12 +8,14 @@ class Usuario {
   final DateTime? fechaIngreso;
   final DateTime? fechaEgreso;
   final String? profilePhotoUrl;
+  final bool activo;
 
   Usuario({
     required this.idPersonal,
     required this.idSucursal,
     required this.idTipo,
     required this.nombre,
+    required this.activo,
     this.telefonoMovil,
     this.email,
     this.fechaIngreso,
@@ -27,6 +29,7 @@ class Usuario {
       idSucursal: json['id_sucursal'],
       idTipo: json['id_tipo'],
       nombre: json['nombre'],
+      activo: json['activo'],
       telefonoMovil: json['telefono_movil'],
       email: json['email'],
       fechaIngreso: json['fecha_ingreso'] != null
@@ -50,6 +53,7 @@ class Usuario {
       'fecha_ingreso': fechaIngreso?.toIso8601String(),
       'fecha_egreso': fechaEgreso?.toIso8601String(),
       'profile_photo_url': profilePhotoUrl,
+      'activo': activo,
       // No incluimos 'id_personal' porque se usa en la URL del endpoint (ej: /usuarios/123)
     };
   }

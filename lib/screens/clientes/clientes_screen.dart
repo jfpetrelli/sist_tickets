@@ -37,7 +37,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
       context,
       MaterialPageRoute(
         // Pasa el cliente a la nueva pantalla
-        builder: (context) => EditClienteScreen(cliente: cliente), 
+        builder: (context) => EditClienteScreen(cliente: cliente),
       ),
     ).then((_) {
       _refreshClientes();
@@ -51,8 +51,6 @@ class _ClientesScreenState extends State<ClientesScreen> {
     Future.microtask(() =>
         Provider.of<ClientProvider>(context, listen: false).fetchClients());
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -107,58 +105,79 @@ class _ClientesScreenState extends State<ClientesScreen> {
                           padding: const EdgeInsets.all(12),
                           itemBuilder: (context, index) {
                             final Cliente cliente = clientesFiltrados[index];
-                            return Card(
-                              elevation: 1,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ListTile(
-                                dense: true,
-                                visualDensity:
-                                    const VisualDensity(vertical: -4),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 0),
-                                leading: Container(
-                                  alignment: Alignment.center,
-                                  width: 40,
-                                  child: const Icon(Icons.business,
-                                      color: Colors.blueAccent),
+                            final bool isActive = cliente.activo == true;
+
+                            return Opacity(
+                              opacity: isActive ? 1.0 : 0.5,
+                              child: Card(
+                                elevation: isActive ? 1 : 0,
+                                color: isActive ? null : Colors.grey[100],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: isActive
+                                      ? BorderSide.none
+                                      : BorderSide(
+                                          color: Colors.grey[300]!, width: 1),
                                 ),
-                                title: Text(
-                                  cliente.razonSocial ?? 'Sin nombre',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                child: ListTile(
+                                  dense: true,
+                                  visualDensity:
+                                      const VisualDensity(vertical: -4),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 0),
+                                  leading: Container(
+                                    alignment: Alignment.center,
+                                    width: 40,
+                                    child: Icon(
+                                      Icons.business,
+                                      color: isActive
+                                          ? Colors.blueAccent
+                                          : Colors.grey,
+                                    ),
                                   ),
-                                ),
-                                subtitle: Text(
-                                  [
-                                    cliente.domicilio,
-                                    cliente.nombreLocalidad,
-                                    cliente.nombreProvincia
-                                  ]
-                                      .where((e) => e != null && e.isNotEmpty)
-                                      .join(', '),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black54,
+                                  title: Text(
+                                    cliente.razonSocial ?? 'Sin nombre',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      decoration: isActive
+                                          ? null
+                                          : TextDecoration.lineThrough,
+                                    ),
                                   ),
+                                  subtitle: Text(
+                                    [
+                                      cliente.domicilio,
+                                      cliente.nombreLocalidad,
+                                      cliente.nombreProvincia
+                                    ]
+                                        .where((e) => e != null && e.isNotEmpty)
+                                        .join(', '),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isActive
+                                          ? Colors.black54
+                                          : Colors.black38,
+                                    ),
+                                  ),
+                                  trailing: cliente.cuit != null
+                                      ? Text(
+                                          cliente.cuit!,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: isActive
+                                                ? Colors.black87
+                                                : Colors.black45,
+                                          ),
+                                        )
+                                      : null,
+
+                                  // --- MODIFICACIÓN: ACCIÓN AL TOCAR ---
+                                  onTap: () {
+                                    _navigateToEditCliente(context, cliente);
+                                  },
+                                  // --- FIN DE LA MODIFICACIÓN ---
                                 ),
-                                trailing: cliente.cuit != null
-                                    ? Text(
-                                        cliente.cuit!,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.black87,
-                                        ),
-                                      )
-                                    : null,
-                                
-                                // --- MODIFICACIÓN: ACCIÓN AL TOCAR ---
-                                onTap: () {
-                                  _navigateToEditCliente(context, cliente);
-                                },
-                                // --- FIN DE LA MODIFICACIÓN ---
                               ),
                             );
                           },

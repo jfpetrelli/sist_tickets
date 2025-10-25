@@ -104,42 +104,92 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                           padding: const EdgeInsets.all(12),
                           itemBuilder: (context, index) {
                             final Usuario usuario = usuariosFiltrados[index];
-                            return Card(
-                              elevation: 1,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ListTile(
-                                  dense: true,
-                                  visualDensity:
-                                      const VisualDensity(vertical: -4),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 0),
-                                  leading: Container(
-                                    alignment: Alignment.center,
-                                    width: 40,
-                                    child: const Icon(Icons.person,
-                                        color: Colors.blueAccent),
-                                  ),
-                                  title: Text(
-                                    usuario.nombre,
-                                    style: const TextStyle(
+                            final bool isActive = usuario.activo == true;
+                            final bool isAdmin = usuario.idTipo == 2;
+                            final String tipoText =
+                                isAdmin ? 'ADMIN' : 'TÉCNICO';
+                            final IconData tipoIcon = isAdmin
+                                ? Icons.admin_panel_settings
+                                : Icons.engineering;
+                            final Color tipoColor =
+                                isAdmin ? Colors.purple : Colors.orange;
+
+                            return Opacity(
+                              opacity: isActive ? 1.0 : 0.5,
+                              child: Card(
+                                elevation: isActive ? 1 : 0,
+                                color: isActive ? null : Colors.grey[100],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: isActive
+                                      ? BorderSide.none
+                                      : BorderSide(
+                                          color: Colors.grey[300]!, width: 1),
+                                ),
+                                child: ListTile(
+                                    dense: true,
+                                    visualDensity:
+                                        const VisualDensity(vertical: -4),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 0),
+                                    leading: Container(
+                                      alignment: Alignment.center,
+                                      width: 40,
+                                      child: Icon(
+                                        Icons.person,
+                                        color: isActive
+                                            ? Colors.blueAccent
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      usuario.nombre,
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14),
-                                  ),
-                                  subtitle: Text(
-                                    [usuario.email, usuario.telefonoMovil]
-                                        .where((e) => (e ?? '').isNotEmpty)
-                                        .join(' | '),
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.black54),
-                                  ),
-                                  trailing: Text('Tipo: ${usuario.idTipo}',
-                                      style: const TextStyle(
-                                          fontSize: 12, color: Colors.black87)),
-                                  onTap: () {
-                                    _navigateToEditUsuario(context, usuario);
-                                  }),
+                                        fontSize: 14,
+                                        decoration: isActive
+                                            ? null
+                                            : TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      [usuario.email, usuario.telefonoMovil]
+                                          .where((e) => (e ?? '').isNotEmpty)
+                                          .join(' | '),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isActive
+                                            ? Colors.black54
+                                            : Colors.black38,
+                                      ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          tipoIcon,
+                                          size: 16,
+                                          color: isActive
+                                              ? tipoColor
+                                              : Colors.grey,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          tipoText,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: isActive
+                                                ? tipoColor
+                                                : Colors.black45,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      _navigateToEditUsuario(context, usuario);
+                                    }),
+                              ),
                             );
                           },
                         ),
@@ -206,6 +256,7 @@ class __AddUsuarioFormState extends State<_AddUsuarioForm> {
         idSucursal: int.tryParse(_idSucursalController.text) ?? 0,
         idTipo: int.tryParse(_idTipoController.text) ?? 0,
         nombre: _nombreController.text,
+        activo: true,
         telefonoMovil: _telefonoMovilController.text,
         email: _emailController.text,
         fechaIngreso: _fechaIngresoController.text.isNotEmpty

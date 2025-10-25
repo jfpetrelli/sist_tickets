@@ -92,6 +92,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
         idPersonal: prevTechnicianId,
         idSucursal: 0,
         idTipo: 1,
+        activo: true,
         nombre: 'Desconocido',
       ),
     );
@@ -101,6 +102,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
         idPersonal: _selectedAssignedTechnicianId ?? 0,
         idSucursal: 0,
         idTipo: 1,
+        activo: true,
         nombre: 'Desconocido',
       ),
     );
@@ -129,7 +131,8 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
       final userProvider = context.read<UserProvider>();
       final usuario = userProvider.user;
       final now = DateTime.now();
-      final detalleMsg = 'Cambio de técnico asignado: ${prevTechnician.nombre} → ${newTechnician.nombre}';
+      final detalleMsg =
+          'Cambio de técnico asignado: ${prevTechnician.nombre} → ${newTechnician.nombre}';
       final intervencion = TicketIntervencion(
         idCaso: _ticket!.idCaso,
         idIntervencion: null,
@@ -140,7 +143,9 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
         tiempoUtilizado: 0, // null no permitido, se usa 0
         idContacto: usuario?.idPersonal.toString() ?? '',
       );
-      await context.read<TicketProvider>().addIntervencion(_ticket!.idCaso!, intervencion);
+      await context
+          .read<TicketProvider>()
+          .addIntervencion(_ticket!.idCaso!, intervencion);
     }
 
     if (mounted) {

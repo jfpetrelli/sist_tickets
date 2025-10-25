@@ -5,13 +5,12 @@ import '../models/usuario.dart';
 import '../api/api_service.dart';
 
 class UserListProvider extends ChangeNotifier {
-  
   Future<void> addUserWithPassword(
       Usuario nuevoUsuario, String password) async {
     isLoading = true;
     notifyListeners();
     try {
-      final data = _usuarioToJson(nuevoUsuario);
+      final data = nuevoUsuario.toJson();
       data.remove('id_personal');
       data['password'] = password;
       print(data);
@@ -31,8 +30,7 @@ class UserListProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      final response =
-          await _apiService.createUser(_usuarioToJson(nuevoUsuario));
+      final response = await _apiService.createUser(nuevoUsuario.toJson());
       final usuarioCreado = Usuario.fromJson(response);
       _users.add(usuarioCreado);
       errorMessage = null;
@@ -42,19 +40,6 @@ class UserListProvider extends ChangeNotifier {
     }
     isLoading = false;
     notifyListeners();
-  }
-
-  Map<String, dynamic> _usuarioToJson(Usuario usuario) {
-    return {
-      'id_personal': usuario.idPersonal,
-      'id_sucursal': usuario.idSucursal,
-      'id_tipo': usuario.idTipo,
-      'nombre': usuario.nombre,
-      'telefono_movil': usuario.telefonoMovil,
-      'email': usuario.email,
-      'fecha_ingreso': usuario.fechaIngreso?.toIso8601String(),
-      'fecha_egreso': usuario.fechaEgreso?.toIso8601String(),
-    };
   }
 
   final ApiService _apiService;
@@ -93,7 +78,8 @@ class UserListProvider extends ChangeNotifier {
       await _apiService.updateUser(usuarioActualizado.idPersonal, userData);
 
       // Actualizar la lista local para reflejar el cambio inmediatamente
-      final index = _users.indexWhere((u) => u.idPersonal == usuarioActualizado.idPersonal);
+      final index = _users
+          .indexWhere((u) => u.idPersonal == usuarioActualizado.idPersonal);
       if (index != -1) {
         _users[index] = usuarioActualizado;
       }
