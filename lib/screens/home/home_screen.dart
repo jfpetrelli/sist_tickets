@@ -85,16 +85,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? DateFormat('dd/MM/yyyy HH:mm')
                           .format(user!.fechaIngreso!.toLocal())
                       : 'No disponible';
+                  
+                  // Construir URL de la imagen de perfil con cache buster basado en la fecha del usuario
+                  String? profileImageUrl;
+                  final apiService = context.read<ApiService>();
+                  final token = apiService.getToken();
+                  
+                  if (user?.idPersonal != null && user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty && token != null) {
+                    // Usar timestamp actual como cache buster para refrescar la imagen
+                    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+                    profileImageUrl = 'http://localhost:8000/usuarios/${user.idPersonal}/profile_photo?t=$cacheBuster';
+                  }
 
                   return Padding(
                     padding: const EdgeInsets.only(top: 50, bottom: 20),
                     child: Column(
                       children: [
-                        const CircleAvatar(
+                        CircleAvatar(
                           radius: 40,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.person,
-                              size: 40, color: kPrimaryColor),
+                          backgroundImage: profileImageUrl != null && token != null
+                              ? NetworkImage(
+                                  profileImageUrl,
+                                  headers: {'Authorization': 'Bearer $token'},
+                                )
+                              : null,
+                          child: profileImageUrl == null || token == null
+                              ? const Icon(Icons.person,
+                                  size: 40, color: kPrimaryColor)
+                              : null,
                         ),
                         const SizedBox(height: 12),
                         Text(

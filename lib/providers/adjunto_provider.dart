@@ -39,6 +39,8 @@ class AdjuntoProvider extends ChangeNotifier {
       String ticketId, String fileName, List<int> fileBytes) async {
     try {
       await _apiService.uploadAdjunto(ticketId, fileName, fileBytes);
+      // Recargar la lista de adjuntos después de subir
+      await fetchAdjuntos(ticketId);
     } catch (e) {
       print('Error al subir el adjunto: $e');
       throw Exception('No se pudo subir el adjunto.');

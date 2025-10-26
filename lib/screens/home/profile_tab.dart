@@ -30,6 +30,7 @@ class _ProfileTabState extends State<ProfileTab> {
   Map<String, int>?
       _userStats; // Estado para guardar las estadísticas del usuario
   bool _isLoadingStats = true; // Estado para la carga de estadísticas
+  int _photoCacheBuster = DateTime.now().millisecondsSinceEpoch;
 
   @override
   void initState() {
@@ -191,6 +192,11 @@ class _ProfileTabState extends State<ProfileTab> {
 
         // Actualizar el UserProvider con la información actualizada del usuario
         userProvider.setUser(updatedUser);
+        
+        // Actualizar el cache buster para forzar recarga de la imagen
+        setState(() {
+          _photoCacheBuster = DateTime.now().millisecondsSinceEpoch;
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -223,6 +229,11 @@ class _ProfileTabState extends State<ProfileTab> {
 
       // Actualizar el UserProvider
       userProvider.setUser(updatedUser);
+      
+      // Actualizar el cache buster para forzar recarga de la imagen
+      setState(() {
+        _photoCacheBuster = DateTime.now().millisecondsSinceEpoch;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -284,8 +295,9 @@ class _ProfileTabState extends State<ProfileTab> {
     if (user?.idPersonal != null &&
         user?.profilePhotoUrl != null &&
         user!.profilePhotoUrl!.isNotEmpty) {
+      // Agregar timestamp para forzar actualización en tiempo real
       profileImageEndpointUrl =
-          '${ApiConfig.baseUrl}/usuarios/${user.idPersonal}/profile_photo';
+          '${ApiConfig.baseUrl}/usuarios/${user.idPersonal}/profile_photo?t=$_photoCacheBuster';
       print("URL del endpoint de imagen de perfil: $profileImageEndpointUrl");
     }
 

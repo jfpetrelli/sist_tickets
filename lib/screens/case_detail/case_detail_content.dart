@@ -13,8 +13,6 @@ import '../../providers/tipos_caso_provider.dart';
 import '../../models/tipo_caso.dart';
 import '../../models/intervencion_ticket.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../widgets/signature_dialog.dart';
-import '../../providers/adjunto_provider.dart';
 
 class CaseDetailContent extends StatefulWidget {
   final String caseId;
@@ -52,54 +50,6 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     setState(() {
       _showEstadoFabMenu = false;
     });
-
-    // Si se va a finalizar (estado 3), verificar firma
-    if (nuevoEstado == 3) {
-      final signature = await showDialog<String>(
-        context: context,
-        builder: (context) => const SignatureDialog(),
-      );
-      
-      if (signature == null || signature.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Debe firmar la conformidad antes de finalizar el ticket'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-      
-      // Guardar la firma como adjunto
-      try {
-        final adjuntoProvider = Provider.of<AdjuntoProvider>(context, listen: false);
-        final signatureBytes = base64Decode(signature);
-        final signatureFileName = 'firma_conformidad_${ticket.idCaso}_${DateTime.now().millisecondsSinceEpoch}.png';
-        
-        await adjuntoProvider.uploadAdjuntoFromBytes(
-          ticket.idCaso.toString(),
-          signatureFileName,
-          signatureBytes,
-        );
-        
-        // La firma ya está guardada como adjunto, no necesitamos actualizar el ticket
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Firma de conformidad guardada correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al guardar la firma: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-    }
 
     // Actualizar el ticket
     final updatedTicket = Ticket(

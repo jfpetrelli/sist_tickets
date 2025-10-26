@@ -244,6 +244,11 @@ class _ConfirmationSignatureContentState extends State<ConfirmationSignatureCont
       // Recargar adjuntos para ver la nueva firma
       await _loadSignatureFromAttachments();
       
+      // Forzar actualización del FutureBuilder
+      if (mounted) {
+        setState(() {});
+      }
+      
       print('✅ Adjuntos recargados');
       
       if (mounted) {

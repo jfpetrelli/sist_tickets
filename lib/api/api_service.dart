@@ -13,6 +13,12 @@ import 'package:dio/dio.dart';
 class ApiService {
   String? getToken() => _token;
 
+  // Cargar el token del storage al inicializar la aplicación
+  Future<void> loadToken() async {
+    _token = await _readSecurely('access_token');
+    debugPrint('📦 Token cargado desde storage: ${_token != null ? "Sí" : "No"}');
+  }
+
   Map<String, String> get _headers {
     return {
       'Content-Type': 'application/json',
@@ -468,7 +474,23 @@ class ApiService {
       'POST',
       Uri.parse('${ApiConfig.adjuntosByTicket}$ticketId'),
     );
-    request.headers.addAll(_headers);
+    
+    // Asegurar que el token esté cargado
+    if (_token == null) {
+      _token = await _readSecurely('access_token');
+      debugPrint('Token cargado desde storage: ${_token != null ? "Sí" : "No"}');
+    }
+    
+    // Agregar headers de autenticación sin Content-Type (el navegador lo manejará)
+    if (_token != null) {
+      request.headers['Authorization'] = 'Bearer $_token';
+      debugPrint('Token presente: ${_token!.substring(0, 20)}...');
+    } else {
+      debugPrint('⚠️ NO HAY TOKEN DISPONIBLE');
+      throw Exception('No hay token de autenticación disponible');
+    }
+
+    debugPrint('Subiendo archivo: $fileName (${fileBytes.length} bytes) al ticket $ticketId');
 
     // Crear MultipartFile desde bytes (funciona tanto en web como mobile)
     request.files.add(
@@ -479,11 +501,19 @@ class ApiService {
       ),
     );
 
+    debugPrint('Enviando request a: ${request.url}');
     final response = await request.send();
+    
+    debugPrint('Respuesta recibida: ${response.statusCode}');
+    
     if (response.statusCode == 200 || response.statusCode == 201) {
       final responseData = await response.stream.bytesToString();
+      debugPrint('✅ Archivo subido exitosamente');
       return jsonDecode(responseData);
     } else {
+      final errorBody = await response.stream.bytesToString();
+      debugPrint('❌ Error al subir adjunto: ${response.statusCode}');
+      debugPrint('Error response: $errorBody');
       throw Exception(
           'Error al subir el adjunto: ${response.statusCode}, ${response.reasonPhrase}');
     }
