@@ -1,175 +1,148 @@
 import 'package:flutter/material.dart';
-import 'package:signature/signature.dart';
-import 'package:sist_tickets/constants.dart';
+import 'dart:ui' as ui;
+import 'dart:convert';
 
-class SignatureScreen extends StatefulWidget {
-  const SignatureScreen({super.key});
+class SignaturePad extends StatefulWidget {
+  const SignaturePad({super.key});
 
   @override
-  State<SignatureScreen> createState() => _SignatureScreenState();
+  SignaturePadState createState() => SignaturePadState();
 }
 
-class _SignatureScreenState extends State<SignatureScreen> {
-  final SignatureController _controller = SignatureController(
-    penStrokeWidth: 3,
-    penColor: Colors.black,
-    exportBackgroundColor: Colors.white,
-  );
+class SignaturePadState extends State<SignaturePad> {
+  List<Offset> _points = <Offset>[];
+  
+  void _startPan(Offset point) {
+    setState(() {
+      // Agregar un punto de inicio (usando Offset.zero como marcador especial)
+      _points.add(Offset.zero);
+      _points.add(point);
+    });
+  }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _updatePan(Offset point) {
+    setState(() {
+      _points = List.from(_points)..add(point);
+    });
+  }
+
+  void _endPan() {
+    // Marcar fin del trazo actual agregando un punto de separación
+    setState(() {
+      _points.add(Offset.zero);
+    });
+  }
+
+  void clear() {
+    setState(() {
+      _points.clear();
+    });
+  }
+
+  Future<String> exportImageBytes() async {
+    if (_points.isEmpty) return '';
+    
+    // Crear un canvas para dibujar
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 3.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Dibujar los puntos sin conectar trazos separados
+    List<Offset> segmentPoints = [];
+    for (int i = 0; i < _points.length; i++) {
+      if (_points[i] == Offset.zero) {
+        // Es un separador, dibujar el segmento actual
+        for (int j = 0; j < segmentPoints.length - 1; j++) {
+          canvas.drawLine(segmentPoints[j], segmentPoints[j + 1], paint);
+        }
+        segmentPoints.clear();
+      } else {
+        segmentPoints.add(_points[i]);
+      }
+    }
+    
+    // Dibujar el último segmento
+    if (segmentPoints.length > 1) {
+      for (int j = 0; j < segmentPoints.length - 1; j++) {
+        canvas.drawLine(segmentPoints[j], segmentPoints[j + 1], paint);
+      }
+    }
+
+    // Convertir a imagen
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(800, 400);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final pngBytes = byteData!.buffer.asUint8List();
+    
+    // Convertir a base64
+    return base64Encode(pngBytes);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: kPrimaryColor,
-        title: const Text(
-          'Firma de Conformidad',
-          style: TextStyle(color: Colors.white),
+    return GestureDetector(
+      onPanStart: (details) => _startPan(details.localPosition),
+      onPanUpdate: (details) => _updatePan(details.localPosition),
+      onPanEnd: (details) => _endPan(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Signature(
-                    controller: _controller,
-                    backgroundColor: Colors.grey[100]!,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.person_outline),
-                const SizedBox(width: 8),
-                const Text(
-                  'Ortega Juan Cruz',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  'Calificación',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: kSuccessColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    '9/10',
-                    style: TextStyle(
-                      color: kSuccessColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.location_on_outlined),
-                const SizedBox(width: 8),
-                Text(
-                  'Av.Avellaneda 1244',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      _controller.clear();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[400]!),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Limpiar'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (_controller.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content:
-                                Text('Por favor, firme antes de confirmar'),
-                          ),
-                        );
-                        return;
-                      }
-                      final signature = await _controller.toPngBytes();
-                      if (signature != null) {
-                        Navigator.pop(context);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kPrimaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Confirmar'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Fecha: 07/02/2024',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
+        child: CustomPaint(
+          size: Size.infinite,
+          painter: _SignaturePainter(_points),
         ),
       ),
     );
+  }
+}
+
+class _SignaturePainter extends CustomPainter {
+  final List<Offset> points;
+
+  _SignaturePainter(this.points);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 3.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Dibujar líneas solo entre puntos consecutivos, saltando los separadores
+    List<Offset> segmentPoints = [];
+    for (int i = 0; i < points.length; i++) {
+      if (points[i] == Offset.zero) {
+        // Es un separador, dibujar el segmento actual
+        for (int j = 0; j < segmentPoints.length - 1; j++) {
+          canvas.drawLine(segmentPoints[j], segmentPoints[j + 1], paint);
+        }
+        segmentPoints.clear();
+      } else {
+        segmentPoints.add(points[i]);
+      }
+    }
+    
+    // Dibujar el último segmento si quedan puntos sin separador
+    if (segmentPoints.length > 1) {
+      for (int j = 0; j < segmentPoints.length - 1; j++) {
+        canvas.drawLine(segmentPoints[j], segmentPoints[j + 1], paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SignaturePainter oldDelegate) {
+    return oldDelegate.points != points;
   }
 }

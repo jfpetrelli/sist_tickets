@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
 import 'package:sist_tickets/screens/case_detail/case_documents_page.dart';
 import '../../models/ticket.dart';
@@ -12,6 +13,8 @@ import '../../providers/tipos_caso_provider.dart';
 import '../../models/tipo_caso.dart';
 import '../../models/intervencion_ticket.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/signature_dialog.dart';
+import '../../providers/adjunto_provider.dart';
 
 class CaseDetailContent extends StatefulWidget {
   final String caseId;
@@ -49,6 +52,54 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     setState(() {
       _showEstadoFabMenu = false;
     });
+
+    // Si se va a finalizar (estado 3), verificar firma
+    if (nuevoEstado == 3) {
+      final signature = await showDialog<String>(
+        context: context,
+        builder: (context) => const SignatureDialog(),
+      );
+      
+      if (signature == null || signature.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debe firmar la conformidad antes de finalizar el ticket'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
+      // Guardar la firma como adjunto
+      try {
+        final adjuntoProvider = Provider.of<AdjuntoProvider>(context, listen: false);
+        final signatureBytes = base64Decode(signature);
+        final signatureFileName = 'firma_conformidad_${ticket.idCaso}_${DateTime.now().millisecondsSinceEpoch}.png';
+        
+        await adjuntoProvider.uploadAdjuntoFromBytes(
+          ticket.idCaso.toString(),
+          signatureFileName,
+          signatureBytes,
+        );
+        
+        // La firma ya está guardada como adjunto, no necesitamos actualizar el ticket
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Firma de conformidad guardada correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar la firma: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
 
     // Actualizar el ticket
     final updatedTicket = Ticket(
@@ -733,7 +784,7 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${intervencion.idTipoIntervencion}',
+                    intervencion.tipoIntervencionLabel ?? '${intervencion.idTipoIntervencion}',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(width: 18),
@@ -798,6 +849,8 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
   final _detalleController = TextEditingController();
   final _tiempoController = TextEditingController();
   final _contactoController = TextEditingController();
+  final _fechaController = TextEditingController();
+  final _fechaVencimientoController = TextEditingController();
 
   // State variables for dropdowns and date pickers
   int? _selectedTipoIntervencion;
@@ -811,6 +864,8 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
     _detalleController.dispose();
     _tiempoController.dispose();
     _contactoController.dispose();
+    _fechaController.dispose();
+    _fechaVencimientoController.dispose();
     super.dispose();
   }
 
@@ -844,66 +899,76 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
     setState(() {
       if (isVencimiento) {
         _selectedFechaVencimiento = selectedDateTime;
+        _fechaVencimientoController.text = DateFormat('dd/MM/yyyy HH:mm').format(selectedDateTime);
       } else {
         _selectedFecha = selectedDateTime;
+        _fechaController.text = DateFormat('dd/MM/yyyy HH:mm').format(selectedDateTime);
       }
     });
   }
 
   // Method to handle form submission
   void _submitForm() async {
-    // First, validate the form.
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
+    // Validar el formulario primero
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return; // Si hay errores de validación, no hacer nada
+    }
+    
+    // Verificar que las fechas estén seleccionadas
+    if (_selectedFecha == null || _selectedFechaVencimiento == null) {
+      return; // Si falta alguna fecha, no continuar
+    }
+    
+    // Solo si todo está validado, proceder con la carga
+    setState(() {
+      _isLoading = true;
+    });
 
-      // Create the new intervention object from the form data.
-      final newIntervencion = TicketIntervencion(
-        fechaVencimiento: _selectedFechaVencimiento!,
-        fecha: _selectedFecha!,
-        idTipoIntervencion: _selectedTipoIntervencion!,
-        detalle: _detalleController.text,
-        tiempoUtilizado: int.tryParse(_tiempoController.text) ?? 0,
-        idContacto: _contactoController.text,
-      );
+    // Create the new intervention object from the form data.
+    final newIntervencion = TicketIntervencion(
+      fechaVencimiento: _selectedFechaVencimiento!,
+      fecha: _selectedFecha!,
+      idTipoIntervencion: _selectedTipoIntervencion!,
+      detalle: _detalleController.text,
+      tiempoUtilizado: int.tryParse(_tiempoController.text) ?? 0,
+      idContacto: '', // Campo oculto, siempre vacío
+    );
 
-      try {
-        final ticketProvider =
-            Provider.of<TicketProvider>(context, listen: false);
-        final success = await ticketProvider.addIntervencion(
-            int.parse(widget.ticketId), newIntervencion);
-        if (success && mounted) {
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Intervención añadida con éxito'),
-              backgroundColor: kSuccessColor,
-            ),
-          );
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error al guardar la intervención'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } catch (error) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error al guardar: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+    try {
+      final ticketProvider =
+          Provider.of<TicketProvider>(context, listen: false);
+      final success = await ticketProvider.addIntervencion(
+          int.parse(widget.ticketId), newIntervencion);
+      if (success && mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Intervención añadida con éxito'),
+            backgroundColor: kSuccessColor,
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al guardar la intervención'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -956,67 +1021,33 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
                     : null,
               ),
               const SizedBox(height: 16),
-              // Contact Text Field
-              TextFormField(
-                controller: _contactoController,
-                decoration: const InputDecoration(
-                  labelText: 'ID de Contacto',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => (value?.isEmpty ?? true)
-                    ? 'El ID de contacto es obligatorio'
-                    : null,
-              ),
-              const SizedBox(height: 16),
 
               // Date Fields
               Row(
                 children: [
                   Expanded(
-                    child: InkWell(
-                      onTap: () =>
-                          _selectDateTime(context, isVencimiento: false),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Fecha Intervención',
-                          border: const OutlineInputBorder(),
-                          errorText:
-                              (_formKey.currentState?.validate() ?? false) &&
-                                      _selectedFecha == null
-                                  ? 'Requerido'
-                                  : null,
-                        ),
-                        child: Text(
-                          _selectedFecha != null
-                              ? DateFormat('dd/MM/yyyy HH:mm')
-                                  .format(_selectedFecha!)
-                              : 'Seleccionar...',
-                        ),
+                    child: TextFormField(
+                      readOnly: true,
+                      onTap: () => _selectDateTime(context, isVencimiento: false),
+                      decoration: const InputDecoration(
+                        labelText: 'Fecha Intervención',
+                        border: OutlineInputBorder(),
                       ),
+                      controller: _fechaController,
+                      validator: (value) => _selectedFecha == null ? 'Requerido' : null,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: InkWell(
-                      onTap: () =>
-                          _selectDateTime(context, isVencimiento: true),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Fecha Vencimiento',
-                          border: const OutlineInputBorder(),
-                          errorText:
-                              (_formKey.currentState?.validate() ?? false) &&
-                                      _selectedFechaVencimiento == null
-                                  ? 'Requerido'
-                                  : null,
-                        ),
-                        child: Text(
-                          _selectedFechaVencimiento != null
-                              ? DateFormat('dd/MM/yyyy HH:mm')
-                                  .format(_selectedFechaVencimiento!)
-                              : 'Seleccionar...',
-                        ),
+                    child: TextFormField(
+                      readOnly: true,
+                      onTap: () => _selectDateTime(context, isVencimiento: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Fecha Vencimiento',
+                        border: OutlineInputBorder(),
                       ),
+                      controller: _fechaVencimientoController,
+                      validator: (value) => _selectedFechaVencimiento == null ? 'Requerido' : null,
                     ),
                   ),
                 ],

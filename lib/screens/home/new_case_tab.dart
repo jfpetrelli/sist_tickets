@@ -10,6 +10,7 @@ import 'package:sist_tickets/providers/client_provider.dart';
 import 'package:sist_tickets/providers/user_list_provider.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/providers/tipos_caso_provider.dart';
+import 'package:sist_tickets/providers/ticket_provider.dart';
 
 class NewCaseTab extends StatefulWidget {
   const NewCaseTab({super.key});
@@ -130,6 +131,10 @@ class _NewCaseTabState extends State<NewCaseTab> {
 
     try {
       await context.read<ApiService>().createTicket(ticketData);
+      
+      // Recargar los tickets para actualizar la lista en tiempo real
+      final user = context.read<UserProvider>().user;
+      await context.read<TicketProvider>().fetchTickets(user);
 
       // Muestra mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(

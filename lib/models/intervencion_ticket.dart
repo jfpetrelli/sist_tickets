@@ -7,6 +7,7 @@ class TicketIntervencion {
   final String detalle;
   final int tiempoUtilizado;
   final String idContacto;
+  final String? tipoIntervencionLabel;
 
   TicketIntervencion({
     this.idCaso,
@@ -17,6 +18,7 @@ class TicketIntervencion {
     required this.detalle,
     required this.tiempoUtilizado,
     required this.idContacto,
+    this.tipoIntervencionLabel,
   });
 
   // Método para crear un objeto TicketIntervencion a partir de un Map
@@ -30,6 +32,7 @@ class TicketIntervencion {
       detalle: json['detalle'] as String,
       tiempoUtilizado: json['tiempo_utilizado'] as int,
       idContacto: json['id_contacto'] as String,
+      tipoIntervencionLabel: json['tipo_intervencion_label'] as String?,
     );
   }
 
@@ -44,6 +47,7 @@ class TicketIntervencion {
       'detalle': detalle,
       'tiempo_utilizado': tiempoUtilizado,
       'id_contacto': idContacto,
+      'tipo_intervencion_label': tipoIntervencionLabel,
     };
   }
 }
