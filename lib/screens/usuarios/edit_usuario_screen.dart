@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sist_tickets/constants.dart';
+import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/models/usuario.dart'; // Modelo de Usuario
 import 'package:sist_tickets/providers/user_list_provider.dart'; // Provider de Usuarios
 import 'package:intl/intl.dart'; // Para formatear fechas
@@ -61,6 +62,102 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
     _idSucursalController.dispose();
     _idTipoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onActivoChanged(bool val) async {
+    // If trying to deactivate, check for active tickets assigned to this user
+    if (!val) {
+      try {
+        final api = ApiService();
+        // Use API filter to request tickets assigned to this user only
+        final tickets = await api.getTickets(widget.usuario.idPersonal.toString());
+
+        final activeTickets = tickets.where((t) {
+          if (t is Map) {
+            final idAsignado = t['id_personal_asignado'] ?? t['idPersonalAsignado'];
+            final idEstado = t['id_estado'] ?? t['idEstado'];
+            return idAsignado == widget.usuario.idPersonal && (idEstado == 1 || idEstado == 2);
+          }
+          return false;
+        }).toList();
+
+        if (activeTickets.isNotEmpty) {
+          // Prepare ticket IDs list
+          final ticketIds = activeTickets.map((t) {
+            if (t is Map) return t['id_caso'] ?? t['idCaso'] ?? t['id'] ?? '-';
+            return '-';
+          }).toList();
+
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (ctx) {
+              return AlertDialog(
+                title: const Text('Advertencia'),
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: [
+                      Text('El usuario tiene ${activeTickets.length} ticket(s) activo(s).'),
+                      const SizedBox(height: 8),
+                      const Text('Tickets activos:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: ticketIds.map((id) => Chip(label: Text(id.toString()))).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text('¿Está seguro que desea dar de baja al usuario?'),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Dar de baja'),
+                  ),
+                ],
+              );
+            },
+          );
+
+          if (confirmed == true) {
+            setState(() {
+              _activo = false;
+              _fechaEgreso = DateTime.now();
+            });
+          } else {
+            // keep as it was
+            setState(() {
+              _activo = true;
+            });
+          }
+          return;
+        }
+
+        // No active tickets -> allow deactivate
+        setState(() {
+          _activo = false;
+          _fechaEgreso = DateTime.now();
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al verificar tickets activos: ${e.toString()}')),
+          );
+        }
+      }
+    } else {
+      // Activating -> clear fechaEgreso
+      setState(() {
+        _activo = true;
+        _fechaEgreso = null;
+      });
+    }
   }
 
   // --- Selección de Fecha ---
@@ -291,19 +388,7 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                       title: const Text('Activo'),
                       value: _activo,
-                      onChanged: (val) {
-                        setState(() {
-                          // Si pasa de ACTIVO (true) a INACTIVO (false), cargar fecha de egreso = NOW
-                          if (_activo == true && val == false) {
-                            _fechaEgreso = DateTime.now();
-                          }
-                          // Si pasa de INACTIVO a ACTIVO, limpiar fecha de egreso
-                          else if (_activo == false && val == true) {
-                            _fechaEgreso = null;
-                          }
-                          _activo = val;
-                        });
-                      },
+                      onChanged: (val) => _onActivoChanged(val),
                       activeColor: Theme.of(context).primaryColor,
                     ),
                   ),

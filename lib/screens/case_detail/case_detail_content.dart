@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'dart:convert';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
 import 'package:sist_tickets/screens/case_detail/case_documents_page.dart';
 import '../../models/ticket.dart';

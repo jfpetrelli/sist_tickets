@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sist_tickets/constants.dart';
+import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/models/cliente.dart';
 import 'package:sist_tickets/providers/client_provider.dart';
 
@@ -77,6 +78,98 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
     _cuitController.dispose();
     _idTipoClienteController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onActivoChanged(bool val) async {
+    // If trying to deactivate, check for active tickets first
+    if (!val) {
+      try {
+        final api = ApiService();
+        final tickets = await api.getTickets();
+
+        final activeTickets = tickets.where((t) {
+          if (t is Map) {
+            final idCliente = t['id_cliente'];
+            final idEstado = t['id_estado'];
+            return idCliente == widget.cliente.idCliente && (idEstado == 1 || idEstado == 2);
+          }
+          return false;
+        }).toList();
+
+        if (activeTickets.isNotEmpty) {
+          final ticketIds = activeTickets.map((t) {
+            if (t is Map) return t['id_caso'] ?? t['idCaso'] ?? t['id'] ?? '-';
+            return '-';
+          }).toList();
+
+          // Show confirmation dialog with destructive action style and ticket IDs
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (ctx) {
+              return AlertDialog(
+                title: const Text('Advertencia'),
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: [
+                      Text('El cliente tiene ${activeTickets.length} ticket(s) activo(s).'),
+                      const SizedBox(height: 8),
+                      const Text('Tickets activos:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: ticketIds.map((id) => Chip(label: Text(id.toString()))).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text('¿Está seguro que desea dar de baja al cliente?'),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Dar de baja'),
+                  ),
+                ],
+              );
+            },
+          );
+
+          if (confirmed == true) {
+            setState(() {
+              _activo = false;
+            });
+          } else {
+            // keep as it was (true)
+            setState(() {
+              _activo = true;
+            });
+          }
+          return;
+        }
+
+        // No active tickets found -> allow deactivate
+        setState(() {
+          _activo = false;
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al verificar tickets activos: ${e.toString()}')),
+          );
+        }
+      }
+    } else {
+      // Activating -> just set
+      setState(() {
+        _activo = true;
+      });
+    }
   }
 
   Future<void> _saveChanges() async {
@@ -317,11 +410,7 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                       title: const Text('Activo'),
                       value: _activo,
-                      onChanged: (val) {
-                        setState(() {
-                          _activo = val;
-                        });
-                      },
+                      onChanged: (val) => _onActivoChanged(val),
                       activeColor: Theme.of(context).primaryColor,
                     ),
                   ),
