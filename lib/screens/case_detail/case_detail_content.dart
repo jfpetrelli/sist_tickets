@@ -733,22 +733,31 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    intervencion.tipoIntervencionLabel ?? '${intervencion.idTipoIntervencion}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(width: 18),
-                  Tooltip(
-                    message: 'Tiempo utilizado',
-                    child:
-                        const Icon(Icons.timer, size: 18, color: Colors.grey),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${intervencion.tiempoUtilizado} minutos',
+                    intervencion.tipoIntervencionLabel ??
+                        '${intervencion.idTipoIntervencion}',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
+              // Mostrar tiempo utilizado solo si es mayor a 0
+              if (intervencion.tiempoUtilizado > 0) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Tooltip(
+                      message: 'Tiempo utilizado',
+                      child:
+                          const Icon(Icons.timer, size: 18, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${intervencion.tiempoUtilizado} minutos',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -848,10 +857,12 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
     setState(() {
       if (isVencimiento) {
         _selectedFechaVencimiento = selectedDateTime;
-        _fechaVencimientoController.text = DateFormat('dd/MM/yyyy HH:mm').format(selectedDateTime);
+        _fechaVencimientoController.text =
+            DateFormat('dd/MM/yyyy HH:mm').format(selectedDateTime);
       } else {
         _selectedFecha = selectedDateTime;
-        _fechaController.text = DateFormat('dd/MM/yyyy HH:mm').format(selectedDateTime);
+        _fechaController.text =
+            DateFormat('dd/MM/yyyy HH:mm').format(selectedDateTime);
       }
     });
   }
@@ -862,12 +873,12 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return; // Si hay errores de validación, no hacer nada
     }
-    
+
     // Verificar que las fechas estén seleccionadas
     if (_selectedFecha == null || _selectedFechaVencimiento == null) {
       return; // Si falta alguna fecha, no continuar
     }
-    
+
     // Solo si todo está validado, proceder con la carga
     setState(() {
       _isLoading = true;
@@ -977,26 +988,31 @@ class __AddIntervencionFormState extends State<_AddIntervencionForm> {
                   Expanded(
                     child: TextFormField(
                       readOnly: true,
-                      onTap: () => _selectDateTime(context, isVencimiento: false),
+                      onTap: () =>
+                          _selectDateTime(context, isVencimiento: false),
                       decoration: const InputDecoration(
                         labelText: 'Fecha Intervención',
                         border: OutlineInputBorder(),
                       ),
                       controller: _fechaController,
-                      validator: (value) => _selectedFecha == null ? 'Requerido' : null,
+                      validator: (value) =>
+                          _selectedFecha == null ? 'Requerido' : null,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextFormField(
                       readOnly: true,
-                      onTap: () => _selectDateTime(context, isVencimiento: true),
+                      onTap: () =>
+                          _selectDateTime(context, isVencimiento: true),
                       decoration: const InputDecoration(
                         labelText: 'Fecha Vencimiento',
                         border: OutlineInputBorder(),
                       ),
                       controller: _fechaVencimientoController,
-                      validator: (value) => _selectedFechaVencimiento == null ? 'Requerido' : null,
+                      validator: (value) => _selectedFechaVencimiento == null
+                          ? 'Requerido'
+                          : null,
                     ),
                   ),
                 ],

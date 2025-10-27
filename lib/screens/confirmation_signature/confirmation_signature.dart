@@ -16,34 +16,41 @@ class ConfirmationSignatureContent extends StatefulWidget {
   });
 
   @override
-  State<ConfirmationSignatureContent> createState() => _ConfirmationSignatureContentState();
+  State<ConfirmationSignatureContent> createState() =>
+      _ConfirmationSignatureContentState();
 }
 
-class _ConfirmationSignatureContentState extends State<ConfirmationSignatureContent> {
-  late Future<void> _loadSignature;
+class _ConfirmationSignatureContentState
+    extends State<ConfirmationSignatureContent> {
+  late Future<void> _loadSignature =
+      Future.value(); // Inicializado con un Future completado
   Adjunto? _signatureAttachment;
 
   @override
   void initState() {
     super.initState();
-    _loadSignature = _loadSignatureFromAttachments();
+    // Usar addPostFrameCallback para evitar llamar al provider durante build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSignature = _loadSignatureFromAttachments();
+    });
   }
 
   Future<void> _loadSignatureFromAttachments() async {
     try {
-      final adjuntoProvider = Provider.of<AdjuntoProvider>(context, listen: false);
+      final adjuntoProvider =
+          Provider.of<AdjuntoProvider>(context, listen: false);
       await adjuntoProvider.fetchAdjuntos(widget.caseId);
-      
+
       // Buscar TODAS las firmas de conformidad y obtener la última (más reciente)
       final firmas = adjuntoProvider.adjuntos
           .where((adjunto) => adjunto.filename.startsWith('firma_conformidad_'))
           .toList();
-      
+
       if (firmas.isNotEmpty) {
         // Ordenar por fecha descendente para obtener la más reciente
         firmas.sort((a, b) => b.fecha.compareTo(a.fecha));
         final firmaMasReciente = firmas.first;
-        
+
         if (mounted) {
           setState(() {
             _signatureAttachment = firmaMasReciente;
@@ -88,18 +95,21 @@ class _ConfirmationSignatureContentState extends State<ConfirmationSignatureCont
                         children: [
                           const Text(
                             'No hay firma de conformidad registrada',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: () => _showSignatureDialog(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,
-                              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 15, horizontal: 30),
                             ),
                             child: const Text(
                               'Firmar Ahora',
-                              style: TextStyle(color: Colors.white, fontSize: 16),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16),
                             ),
                           ),
                         ],
@@ -109,7 +119,8 @@ class _ConfirmationSignatureContentState extends State<ConfirmationSignatureCont
                         children: [
                           const Text(
                             'Firma de Conformidad',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 20),
                           Container(
@@ -123,13 +134,17 @@ class _ConfirmationSignatureContentState extends State<ConfirmationSignatureCont
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: _signatureAttachment?.filepath.isNotEmpty == true
+                              child: _signatureAttachment
+                                          ?.filepath.isNotEmpty ==
+                                      true
                                   ? Image.network(
                                       'http://localhost:8000/adjuntos/${_signatureAttachment!.idAdjunto}',
                                       fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) {
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
                                         return const Center(
-                                          child: Text('Error al cargar la firma'),
+                                          child:
+                                              Text('Error al cargar la firma'),
                                         );
                                       },
                                     )
@@ -151,7 +166,8 @@ class _ConfirmationSignatureContentState extends State<ConfirmationSignatureCont
                             onPressed: () => _showSignatureDialog(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,
-                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 20),
                             ),
                             child: const Text(
                               'Actualizar Firma',
@@ -196,22 +212,24 @@ class _ConfirmationSignatureContentState extends State<ConfirmationSignatureCont
       context: context,
       builder: (context) => const SignatureDialog(),
     );
-    
+
     if (signature == null || signature.isEmpty) {
       print('Usuario canceló la firma o la firma está vacía');
       return;
     }
-    
+
     print('Firma obtenida, iniciando guardado...');
-    
+
     // Guardar la firma
     try {
-      final adjuntoProvider = Provider.of<AdjuntoProvider>(context, listen: false);
-      final ticketProvider = Provider.of<TicketProvider>(context, listen: false);
+      final adjuntoProvider =
+          Provider.of<AdjuntoProvider>(context, listen: false);
+      final ticketProvider =
+          Provider.of<TicketProvider>(context, listen: false);
       final ticket = ticketProvider.ticket;
-      
+
       print('Ticket obtenido: ${ticket?.idCaso}');
-      
+
       if (ticket == null) {
         print('ERROR: No se pudo obtener el ticket');
         if (mounted) {
@@ -224,33 +242,34 @@ class _ConfirmationSignatureContentState extends State<ConfirmationSignatureCont
         }
         return;
       }
-      
+
       final signatureBytes = base64Decode(signature);
-      final signatureFileName = 'firma_conformidad_${ticket.idCaso}_${DateTime.now().millisecondsSinceEpoch}.png';
-      
+      final signatureFileName =
+          'firma_conformidad_${ticket.idCaso}_${DateTime.now().millisecondsSinceEpoch}.png';
+
       print('Preparando para subir firma:');
       print('- Ticket ID: ${ticket.idCaso}');
       print('- Nombre de archivo: $signatureFileName');
       print('- Tamaño: ${signatureBytes.length} bytes');
-      
+
       await adjuntoProvider.uploadAdjuntoFromBytes(
         ticket.idCaso.toString(),
         signatureFileName,
         signatureBytes,
       );
-      
+
       print('✅ Firma subida correctamente, recargando adjuntos...');
-      
+
       // Recargar adjuntos para ver la nueva firma
       await _loadSignatureFromAttachments();
-      
+
       // Forzar actualización del FutureBuilder
       if (mounted) {
         setState(() {});
       }
-      
+
       print('✅ Adjuntos recargados');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
