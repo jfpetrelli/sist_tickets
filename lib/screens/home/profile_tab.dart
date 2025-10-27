@@ -192,7 +192,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
         // Actualizar el UserProvider con la información actualizada del usuario
         userProvider.setUser(updatedUser);
-        
+
         // Actualizar el cache buster para forzar recarga de la imagen
         setState(() {
           _photoCacheBuster = DateTime.now().millisecondsSinceEpoch;
@@ -229,7 +229,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
       // Actualizar el UserProvider
       userProvider.setUser(updatedUser);
-      
+
       // Actualizar el cache buster para forzar recarga de la imagen
       setState(() {
         _photoCacheBuster = DateTime.now().millisecondsSinceEpoch;
@@ -265,14 +265,6 @@ class _ProfileTabState extends State<ProfileTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Perfil',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
               const SizedBox(height: 20),
               // Pasar el usuario al método _buildProfileCard
               _buildProfileCard(context, user), // Añadido context

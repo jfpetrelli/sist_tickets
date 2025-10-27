@@ -14,7 +14,8 @@ class CasesTab extends StatefulWidget {
   State<CasesTab> createState() => _CasesTabState();
 }
 
-class _CasesTabState extends State<CasesTab> {
+class _CasesTabState extends State<CasesTab>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _searchController;
   String _searchQuery = '';
   bool _isSortAscending = true;
@@ -24,10 +25,24 @@ class _CasesTabState extends State<CasesTab> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  late final AnimationController _calendarAnimController;
+  late final Animation<Offset> _calendarSlide;
 
   @override
   void initState() {
     super.initState();
+    _calendarAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _calendarSlide = Tween<Offset>(
+      begin: const Offset(0, -1.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _calendarAnimController,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    ));
     _searchController = TextEditingController();
     _searchController.addListener(() {
       setState(() {
@@ -53,6 +68,7 @@ class _CasesTabState extends State<CasesTab> {
   void dispose() {
     _searchController.dispose();
     _selectedEvents.dispose();
+    _calendarAnimController.dispose();
     super.dispose();
   }
 
@@ -69,9 +85,22 @@ class _CasesTabState extends State<CasesTab> {
   }
 
   void _toggleView() {
-    setState(() {
-      _isCalendarView = !_isCalendarView;
-    });
+    if (!_isCalendarView) {
+      // Mostrar calendario: activar flag y animar entrada desde arriba
+      setState(() {
+        _isCalendarView = true;
+      });
+      _calendarAnimController.forward();
+    } else {
+      // Ocultar calendario: animar salida hacia arriba y luego desactivar flag
+      _calendarAnimController.reverse().then((_) {
+        if (mounted) {
+          setState(() {
+            _isCalendarView = false;
+          });
+        }
+      });
+    }
   }
 
   List<Ticket> _getEventsForDay(DateTime day, List<Ticket> allTickets) {
@@ -87,61 +116,117 @@ class _CasesTabState extends State<CasesTab> {
 
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(_isCalendarView ? 'Calendario de Casos' : 'Casos'),
-          actions: [
-            IconButton(
-              tooltip: _isCalendarView ? 'Ver Lista' : 'Ver Calendario',
-              icon: Icon(_isCalendarView ? Icons.list : Icons.calendar_today),
-              onPressed: _toggleView,
-            ),
-          ],
-          bottom: _isCalendarView
-              ? null
-              : const TabBar(
-                  labelColor: kPrimaryColor,
-                  unselectedLabelColor: Colors.black54,
-                  indicatorColor: kPrimaryColor,
-                  tabs: [
-                    Tab(text: 'Pendientes'),
-                    Tab(text: 'En Proceso'),
-                    Tab(text: 'Completados'),
-                  ],
-                ),
-        ),
-        body: Column(
-          children: [
-            if (!_isCalendarView) _buildSearchField(),
-            Expanded(
-              child: _isCalendarView
-                  ? _buildCalendarView(ticketProvider.tickets)
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        return TabBarView(
-                          children: [
-                            _buildCasesTabView(1, constraints, ticketProvider),
-                            _buildCasesTabView(2, constraints, ticketProvider),
-                            _buildCasesTabView(3, constraints, ticketProvider),
-                          ],
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-        floatingActionButton: _isCalendarView
-            ? null
-            : FloatingActionButton(
-                onPressed: _toggleSortOrder,
-                tooltip: 'Ordenar por fecha',
-                shape: const CircleBorder(),
-                backgroundColor: kPrimaryColor,
-                child: Icon(
-                  _isSortAscending ? Icons.arrow_downward : Icons.arrow_upward,
-                  color: Colors.white,
-                ),
+      child: Column(
+        children: [
+          // Controles superiores con transición entre calendario y lista
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            crossFadeState: _isCalendarView
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            firstChild: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    tooltip: 'Ver Lista',
+                    icon: const Icon(Icons.list, color: kPrimaryColor),
+                    onPressed: _toggleView,
+                  ),
+                ],
               ),
+            ),
+            secondChild: Container(
+              color: Colors.white,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TabBar(
+                      labelColor: kPrimaryColor,
+                      unselectedLabelColor: Colors.black54,
+                      indicatorColor: kPrimaryColor,
+                      tabs: const [
+                        Tab(text: 'Pendientes'),
+                        Tab(text: 'En Proceso'),
+                        Tab(text: 'Completados'),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Ver Calendario',
+                    icon:
+                        const Icon(Icons.calendar_today, color: kPrimaryColor),
+                    onPressed: _toggleView,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Campo de búsqueda con transición
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child:
+                _isCalendarView ? const SizedBox.shrink() : _buildSearchField(),
+          ),
+
+          // Contenido principal con calendario deslizándose por encima
+          Expanded(
+            child: Stack(
+              children: [
+                // Lista siempre renderizada debajo (sin interacción cuando el calendario está visible)
+                IgnorePointer(
+                  ignoring: _isCalendarView,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return TabBarView(
+                        children: [
+                          _buildCasesTabView(1, constraints, ticketProvider),
+                          _buildCasesTabView(2, constraints, ticketProvider),
+                          _buildCasesTabView(3, constraints, ticketProvider),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+                // Calendario que entra/sale desde/hacia arriba, sin fade, cubriendo totalmente
+                Positioned.fill(
+                  child: ClipRect(
+                    child: SlideTransition(
+                      position: _calendarSlide,
+                      child: Container(
+                        color: Colors.white,
+                        child: _buildCalendarView(ticketProvider.tickets),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // FAB solo en vista lista
+                if (!_isCalendarView)
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: FloatingActionButton(
+                      onPressed: _toggleSortOrder,
+                      tooltip: 'Ordenar por fecha',
+                      shape: const CircleBorder(),
+                      backgroundColor: kPrimaryColor,
+                      child: Icon(
+                        _isSortAscending
+                            ? Icons.arrow_downward
+                            : Icons.arrow_upward,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

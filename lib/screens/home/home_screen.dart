@@ -26,7 +26,11 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
 
   late final List<Widget> _widgetOptions;
-
+  final List<String> _appBarTitles = const [
+    'Nuevo Caso',
+    'Casos', // Dejar vacío si prefieres no tener título en la pestaña principal
+    'Perfil',
+  ];
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return AppTemplate(
       scaffoldKey: _scaffoldKey,
+      title: _appBarTitles[_selectedIndex],
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
@@ -85,16 +90,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? DateFormat('dd/MM/yyyy HH:mm')
                           .format(user!.fechaIngreso!.toLocal())
                       : 'No disponible';
-                  
+
                   // Construir URL de la imagen de perfil con cache buster basado en la fecha del usuario
                   String? profileImageUrl;
                   final apiService = context.read<ApiService>();
                   final token = apiService.getToken();
-                  
-                  if (user?.idPersonal != null && user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty && token != null) {
+
+                  if (user?.idPersonal != null &&
+                      user?.profilePhotoUrl != null &&
+                      user!.profilePhotoUrl!.isNotEmpty &&
+                      token != null) {
                     // Usar timestamp actual como cache buster para refrescar la imagen
                     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
-                    profileImageUrl = 'http://localhost:8000/usuarios/${user.idPersonal}/profile_photo?t=$cacheBuster';
+                    profileImageUrl =
+                        'http://localhost:8000/usuarios/${user.idPersonal}/profile_photo?t=$cacheBuster';
                   }
 
                   return Padding(
@@ -104,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         CircleAvatar(
                           radius: 40,
                           backgroundColor: Colors.white,
-                          backgroundImage: profileImageUrl != null && token != null
+                          backgroundImage: profileImageUrl != null &&
+                                  token != null
                               ? NetworkImage(
                                   profileImageUrl,
                                   headers: {'Authorization': 'Bearer $token'},

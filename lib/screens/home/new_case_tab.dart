@@ -131,7 +131,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
 
     try {
       await context.read<ApiService>().createTicket(ticketData);
-      
+
       // Recargar los tickets para actualizar la lista en tiempo real
       final user = context.read<UserProvider>().user;
       await context.read<TicketProvider>().fetchTickets(user);
@@ -198,13 +198,6 @@ class _NewCaseTabState extends State<NewCaseTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Nuevo Caso',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             const SizedBox(height: 20),
 
             // Usamos un Consumer para escuchar los cambios en ClientProvider

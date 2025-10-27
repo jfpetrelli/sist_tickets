@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:sist_tickets/constants.dart';
 
@@ -7,6 +6,7 @@ class AppTemplate extends StatelessWidget {
   final Widget body;
   final Widget? bottomNavigationBar;
   final Widget? drawer;
+  final String? title;
 
   const AppTemplate({
     super.key,
@@ -14,6 +14,7 @@ class AppTemplate extends StatelessWidget {
     required this.body,
     this.bottomNavigationBar,
     this.drawer,
+    this.title,
   });
 
   @override
@@ -23,24 +24,24 @@ class AppTemplate extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimaryColor,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Colors.white),
           onPressed: () {
             scaffoldKey.currentState?.openDrawer();
           },
         ),
+        title: title != null
+            ? Text(title!, style: const TextStyle(color: Colors.white))
+            : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-
-            },
+            onPressed: () {},
           ),
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {
-
-            },
+            onPressed: () {},
           ),
         ],
       ),

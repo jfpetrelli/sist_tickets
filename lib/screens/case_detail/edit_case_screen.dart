@@ -276,6 +276,14 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                                 style: const TextStyle(color: Colors.red),
                               );
                             }
+
+                            // Eliminar duplicados usando un Map
+                            final Map<int, dynamic> uniqueTipos = {};
+                            for (var tipo in tiposCasoProvider.tiposCaso) {
+                              uniqueTipos[tipo.id] = tipo;
+                            }
+                            final uniqueTiposList = uniqueTipos.values.toList();
+
                             return DropdownButtonFormField<int>(
                               value: _selectedCaseTypeId,
                               decoration: const InputDecoration(
@@ -283,7 +291,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.category),
                               ),
-                              items: tiposCasoProvider.tiposCaso
+                              items: uniqueTiposList
                                   .map((tipo) => DropdownMenuItem<int>(
                                         value: tipo.id,
                                         child: Text(tipo.nombre),
@@ -325,7 +333,16 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
 
                         Consumer<UserListProvider>(
                           builder: (context, userListProvider, child) {
-                            final technicianExists = userListProvider.users.any(
+                            // Crear un mapa para eliminar duplicados por idPersonal
+                            final Map<int, Usuario> uniqueUsers = {};
+                            for (var user in userListProvider.users) {
+                              uniqueUsers[user.idPersonal] = user;
+                            }
+
+                            // Convertir de vuelta a lista
+                            final uniqueUsersList = uniqueUsers.values.toList();
+
+                            final technicianExists = uniqueUsersList.any(
                                 (user) =>
                                     user.idPersonal ==
                                     _selectedAssignedTechnicianId);
@@ -340,7 +357,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.person),
                               ),
-                              items: userListProvider.users.map((Usuario user) {
+                              items: uniqueUsersList.map((Usuario user) {
                                 return DropdownMenuItem<int>(
                                   value: user.idPersonal,
                                   child: Text(user.nombre,

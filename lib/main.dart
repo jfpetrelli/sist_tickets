@@ -47,10 +47,10 @@ class MyApp extends StatelessWidget {
         title: 'Sistema de Tickets',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primaryColor: kPrimaryColor,
-          colorScheme: ColorScheme.fromSeed(seedColor: kPrimaryColor),
-          useMaterial3: true,
-        ),
+            primaryColor: kPrimaryColor,
+            colorScheme: ColorScheme.fromSeed(seedColor: kPrimaryColor),
+            useMaterial3: true,
+            inputDecorationTheme: kInputDecorationTheme),
         home: const SplashScreen(),
       ),
     );
