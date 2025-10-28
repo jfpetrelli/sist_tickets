@@ -6,6 +6,7 @@ import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/screens/home/cases_tab.dart';
 import 'package:sist_tickets/screens/home/new_case_tab.dart';
 import 'package:sist_tickets/screens/home/profile_tab.dart';
+import 'package:sist_tickets/screens/home/archivados_screen.dart';
 
 import 'package:sist_tickets/screens/login/login_screen.dart';
 import 'package:sist_tickets/screens/reports/reports_content.dart';
@@ -166,6 +167,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   _onBottomItemTapped(1);
                   Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.archive, color: Colors.white),
+                title: const Text('Archivados', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ArchivadosScreen()),
+                  );
                 },
               ),
               const Divider(color: Colors.white24),

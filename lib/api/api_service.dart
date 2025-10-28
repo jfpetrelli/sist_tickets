@@ -360,6 +360,25 @@ class ApiService {
     }
   }
 
+  /// Get tickets filtered by estado (id_estado). Uses the filter endpoint with query param id_estado.
+  Future<List<dynamic>> getTicketsByEstado(int estado, [String? idPersonalAsignado]) async {
+    Uri uri;
+    const base = ApiConfig.tickets;
+    if (idPersonalAsignado != null) {
+      uri = Uri.parse('$base?id_estado=$estado&id_personal_asignado=$idPersonalAsignado');
+    } else {
+      uri = Uri.parse('$base?id_estado=$estado');
+    }
+
+    final response = await _makeAuthenticatedRequest(() => http.get(uri, headers: _headers));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Error al obtener tickets por estado: ${response.statusCode}, ${response.body}');
+    }
+  }
+
   Future<Map<String, dynamic>> getTicketById(String id) async {
     final response = await _makeAuthenticatedRequest(() => http.get(
         Uri.parse('${ApiConfig.ticketById}$id')

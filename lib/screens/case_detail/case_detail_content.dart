@@ -50,6 +50,17 @@ class _CaseDetailContentState extends State<CaseDetailContent>
       _showEstadoFabMenu = false;
     });
 
+    // Validate allowed transitions for 'Archivado' (id 5)
+    const int estadoArchivado = 4;
+    if (nuevoEstado == estadoArchivado && !(ticket.idEstado == 1 || ticket.idEstado == 2)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Solo se puede archivar desde Pendiente o En Proceso')),
+        );
+      }
+      return;
+    }
+
     // Actualizar el ticket
     final updatedTicket = Ticket(
       idCaso: ticket.idCaso,
@@ -101,6 +112,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
         return 'En Proceso';
       case 3:
         return 'Finalizado';
+      case 4:
+        return 'Archivado';
       default:
         return 'Desconocido';
     }
@@ -403,6 +416,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                     return kSuccessColor.withOpacity(0.2);
                   } else if (ticket.idEstado == 2) {
                     return kPrimaryColor.withOpacity(0.2);
+                  } else if (ticket.idEstado == 4) {
+                    return Colors.grey.withOpacity(0.15);
                   } else {
                     return Colors.orange.withOpacity(0.2);
                   }
@@ -415,6 +430,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                     return Icons.check_circle;
                   } else if (ticket.idEstado == 2) {
                     return Icons.settings_suggest_rounded;
+                  } else if (ticket.idEstado == 4) {
+                    return Icons.archive;
                   } else {
                     return Icons.hourglass_empty;
                   }
@@ -424,6 +441,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                     return kSuccessColor;
                   } else if (ticket.idEstado == 2) {
                     return kPrimaryColor;
+                  } else if (ticket.idEstado == 4) {
+                    return Colors.grey;
                   } else {
                     return Colors.orange;
                   }
@@ -448,6 +467,19 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                     ),
                   ),
                 );
+                // Allow archiving from Pendiente
+                items.add(
+                  PopupMenuItem(
+                    value: 4,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.archive, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text('Archivar'),
+                      ],
+                    ),
+                  ),
+                );
               }
               if (ticket.idEstado == 2) {
                 items.addAll([
@@ -468,6 +500,42 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                         Icon(Icons.check_circle, color: kSuccessColor),
                         SizedBox(width: 8),
                         Text('Completado'),
+                      ],
+                    ),
+                  ),
+                  // Allow archiving from En Proceso
+                  PopupMenuItem(
+                    value: 4,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.archive, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text('Archivar'),
+                      ],
+                    ),
+                  ),
+                ]);
+              }
+              if (ticket.idEstado == 4) {
+                items.addAll([
+                  PopupMenuItem(
+                    value: 1,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.hourglass_empty, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Text('Pendiente'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 2,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.settings_suggest_rounded,
+                            color: kPrimaryColor),
+                        SizedBox(width: 8),
+                        Text('En Proceso'),
                       ],
                     ),
                   ),
