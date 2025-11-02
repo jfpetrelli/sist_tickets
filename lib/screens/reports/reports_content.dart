@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
+import 'package:sist_tickets/utils/pdf_downloader.dart';
 
 class ReportsContent extends StatefulWidget {
   const ReportsContent({super.key});
@@ -60,13 +61,15 @@ class _ReportsContentState extends State<ReportsContent> {
           'Reporte_Estadisticas_${DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        // Para Flutter Web: mostrar mensaje de que no está soportado aún
+        // Para Flutter Web: descargar usando helper
+        final pdfBytes = await pdf.save();
+        downloadPdf(pdfBytes, fileName);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:
-                  Text('Exportar PDF no está disponible en la versión web'),
-              backgroundColor: Colors.orange,
+            SnackBar(
+              content: Text('Reporte PDF descargado: $fileName'),
+              backgroundColor: Colors.green,
             ),
           );
         }
