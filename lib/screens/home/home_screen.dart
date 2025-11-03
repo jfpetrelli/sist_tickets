@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
@@ -14,6 +15,7 @@ import 'package:sist_tickets/screens/reports/reports_content.dart';
 import 'package:sist_tickets/widgets/app_template.dart';
 import 'package:sist_tickets/screens/clientes/clientes_screen.dart';
 import 'package:sist_tickets/screens/usuarios/usuarios_screen.dart';
+import 'package:sist_tickets/screens/admin_web/admin_web_dashboard.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -51,6 +53,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Si es web, mostrar el dashboard de administrador
+    if (kIsWeb) {
+      return const AdminWebDashboard();
+    }
+
+    // Si es móvil, mostrar la interfaz móvil existente
     return AppTemplate(
       scaffoldKey: _scaffoldKey,
       title: _appBarTitles[_selectedIndex],
