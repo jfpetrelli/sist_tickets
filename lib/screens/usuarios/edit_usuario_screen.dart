@@ -70,13 +70,16 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
       try {
         final api = ApiService();
         // Use API filter to request tickets assigned to this user only
-        final tickets = await api.getTickets(widget.usuario.idPersonal.toString());
+        final tickets =
+            await api.getTickets(widget.usuario.idPersonal.toString());
 
         final activeTickets = tickets.where((t) {
           if (t is Map) {
-            final idAsignado = t['id_personal_asignado'] ?? t['idPersonalAsignado'];
+            final idAsignado =
+                t['id_personal_asignado'] ?? t['idPersonalAsignado'];
             final idEstado = t['id_estado'] ?? t['idEstado'];
-            return idAsignado == widget.usuario.idPersonal && (idEstado == 1 || idEstado == 2);
+            return idAsignado == widget.usuario.idPersonal &&
+                (idEstado == 1 || idEstado == 2);
           }
           return false;
         }).toList();
@@ -96,17 +99,22 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
                 content: SingleChildScrollView(
                   child: ListBody(
                     children: [
-                      Text('El usuario tiene ${activeTickets.length} ticket(s) activo(s).'),
+                      Text(
+                          'El usuario tiene ${activeTickets.length} ticket(s) activo(s).'),
                       const SizedBox(height: 8),
-                      const Text('Tickets activos:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Tickets activos:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 8,
                         runSpacing: 6,
-                        children: ticketIds.map((id) => Chip(label: Text(id.toString()))).toList(),
+                        children: ticketIds
+                            .map((id) => Chip(label: Text(id.toString())))
+                            .toList(),
                       ),
                       const SizedBox(height: 12),
-                      const Text('¿Está seguro que desea dar de baja al usuario?'),
+                      const Text(
+                          '¿Está seguro que desea dar de baja al usuario?'),
                     ],
                   ),
                 ),
@@ -147,7 +155,9 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al verificar tickets activos: ${e.toString()}')),
+            SnackBar(
+                content: Text(
+                    'Error al verificar tickets activos: ${e.toString()}')),
           );
         }
       }
@@ -242,6 +252,90 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false; // Detener indicador de carga
+        });
+      }
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    // Mostrar diálogo de confirmación
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Resetear Contraseña'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                  '¿Está seguro que desea resetear la contraseña de ${_nombreController.text}?'),
+              const SizedBox(height: 12),
+              const Text(
+                'El usuario deberá cambiar su contraseña en el próximo inicio de sesión.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.orange),
+              child: const Text('Resetear'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    // Proceder con el reseteo de contraseña
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final success = await context
+          .read<UserListProvider>()
+          .resetUserPassword(widget.usuario.idPersonal);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Contraseña reseteada exitosamente.'),
+              backgroundColor: kSuccessColor,
+            ),
+          );
+        } else {
+          final err = context.read<UserListProvider>().errorMessage ??
+              'Error al resetear la contraseña';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(err),
+              backgroundColor: kErrorColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al resetear contraseña: ${e.toString()}'),
+            backgroundColor: kErrorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
         });
       }
     }
@@ -396,29 +490,54 @@ class _EditUsuarioScreenState extends State<EditUsuarioScreen> {
               ),
 
               const SizedBox(height: 24),
-              // --- Botón de Guardar ---
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _saveChanges,
-                  icon: _isLoading
-                      ? Container(
-                          width: 24,
-                          height: 24,
-                          padding: const EdgeInsets.all(2.0),
-                          child: const CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
-                        )
-                      : const Icon(Icons.save),
-                  label: const Text('Guardar Cambios'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
+              // --- Botones de acción ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _resetPassword,
+                      icon: const Icon(Icons.lock_reset),
+                      label: const Text('Resetear Contraseña'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                        side: const BorderSide(color: Colors.orange),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 200,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _saveChanges,
+                      icon: _isLoading
+                          ? Container(
+                              width: 24,
+                              height: 24,
+                              padding: const EdgeInsets.all(2.0),
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )
+                          : const Icon(Icons.save),
+                      label: const Text('Guardar Cambios'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

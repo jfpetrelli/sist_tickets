@@ -91,7 +91,8 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
           if (t is Map) {
             final idCliente = t['id_cliente'];
             final idEstado = t['id_estado'];
-            return idCliente == widget.cliente.idCliente && (idEstado == 1 || idEstado == 2);
+            return idCliente == widget.cliente.idCliente &&
+                (idEstado == 1 || idEstado == 2);
           }
           return false;
         }).toList();
@@ -111,17 +112,22 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
                 content: SingleChildScrollView(
                   child: ListBody(
                     children: [
-                      Text('El cliente tiene ${activeTickets.length} ticket(s) activo(s).'),
+                      Text(
+                          'El cliente tiene ${activeTickets.length} ticket(s) activo(s).'),
                       const SizedBox(height: 8),
-                      const Text('Tickets activos:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Tickets activos:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 8,
                         runSpacing: 6,
-                        children: ticketIds.map((id) => Chip(label: Text(id.toString()))).toList(),
+                        children: ticketIds
+                            .map((id) => Chip(label: Text(id.toString())))
+                            .toList(),
                       ),
                       const SizedBox(height: 12),
-                      const Text('¿Está seguro que desea dar de baja al cliente?'),
+                      const Text(
+                          '¿Está seguro que desea dar de baja al cliente?'),
                     ],
                   ),
                 ),
@@ -160,7 +166,9 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al verificar tickets activos: ${e.toString()}')),
+            SnackBar(
+                content: Text(
+                    'Error al verificar tickets activos: ${e.toString()}')),
           );
         }
       }
@@ -418,28 +426,36 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
               ),
               const SizedBox(height: 24),
               // --- Botón de Guardar ---
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _saveChanges,
-                  icon: _isLoading
-                      ? Container(
-                          width: 24,
-                          height: 24,
-                          padding: const EdgeInsets.all(2.0),
-                          child: const CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
-                        )
-                      : const Icon(Icons.save),
-                  label: const Text('Guardar Cambios'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _saveChanges,
+                      icon: _isLoading
+                          ? Container(
+                              width: 24,
+                              height: 24,
+                              padding: const EdgeInsets.all(2.0),
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )
+                          : const Icon(Icons.save),
+                      label: const Text('Guardar Cambios'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),

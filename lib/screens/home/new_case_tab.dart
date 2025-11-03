@@ -503,6 +503,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
 
             // --- Botones de Acción ---
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 // Botón para limpiar el formulario
                 OutlinedButton(
@@ -513,15 +514,30 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   child: const Icon(Icons.refresh),
                 ),
                 const SizedBox(width: 16),
-                // Botón para guardar el caso (se expande para llenar el espacio)
-                Expanded(
-                  child: SizedBox(
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _saveCase,
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Guardar Caso'),
+                // Botón para guardar el caso
+                SizedBox(
+                  width: 200,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _saveCase,
+                    icon: _isSaving
+                        ? Container(
+                            width: 24,
+                            height: 24,
+                            padding: const EdgeInsets.all(2.0),
+                            child: const CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Icon(Icons.save),
+                    label: const Text('Guardar Caso'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),

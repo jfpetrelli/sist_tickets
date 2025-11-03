@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
 import 'package:sist_tickets/screens/case_detail/case_documents_page.dart';
+import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature_screen.dart';
+import 'package:sist_tickets/screens/case_detail/edit_case_screen.dart';
 import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
@@ -52,10 +54,13 @@ class _CaseDetailContentState extends State<CaseDetailContent>
 
     // Validate allowed transitions for 'Archivado' (id 5)
     const int estadoArchivado = 4;
-    if (nuevoEstado == estadoArchivado && !(ticket.idEstado == 1 || ticket.idEstado == 2)) {
+    if (nuevoEstado == estadoArchivado &&
+        !(ticket.idEstado == 1 || ticket.idEstado == 2)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Solo se puede archivar desde Pendiente o En Proceso')),
+          const SnackBar(
+              content:
+                  Text('Solo se puede archivar desde Pendiente o En Proceso')),
         );
       }
       return;
@@ -209,6 +214,12 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TicketProvider>(context, listen: false)
           .getTicketById(widget.caseId);
+      // Asegurar que los tipos de caso estén cargados para poder mostrar el nombre
+      final tiposCasoProvider =
+          Provider.of<TiposCasoProvider>(context, listen: false);
+      if (tiposCasoProvider.tiposCaso.isEmpty) {
+        tiposCasoProvider.fetchTiposCaso();
+      }
     });
   }
 
@@ -280,6 +291,28 @@ class _CaseDetailContentState extends State<CaseDetailContent>
             alignment: Alignment.bottomRight,
             scale: CurvedAnimation(
               parent: _fabAnimationController,
+              curve: Interval(0.5, 1.0, curve: Curves.easeOutCubic),
+            ),
+            child: FloatingActionButton.extended(
+              heroTag: 'fab_edit',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditCaseScreen(caseId: widget.caseId),
+                  ),
+                );
+                _toggleFabMenu();
+              },
+              label: const Text('Editar Caso'),
+              icon: const Icon(Icons.edit),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ScaleTransition(
+            alignment: Alignment.bottomRight,
+            scale: CurvedAnimation(
+              parent: _fabAnimationController,
               // The interval is adjusted to appear after the other buttons.
               curve: Interval(0.4, 1.0, curve: Curves.easeOutCubic),
             ),
@@ -304,7 +337,13 @@ class _CaseDetailContentState extends State<CaseDetailContent>
             child: FloatingActionButton.extended(
               heroTag: 'fab_signature',
               onPressed: () {
-                widget.onShowConfirmationSignature();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ConfirmationSignatureScreen(caseId: widget.caseId),
+                  ),
+                );
                 _toggleFabMenu();
               },
               label: const Text('Ver firma'),
@@ -602,9 +641,11 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                     const SizedBox(height: 4),
                     _buildDetailRow(
                         Icons.category,
-                        tipoCasoNombre.isNotEmpty
-                            ? tipoCasoNombre
-                            : 'Tipo de caso no disponible'),
+                        tiposCasoProvider.isLoading
+                            ? 'Cargando tipo de caso...'
+                            : (tipoCasoNombre.isNotEmpty
+                                ? tipoCasoNombre
+                                : 'Tipo de caso no disponible')),
                     const SizedBox(height: 4),
                     _buildDetailRow(Icons.priority_high, prioridadTexto),
                     const SizedBox(height: 4),

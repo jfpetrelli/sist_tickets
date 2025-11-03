@@ -16,7 +16,8 @@ class ApiService {
   // Cargar el token del storage al inicializar la aplicación
   Future<void> loadToken() async {
     _token = await _readSecurely('access_token');
-    debugPrint('📦 Token cargado desde storage: ${_token != null ? "Sí" : "No"}');
+    debugPrint(
+        '📦 Token cargado desde storage: ${_token != null ? "Sí" : "No"}');
   }
 
   Map<String, String> get _headers {
@@ -109,6 +110,35 @@ class ApiService {
           'Error al cambiar contraseña: ${response.statusCode} - ${response.body}');
       final errorData = jsonDecode(response.body);
       throw Exception(errorData['detail'] ?? 'Error al cambiar la contraseña');
+    }
+  }
+
+  // Método para resetear la contraseña de un usuario (solo admin)
+  // Backend: PUT /usuarios/{usuario_id}/reset_password (sin body) -> resetea a "1234"
+  Future<Map<String, dynamic>> adminResetPassword(int userId) async {
+    final url = Uri.parse('${ApiConfig.users}$userId/reset_password');
+    print('Admin resetting password for user: $userId');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.put(
+        url,
+        headers: _headers, // No body: el backend fija la contraseña por defecto
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      print('Password reset successfully');
+      return jsonDecode(response.body);
+    } else {
+      print(
+          'Error al resetear contraseña: ${response.statusCode} - ${response.body}');
+      try {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+            errorData['detail'] ?? 'Error al resetear la contraseña');
+      } catch (_) {
+        throw Exception('Error al resetear la contraseña');
+      }
     }
   }
 
@@ -361,21 +391,25 @@ class ApiService {
   }
 
   /// Get tickets filtered by estado (id_estado). Uses the filter endpoint with query param id_estado.
-  Future<List<dynamic>> getTicketsByEstado(int estado, [String? idPersonalAsignado]) async {
+  Future<List<dynamic>> getTicketsByEstado(int estado,
+      [String? idPersonalAsignado]) async {
     Uri uri;
     const base = ApiConfig.tickets;
     if (idPersonalAsignado != null) {
-      uri = Uri.parse('$base?id_estado=$estado&id_personal_asignado=$idPersonalAsignado');
+      uri = Uri.parse(
+          '$base?id_estado=$estado&id_personal_asignado=$idPersonalAsignado');
     } else {
       uri = Uri.parse('$base?id_estado=$estado');
     }
 
-    final response = await _makeAuthenticatedRequest(() => http.get(uri, headers: _headers));
+    final response =
+        await _makeAuthenticatedRequest(() => http.get(uri, headers: _headers));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Error al obtener tickets por estado: ${response.statusCode}, ${response.body}');
+      throw Exception(
+          'Error al obtener tickets por estado: ${response.statusCode}, ${response.body}');
     }
   }
 
@@ -493,13 +527,14 @@ class ApiService {
       'POST',
       Uri.parse('${ApiConfig.adjuntosByTicket}$ticketId'),
     );
-    
+
     // Asegurar que el token esté cargado
     if (_token == null) {
       _token = await _readSecurely('access_token');
-      debugPrint('Token cargado desde storage: ${_token != null ? "Sí" : "No"}');
+      debugPrint(
+          'Token cargado desde storage: ${_token != null ? "Sí" : "No"}');
     }
-    
+
     // Agregar headers de autenticación sin Content-Type (el navegador lo manejará)
     if (_token != null) {
       request.headers['Authorization'] = 'Bearer $_token';
@@ -509,7 +544,8 @@ class ApiService {
       throw Exception('No hay token de autenticación disponible');
     }
 
-    debugPrint('Subiendo archivo: $fileName (${fileBytes.length} bytes) al ticket $ticketId');
+    debugPrint(
+        'Subiendo archivo: $fileName (${fileBytes.length} bytes) al ticket $ticketId');
 
     // Crear MultipartFile desde bytes (funciona tanto en web como mobile)
     request.files.add(
@@ -522,9 +558,9 @@ class ApiService {
 
     debugPrint('Enviando request a: ${request.url}');
     final response = await request.send();
-    
+
     debugPrint('Respuesta recibida: ${response.statusCode}');
-    
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       final responseData = await response.stream.bytesToString();
       debugPrint('✅ Archivo subido exitosamente');

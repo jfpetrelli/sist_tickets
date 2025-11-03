@@ -95,4 +95,28 @@ class UserListProvider extends ChangeNotifier {
       return false; // Indicar fallo
     }
   }
+
+  // Resetear la contraseña del usuario a la predeterminada (backend la fija a "1234")
+  Future<bool> resetUserPassword(int userId) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiService.adminResetPassword(userId);
+      final updatedUser = Usuario.fromJson(response);
+      // Actualizar la lista local si el usuario existe en caché
+      final index = _users.indexWhere((u) => u.idPersonal == userId);
+      if (index != -1) {
+        _users[index] = updatedUser;
+      }
+      errorMessage = null;
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      errorMessage = 'No se pudo resetear la contraseña: ${e.toString()}';
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

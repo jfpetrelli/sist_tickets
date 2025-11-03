@@ -394,28 +394,37 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                         const SizedBox(height: 24), // Espacio antes del botón
 
                         // --- NUEVO BOTÓN DE GUARDAR ---
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton.icon(
-                            onPressed: _isSaving ? null : _saveChanges,
-                            icon: _isSaving
-                                ? Container(
-                                    width: 24,
-                                    height: 24,
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: const CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 3,
-                                    ),
-                                  )
-                                : const Icon(Icons.save),
-                            label: const Text('Guardar Cambios'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).primaryColor,
-                              foregroundColor: Colors.white,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SizedBox(
+                              width: 200,
+                              height: 52,
+                              child: ElevatedButton.icon(
+                                onPressed: _isSaving ? null : _saveChanges,
+                                icon: _isSaving
+                                    ? Container(
+                                        width: 24,
+                                        height: 24,
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: const CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 3,
+                                        ),
+                                      )
+                                    : const Icon(Icons.save),
+                                label: const Text('Guardar Cambios'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Theme.of(context).primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),

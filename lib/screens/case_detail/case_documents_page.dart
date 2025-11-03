@@ -235,6 +235,7 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
           _showAttachmentOptions();
         },
         backgroundColor: kPrimaryColor,
+        shape: const CircleBorder(),
         tooltip: 'Adjuntar Documento',
         child: const Icon(Icons.add, color: Colors.white),
       ),

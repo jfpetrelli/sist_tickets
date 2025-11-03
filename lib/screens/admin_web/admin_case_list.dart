@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/models/ticket.dart';
 import 'package:sist_tickets/providers/ticket_provider.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
@@ -60,7 +61,7 @@ class _AdminCaseListState extends State<AdminCaseList> {
 
   Widget _buildSearchField() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      padding: const EdgeInsets.fromLTRB(12, 18, 12, 8),
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
@@ -171,7 +172,7 @@ class _AdminCaseListState extends State<AdminCaseList> {
                 child: Text(
                   '#${caseItem.idCaso.toString()}',
                   style: const TextStyle(
-                    color: Colors.orange,
+                    color: kPrimaryColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -219,9 +220,9 @@ class _AdminCaseListState extends State<AdminCaseList> {
             children: [
               _buildSearchField(),
               const TabBar(
-                labelColor: Colors.orange,
+                labelColor: kPrimaryColor,
                 unselectedLabelColor: Colors.black54,
-                indicatorColor: Colors.orange,
+                indicatorColor: kPrimaryColor,
                 tabs: [
                   Tab(text: 'Pendientes'),
                   Tab(text: 'En Proceso'),
