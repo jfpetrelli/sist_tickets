@@ -390,26 +390,17 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
                   return null; // Email es opcional pero si se ingresa, debe ser válido
                 },
               ),
+
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _cuitController,
-                decoration: const InputDecoration(
-                  labelText: 'CUIT',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // ID Tipo Cliente + Toggle Activo lado a lado
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _idTipoClienteController,
+                      controller: _cuitController,
                       decoration: const InputDecoration(
-                        labelText: 'ID Tipo Cliente (Opcional)',
+                        labelText: 'CUIT',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
                     ),
                   ),
                   const SizedBox(width: 8),
