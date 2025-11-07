@@ -213,22 +213,6 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
         title: const Text('Editar Caso'),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
-        actions: [
-          _isSaving
-              ? const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.save),
-                  tooltip: 'Guardar Cambios',
-                  onPressed: _saveChanges,
-                ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

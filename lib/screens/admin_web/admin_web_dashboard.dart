@@ -147,13 +147,16 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
               const Text('Nuevo Caso', style: TextStyle(color: Colors.white)),
           onTap: () {
             Navigator.pop(context);
-            // Mostrar el formulario de nuevo caso en un dialog
-            showDialog(
-              context: context,
-              builder: (context) => Dialog(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: const NewCaseTab(),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Nuevo Caso'),
+                    backgroundColor: kPrimaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  body: const NewCaseTab(),
                 ),
               ),
             );

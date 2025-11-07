@@ -19,14 +19,17 @@ class AdminCaseList extends StatefulWidget {
   State<AdminCaseList> createState() => _AdminCaseListState();
 }
 
-class _AdminCaseListState extends State<AdminCaseList> {
+class _AdminCaseListState extends State<AdminCaseList>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _searchController;
   String _searchQuery = '';
   bool _isSortAscending = true;
+  late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     _searchController = TextEditingController();
     _searchController.addListener(() {
       setState(() {
@@ -44,6 +47,7 @@ class _AdminCaseListState extends State<AdminCaseList> {
   @override
   void dispose() {
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -53,11 +57,7 @@ class _AdminCaseListState extends State<AdminCaseList> {
         .fetchTickets(userProvider.user);
   }
 
-  void _toggleSortOrder() {
-    setState(() {
-      _isSortAscending = !_isSortAscending;
-    });
-  }
+  // Sorting order can be toggled from UI if needed; default is ascending
 
   Widget _buildSearchField() {
     return Padding(
@@ -84,7 +84,7 @@ class _AdminCaseListState extends State<AdminCaseList> {
   }
 
   Widget _buildCasesTabView(
-      int statusId, BoxConstraints constraints, TicketProvider value) {
+      int statusId, BoxConstraints constraints, List<Ticket> allTickets) {
     return RefreshIndicator(
       onRefresh: _refreshTickets,
       child: SingleChildScrollView(
@@ -94,12 +94,9 @@ class _AdminCaseListState extends State<AdminCaseList> {
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Builder(
             builder: (context) {
-              if (value.isLoading && value.tickets.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
               final normalizedQuery = _searchQuery.toLowerCase();
 
-              final cases = value.tickets
+              final cases = allTickets
                   .where((ticket) => ticket.idEstado == statusId)
                   .where((ticket) {
                 if (normalizedQuery.isEmpty) return true;
@@ -149,6 +146,8 @@ class _AdminCaseListState extends State<AdminCaseList> {
           formattedDate =
               '${date?.day.toString().padLeft(2, '0')}/${date?.month.toString().padLeft(2, '0')}';
         }
+        final bool isSelected =
+            caseItem.idCaso != null && caseItem.idCaso == widget.selectedCaseId;
         return InkWell(
           onTap: () {
             if (caseItem.idCaso != null) {
@@ -158,10 +157,17 @@ class _AdminCaseListState extends State<AdminCaseList> {
           borderRadius: BorderRadius.circular(8),
           child: Card(
             elevation: 1,
+            color: isSelected ? kSecondaryColor.withOpacity(0.10) : null,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
+              side: isSelected
+                  ? const BorderSide(color: kSecondaryColor, width: 1.5)
+                  : BorderSide.none,
             ),
             child: ListTile(
+              selected: isSelected,
+              selectedColor: kTextColor,
+              tileColor: isSelected ? kSecondaryColor.withOpacity(0.06) : null,
               dense: true,
               visualDensity: const VisualDensity(vertical: -4),
               contentPadding:
@@ -209,41 +215,46 @@ class _AdminCaseListState extends State<AdminCaseList> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<TicketProvider>(
-      builder: (context, ticketProvider, child) {
-        if (ticketProvider.isLoading) {
+    final isLoadingEmpty = context
+        .select<TicketProvider, bool>((p) => p.isLoading && p.tickets.isEmpty);
+
+    return Selector<TicketProvider, List<Ticket>>(
+      selector: (_, p) => p.tickets,
+      builder: (context, tickets, child) {
+        if (isLoadingEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
-        return DefaultTabController(
-          length: 3,
-          child: Column(
-            children: [
-              _buildSearchField(),
-              const TabBar(
-                labelColor: kPrimaryColor,
-                unselectedLabelColor: Colors.black54,
-                indicatorColor: kPrimaryColor,
-                tabs: [
-                  Tab(text: 'Pendientes'),
-                  Tab(text: 'En Proceso'),
-                  Tab(text: 'Completados'),
-                ],
+        return Column(
+          children: [
+            _buildSearchField(),
+            TabBar(
+              controller: _tabController,
+              labelColor: kPrimaryColor,
+              unselectedLabelColor: Colors.black54,
+              indicatorColor: kPrimaryColor,
+              tabs: const [
+                Tab(text: 'Pendientes', icon: Icon(Icons.hourglass_empty)),
+                Tab(
+                    text: 'En Proceso',
+                    icon: Icon(Icons.settings_suggest_rounded)),
+                Tab(text: 'Completados', icon: Icon(Icons.check_circle)),
+              ],
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildCasesTabView(1, constraints, tickets),
+                      _buildCasesTabView(2, constraints, tickets),
+                      _buildCasesTabView(3, constraints, tickets),
+                    ],
+                  );
+                },
               ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return TabBarView(
-                      children: [
-                        _buildCasesTabView(1, constraints, ticketProvider),
-                        _buildCasesTabView(2, constraints, ticketProvider),
-                        _buildCasesTabView(3, constraints, ticketProvider),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

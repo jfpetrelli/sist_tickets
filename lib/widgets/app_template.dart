@@ -34,16 +34,6 @@ class AppTemplate extends StatelessWidget {
         title: title != null
             ? Text(title!, style: const TextStyle(color: Colors.white))
             : null,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
       ),
       drawer: drawer,
       body: body,
