@@ -52,8 +52,9 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
       body: Row(
         children: [
           // Master panel (lista de casos)
-          Expanded(
-            flex: 1,
+          Container(
+            constraints: const BoxConstraints(minWidth: 280, maxWidth: 600),
+            width: 500, // ancho preferido
             child: AdminCaseList(
               onCaseSelected: _onCaseSelected,
               selectedCaseId: _selectedCaseId,
