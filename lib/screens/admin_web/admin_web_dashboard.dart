@@ -5,6 +5,7 @@ import 'package:sist_tickets/screens/admin_web/admin_case_detail.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/constants.dart';
+import 'package:sist_tickets/screens/admin_web/admin_web_profile.dart';
 import 'package:sist_tickets/screens/login/login_screen.dart';
 import 'package:sist_tickets/screens/usuarios/usuarios_screen.dart';
 import 'package:sist_tickets/screens/clientes/clientes_screen.dart';
@@ -22,11 +23,36 @@ class AdminWebDashboard extends StatefulWidget {
 
 class _AdminWebDashboardState extends State<AdminWebDashboard> {
   int? _selectedCaseId;
+  static const double _detailBreakpoint = 800.0;
 
   void _onCaseSelected(int caseId) {
     setState(() {
       _selectedCaseId = caseId;
     });
+  }
+
+  void _handleCaseSelected(BuildContext context, int caseId) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < _detailBreakpoint) {
+      // On small screens, show details in a dialog instead of squeezing the layout
+      setState(() {
+        _selectedCaseId = caseId;
+      });
+      showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return Dialog(
+            child: SizedBox(
+              width: width * 1,
+              height: MediaQuery.of(context).size.height * 0.85,
+              child: AdminCaseDetail(caseId: caseId),
+            ),
+          );
+        },
+      );
+    } else {
+      _onCaseSelected(caseId);
+    }
   }
 
   @override
@@ -49,28 +75,34 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
           ),
         ),
       ),
-      body: Row(
-        children: [
-          // Master panel (lista de casos)
-          Container(
-            constraints: const BoxConstraints(minWidth: 280, maxWidth: 600),
-            width: 500, // ancho preferido
-            child: AdminCaseList(
-              onCaseSelected: _onCaseSelected,
-              selectedCaseId: _selectedCaseId,
+      body: Builder(builder: (context) {
+        final width = MediaQuery.of(context).size.width;
+        final showDetail = width >= _detailBreakpoint;
+
+        return Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: AdminCaseList(
+                onCaseSelected: (id) => _handleCaseSelected(context, id),
+                selectedCaseId: _selectedCaseId,
+              ),
             ),
-          ),
-          // Divider vertical
-          const VerticalDivider(width: 1, thickness: 1),
-          // Detail panel (detalle del caso seleccionado)
-          Expanded(
-            flex: 2,
-            child: AdminCaseDetail(
-              caseId: _selectedCaseId,
-            ),
-          ),
-        ],
-      ),
+
+            // On wide screens show divider + detail; on narrow screens hide them to avoid compression
+            if (showDetail) ...[
+              const VerticalDivider(width: 1, thickness: 1),
+              // Detail panel (detalle del caso seleccionado)
+              Expanded(
+                flex: 2,
+                child: AdminCaseDetail(
+                  caseId: _selectedCaseId,
+                ),
+              ),
+            ],
+          ],
+        );
+      }),
     );
   }
 
@@ -219,6 +251,19 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
                           context,
                           MaterialPageRoute(
                               builder: (context) => const ReportsContent()));
+                    },
+                  ),
+                  ListTile(
+                    leading:
+                        const Icon(Icons.person_outline, color: Colors.white),
+                    title: const Text('Perfil',
+                        style: TextStyle(color: Colors.white)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AdminWebProfile()));
                     },
                   ),
                 ],
