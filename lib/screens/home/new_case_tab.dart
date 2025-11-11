@@ -201,7 +201,6 @@ class _NewCaseTabState extends State<NewCaseTab> {
             const SizedBox(height: 20),
 
             // Usamos un Consumer para escuchar los cambios en ClientProvider
-            // Usamos un Consumer para escuchar los cambios en ClientProvider
 
             // --- Campo para Cliente (con búsqueda) ---
             Consumer<ClientProvider>(
@@ -219,7 +218,6 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   );
                 }
 
-                // We wrap Autocomplete in a FormField to integrate with the form's validation.
                 return FormField<String>(
                   validator: (value) {
                     if (_selectedClientId == null) {
@@ -420,8 +418,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
                 if (currentUser?.idTipo == 1) {
                   availableUsers = currentUser != null ? [currentUser] : [];
                   // Auto-seleccionar al usuario actual si no hay una selección previa
-                  if (_selectedAssignedTechnicianId == null &&
-                      currentUser != null) {
+                  if (_selectedAssignedTechnicianId == null && currentUser != null) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       setState(() {
                         _selectedAssignedTechnicianId = currentUser.idPersonal;
@@ -433,38 +430,71 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   availableUsers = userListProvider.users;
                 }
 
-                return DropdownButtonFormField<int>(
-                  autovalidateMode: AutovalidateMode.onUnfocus,
-                  value: _selectedAssignedTechnicianId,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: 'Técnico Asignado',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.person),
-                    // Mostrar ayuda si es usuario tipo 1
-                    helperText: currentUser?.idTipo == 1
-                        ? 'Solo puedes asignarte casos a ti mismo'
-                        : null,
-                  ),
-                  items: availableUsers.map((Usuario user) {
-                    return DropdownMenuItem<int>(
-                      value: user.idPersonal,
-                      child: Text(
-                        user.nombre,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedAssignedTechnicianId = value;
-                    });
-                  },
+                return FormField<String>(
                   validator: (value) {
-                    if (value == null) {
+                    if (_selectedAssignedTechnicianId == null) {
                       return 'Por favor, asigne un técnico';
                     }
                     return null;
+                  },
+                  builder: (FormFieldState<String> state) {
+                    return Autocomplete<Usuario>(
+                      displayStringForOption: (Usuario user) => user.nombre,
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<Usuario>.empty();
+                        }
+                        return availableUsers.where((Usuario user) {
+                          return user.nombre.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                        });
+                      },
+                      onSelected: (Usuario selection) {
+                        setState(() {
+                          _selectedAssignedTechnicianId = selection.idPersonal;
+                          state.didChange(selection.nombre);
+                        });
+                      },
+                      fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                        // Solo inicializar el valor del controller si está vacío y hay una selección
+                        if (controller.text.isEmpty && _selectedAssignedTechnicianId != null) {
+                          final selectedUser = availableUsers.firstWhere(
+                            (u) => u.idPersonal == _selectedAssignedTechnicianId,
+                            orElse: () => availableUsers.isNotEmpty
+                                ? availableUsers.first
+                                : Usuario(idPersonal: 0, idSucursal: 0, idTipo: 0, nombre: '', activo: false)
+                          );
+                          controller.text = selectedUser.nombre;
+                        }
+                        controller.addListener(() {
+                          if (_selectedAssignedTechnicianId != null &&
+                              controller.text !=
+                                  availableUsers.firstWhere(
+                                    (u) => u.idPersonal == _selectedAssignedTechnicianId,
+                                    orElse: () => availableUsers.isNotEmpty
+                                        ? availableUsers.first
+                                        : Usuario(idPersonal: 0, idSucursal: 0, idTipo: 0, nombre: '', activo: false)
+                                  ).nombre) {
+                            setState(() {
+                              _selectedAssignedTechnicianId = null;
+                              state.didChange(null);
+                            });
+                          }
+                        });
+                        return TextFormField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: 'Técnico Asignado',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.person),
+                            helperText: currentUser?.idTipo == 1
+                                ? 'Solo puedes asignarte casos a ti mismo'
+                                : null,
+                            errorText: state.errorText,
+                          ),
+                        );
+                      },
+                    );
                   },
                 );
               },

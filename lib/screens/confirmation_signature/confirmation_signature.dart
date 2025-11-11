@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../providers/adjunto_provider.dart';
 import '../../providers/ticket_provider.dart';
@@ -117,26 +118,33 @@ class _ConfirmationSignatureContentState
                     ),
                     const SizedBox(height: 40),
                     // Botón principal - Firmar Ahora
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showSignatureDialog(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kPrimaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                    Consumer<TicketProvider>(
+                      builder: (context, ticketProvider, child) {
+                        final ticket = ticketProvider.ticket;
+                        final isEnabled = ticket?.idEstado == 3 && !kIsWeb;
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: isEnabled ? () => _showSignatureDialog(context) : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kPrimaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 2,
+                              disabledBackgroundColor: Colors.grey[300],
+                            ),
+                            icon: const Icon(Icons.edit, size: 20),
+                            label: const Text(
+                              'Firmar Ahora',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          elevation: 2,
-                        ),
-                        icon: const Icon(Icons.edit, size: 20),
-                        label: const Text(
-                          'Firmar Ahora',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
                     // Botón secundario - Volver
@@ -289,7 +297,7 @@ class _ConfirmationSignatureContentState
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => _showSignatureDialog(context),
+                        onPressed: !kIsWeb ? () => _showSignatureDialog(context) : null,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: kPrimaryColor,
                           padding: const EdgeInsets.symmetric(vertical: 16),
