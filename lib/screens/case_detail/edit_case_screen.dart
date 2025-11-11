@@ -25,6 +25,7 @@ class EditCaseScreen extends StatefulWidget {
 class _EditCaseScreenState extends State<EditCaseScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
+  late TextEditingController _telefonoContactoController;
 
   Ticket? _ticket;
   bool _isLoading = true;
@@ -38,6 +39,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
   void initState() {
     super.initState();
     _titleController = TextEditingController();
+    _telefonoContactoController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
@@ -59,6 +61,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
       setState(() {
         _ticket = ticketProvider.ticket;
         _titleController.text = _ticket!.titulo;
+        _telefonoContactoController.text = _ticket!.telefonoContacto ?? '';
         _selectedCaseTypeId = _ticket!.idTipocaso;
         _selectedPriorityId = _ticket!.idPrioridad;
         _selectedAssignedTechnicianId = _ticket!.idPersonalAsignado;
@@ -93,52 +96,60 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
       if (t.idCaso == _ticket?.idCaso) return false; // Ignorar el ticket actual
       if (t.idPersonalAsignado != tecnicoId) return false;
       if (!(t.idEstado == 1 || t.idEstado == 2)) return false;
-      if (t.fechaTentativaInicio == null || fechaTentativa == null) return false;
+      if (t.fechaTentativaInicio == null || fechaTentativa == null)
+        return false;
       // Rango de 1 hora desde la fecha tentativa
       final start = fechaTentativa.subtract(const Duration(hours: 1));
       final end = fechaTentativa.add(const Duration(hours: 1));
-      return t.fechaTentativaInicio!.isAfter(start) && t.fechaTentativaInicio!.isBefore(end);
+      return t.fechaTentativaInicio!.isAfter(start) &&
+          t.fechaTentativaInicio!.isBefore(end);
       // Comentario: aquí se podría implementar lógica de solapamiento en el futuro
     }).toList();
 
     bool continueSave = true;
     if (conflictTickets.isNotEmpty) {
-      final ticketIds = conflictTickets.map((t) => t.idCaso?.toString() ?? '-').toList();
+      final ticketIds =
+          conflictTickets.map((t) => t.idCaso?.toString() ?? '-').toList();
       continueSave = await showDialog<bool>(
-        context: context,
-        builder: (ctx) {
-          return AlertDialog(
-            title: const Text('Advertencia de asignación'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: [
-                  Text('El técnico seleccionado ya tiene ${conflictTickets.length} ticket(s) activo(s) asignado(s) en el rango de 1 hora desde la fecha/hora elegida.'),
-                  const SizedBox(height: 8),
-                  const Text('Tickets:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: ticketIds.map((id) => Chip(label: Text(id))).toList(),
+            context: context,
+            builder: (ctx) {
+              return AlertDialog(
+                title: const Text('Advertencia de asignación'),
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: [
+                      Text(
+                          'El técnico seleccionado ya tiene ${conflictTickets.length} ticket(s) activo(s) asignado(s) en el rango de 1 hora desde la fecha/hora elegida.'),
+                      const SizedBox(height: 8),
+                      const Text('Tickets:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: ticketIds
+                            .map((id) => Chip(label: Text(id)))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text('¿Desea continuar con la asignación?'),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  const Text('¿Desea continuar con la asignación?'),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: const Text('Continuar'),
+                  ),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Continuar'),
-              ),
-            ],
-          );
-        },
-      ) ?? false;
+              );
+            },
+          ) ??
+          false;
     }
     if (!continueSave) {
       setState(() {
@@ -177,6 +188,9 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
       idCliente: _ticket!.idCliente,
       idPersonalCreador: _ticket!.idPersonalCreador,
       idPersonalAsignado: _selectedAssignedTechnicianId!,
+      telefonoContacto: _telefonoContactoController.text.isNotEmpty
+          ? _telefonoContactoController.text
+          : null,
       idTipocaso: _selectedCaseTypeId!,
       idEstado: _ticket!.idEstado,
       idPrioridad: _selectedPriorityId!,
@@ -237,6 +251,7 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
   @override
   void dispose() {
     _titleController.dispose();
+    _telefonoContactoController.dispose();
     super.dispose();
   }
 
@@ -311,6 +326,60 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                         ),
                         const SizedBox(height: 16),
 
+                        TextFormField(
+                          initialValue: _ticket!.descripcion,
+                          minLines: 3,
+                          maxLines: 6,
+                          decoration: const InputDecoration(
+                            labelText: 'Descripción',
+                            border: OutlineInputBorder(),
+                            alignLabelWithHint: true,
+                            prefixIcon: Icon(Icons.description),
+                          ),
+                          onChanged: (value) {
+                            // Actualizar la descripción en el ticket
+                            _ticket = Ticket(
+                              idCaso: _ticket!.idCaso,
+                              titulo: _ticket!.titulo,
+                              descripcion: value,
+                              idCliente: _ticket!.idCliente,
+                              idPersonalCreador: _ticket!.idPersonalCreador,
+                              idPersonalAsignado: _ticket!.idPersonalAsignado,
+                              idTipocaso: _ticket!.idTipocaso,
+                              idEstado: _ticket!.idEstado,
+                              idPrioridad: _ticket!.idPrioridad,
+                              telefonoContacto: _ticket!.telefonoContacto,
+                              fecha: _ticket!.fecha,
+                              ultimaModificacion: _ticket!.ultimaModificacion,
+                              fechaTentativaInicio:
+                                  _ticket!.fechaTentativaInicio,
+                              fechaTentativaFinalizacion:
+                                  _ticket!.fechaTentativaFinalizacion,
+                              cliente: _ticket!.cliente,
+                              intervenciones: _ticket!.intervenciones,
+                              tecnico: _ticket!.tecnico,
+                            );
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor, ingrese una descripción';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        TextFormField(
+                          controller: _telefonoContactoController,
+                          decoration: const InputDecoration(
+                            labelText: 'Teléfono de contacto (opcional)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.phone),
+                          ),
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 16),
+
                         Consumer<TiposCasoProvider>(
                           builder: (context, tiposCasoProvider, child) {
                             if (tiposCasoProvider.isLoading) {
@@ -379,9 +448,11 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                         const SizedBox(height: 16),
 
                         Consumer2<UserListProvider, UserProvider>(
-                          builder: (context, userListProvider, userProvider, child) {
+                          builder:
+                              (context, userListProvider, userProvider, child) {
                             if (userListProvider.isLoading) {
-                              return const Center(child: CircularProgressIndicator());
+                              return const Center(
+                                  child: CircularProgressIndicator());
                             }
 
                             final currentUser = userProvider.user;
@@ -389,12 +460,16 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
 
                             // Si el usuario es tipo 1 (técnico), solo puede asignarse a sí mismo
                             if (currentUser?.idTipo == 1) {
-                              availableUsers = currentUser != null ? [currentUser] : [];
+                              availableUsers =
+                                  currentUser != null ? [currentUser] : [];
                               // Auto-seleccionar al usuario actual si no hay una selección previa
-                              if (_selectedAssignedTechnicianId == null && currentUser != null) {
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (_selectedAssignedTechnicianId == null &&
+                                  currentUser != null) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
                                   setState(() {
-                                    _selectedAssignedTechnicianId = currentUser.idPersonal;
+                                    _selectedAssignedTechnicianId =
+                                        currentUser.idPersonal;
                                   });
                                 });
                               }
@@ -417,41 +492,68 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                               },
                               builder: (FormFieldState<String> state) {
                                 return Autocomplete<Usuario>(
-                                  displayStringForOption: (Usuario user) => user.nombre,
-                                  optionsBuilder: (TextEditingValue textEditingValue) {
+                                  displayStringForOption: (Usuario user) =>
+                                      user.nombre,
+                                  optionsBuilder:
+                                      (TextEditingValue textEditingValue) {
                                     if (textEditingValue.text.isEmpty) {
                                       return const Iterable<Usuario>.empty();
                                     }
                                     return availableUsers.where((Usuario user) {
-                                      return user.nombre.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                                      return user.nombre.toLowerCase().contains(
+                                          textEditingValue.text.toLowerCase());
                                     });
                                   },
                                   onSelected: (Usuario selection) {
                                     setState(() {
-                                      _selectedAssignedTechnicianId = selection.idPersonal;
+                                      _selectedAssignedTechnicianId =
+                                          selection.idPersonal;
                                       state.didChange(selection.nombre);
                                     });
                                   },
-                                  fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                                  fieldViewBuilder: (context, controller,
+                                      focusNode, onSubmitted) {
                                     // Solo inicializar el valor del controller si está vacío y hay una selección
-                                    if (controller.text.isEmpty && _selectedAssignedTechnicianId != null) {
-                                      final selectedUser = availableUsers.firstWhere(
-                                        (u) => u.idPersonal == _selectedAssignedTechnicianId,
-                                        orElse: () => availableUsers.isNotEmpty
-                                            ? availableUsers.first
-                                            : Usuario(idPersonal: 0, idSucursal: 0, idTipo: 0, nombre: '', activo: false)
-                                      );
+                                    if (controller.text.isEmpty &&
+                                        _selectedAssignedTechnicianId != null) {
+                                      final selectedUser =
+                                          availableUsers.firstWhere(
+                                              (u) =>
+                                                  u.idPersonal ==
+                                                  _selectedAssignedTechnicianId,
+                                              orElse: () =>
+                                                  availableUsers.isNotEmpty
+                                                      ? availableUsers.first
+                                                      : Usuario(
+                                                          idPersonal: 0,
+                                                          idSucursal: 0,
+                                                          idTipo: 0,
+                                                          nombre: '',
+                                                          activo: false));
                                       controller.text = selectedUser.nombre;
                                     }
                                     controller.addListener(() {
-                                      if (_selectedAssignedTechnicianId != null &&
+                                      if (_selectedAssignedTechnicianId !=
+                                              null &&
                                           controller.text !=
-                                              availableUsers.firstWhere(
-                                                (u) => u.idPersonal == _selectedAssignedTechnicianId,
-                                                orElse: () => availableUsers.isNotEmpty
-                                                    ? availableUsers.first
-                                                    : Usuario(idPersonal: 0, idSucursal: 0, idTipo: 0, nombre: '', activo: false)
-                                              ).nombre) {
+                                              availableUsers
+                                                  .firstWhere(
+                                                      (u) =>
+                                                          u.idPersonal ==
+                                                          _selectedAssignedTechnicianId,
+                                                      orElse: () =>
+                                                          availableUsers
+                                                                  .isNotEmpty
+                                                              ? availableUsers
+                                                                  .first
+                                                              : Usuario(
+                                                                  idPersonal: 0,
+                                                                  idSucursal: 0,
+                                                                  idTipo: 0,
+                                                                  nombre: '',
+                                                                  activo:
+                                                                      false))
+                                                  .nombre) {
                                         setState(() {
                                           _selectedAssignedTechnicianId = null;
                                           state.didChange(null);
