@@ -84,6 +84,69 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
       _isSaving = true;
     });
 
+    // Validación informativa: técnico con ticket activo en el rango de 1 hora desde la fecha tentativa
+    final ticketsProvider = context.read<TicketProvider>();
+    final List<Ticket> tickets = ticketsProvider.tickets;
+    final int? tecnicoId = _selectedAssignedTechnicianId;
+    final DateTime? fechaTentativa = _selectedTentativeDate;
+    final conflictTickets = tickets.where((t) {
+      if (t.idCaso == _ticket?.idCaso) return false; // Ignorar el ticket actual
+      if (t.idPersonalAsignado != tecnicoId) return false;
+      if (!(t.idEstado == 1 || t.idEstado == 2)) return false;
+      if (t.fechaTentativaInicio == null || fechaTentativa == null) return false;
+      // Rango de 1 hora desde la fecha tentativa
+      final start = fechaTentativa.subtract(const Duration(hours: 1));
+      final end = fechaTentativa.add(const Duration(hours: 1));
+      return t.fechaTentativaInicio!.isAfter(start) && t.fechaTentativaInicio!.isBefore(end);
+      // Comentario: aquí se podría implementar lógica de solapamiento en el futuro
+    }).toList();
+
+    bool continueSave = true;
+    if (conflictTickets.isNotEmpty) {
+      final ticketIds = conflictTickets.map((t) => t.idCaso?.toString() ?? '-').toList();
+      continueSave = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: const Text('Advertencia de asignación'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  Text('El técnico seleccionado ya tiene ${conflictTickets.length} ticket(s) activo(s) asignado(s) en el rango de 1 hora desde la fecha/hora elegida.'),
+                  const SizedBox(height: 8),
+                  const Text('Tickets:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: ticketIds.map((id) => Chip(label: Text(id))).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('¿Desea continuar con la asignación?'),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Continuar'),
+              ),
+            ],
+          );
+        },
+      ) ?? false;
+    }
+    if (!continueSave) {
+      setState(() {
+        _isSaving = false;
+      });
+      return;
+    }
+
     final prevTechnicianId = _ticket!.idPersonalAsignado;
     final userListProvider = context.read<UserListProvider>();
     final prevTechnician = userListProvider.users.firstWhere(
@@ -315,46 +378,102 @@ class _EditCaseScreenState extends State<EditCaseScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        Consumer<UserListProvider>(
-                          builder: (context, userListProvider, child) {
-                            // Crear un mapa para eliminar duplicados por idPersonal
-                            final Map<int, Usuario> uniqueUsers = {};
-                            for (var user in userListProvider.users) {
-                              uniqueUsers[user.idPersonal] = user;
+                        Consumer2<UserListProvider, UserProvider>(
+                          builder: (context, userListProvider, userProvider, child) {
+                            if (userListProvider.isLoading) {
+                              return const Center(child: CircularProgressIndicator());
                             }
 
-                            // Convertir de vuelta a lista
-                            final uniqueUsersList = uniqueUsers.values.toList();
+                            final currentUser = userProvider.user;
+                            List<Usuario> availableUsers;
 
-                            final technicianExists = uniqueUsersList.any(
-                                (user) =>
-                                    user.idPersonal ==
-                                    _selectedAssignedTechnicianId);
-
-                            return DropdownButtonFormField<int>(
-                              value: technicianExists
-                                  ? _selectedAssignedTechnicianId
-                                  : null,
-                              isExpanded: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Técnico Asignado',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.person),
-                              ),
-                              items: uniqueUsersList.map((Usuario user) {
-                                return DropdownMenuItem<int>(
-                                  value: user.idPersonal,
-                                  child: Text(user.nombre,
-                                      overflow: TextOverflow.ellipsis),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedAssignedTechnicianId = value;
+                            // Si el usuario es tipo 1 (técnico), solo puede asignarse a sí mismo
+                            if (currentUser?.idTipo == 1) {
+                              availableUsers = currentUser != null ? [currentUser] : [];
+                              // Auto-seleccionar al usuario actual si no hay una selección previa
+                              if (_selectedAssignedTechnicianId == null && currentUser != null) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  setState(() {
+                                    _selectedAssignedTechnicianId = currentUser.idPersonal;
+                                  });
                                 });
+                              }
+                            } else {
+                              // Si es tipo 2 (administrador), mostrar todos los técnicos
+                              // Eliminar duplicados por idPersonal
+                              final Map<int, Usuario> uniqueUsers = {};
+                              for (var user in userListProvider.users) {
+                                uniqueUsers[user.idPersonal] = user;
+                              }
+                              availableUsers = uniqueUsers.values.toList();
+                            }
+
+                            return FormField<String>(
+                              validator: (value) {
+                                if (_selectedAssignedTechnicianId == null) {
+                                  return 'Asigne un técnico';
+                                }
+                                return null;
                               },
-                              validator: (value) =>
-                                  value == null ? 'Asigne un técnico' : null,
+                              builder: (FormFieldState<String> state) {
+                                return Autocomplete<Usuario>(
+                                  displayStringForOption: (Usuario user) => user.nombre,
+                                  optionsBuilder: (TextEditingValue textEditingValue) {
+                                    if (textEditingValue.text.isEmpty) {
+                                      return const Iterable<Usuario>.empty();
+                                    }
+                                    return availableUsers.where((Usuario user) {
+                                      return user.nombre.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                                    });
+                                  },
+                                  onSelected: (Usuario selection) {
+                                    setState(() {
+                                      _selectedAssignedTechnicianId = selection.idPersonal;
+                                      state.didChange(selection.nombre);
+                                    });
+                                  },
+                                  fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                                    // Solo inicializar el valor del controller si está vacío y hay una selección
+                                    if (controller.text.isEmpty && _selectedAssignedTechnicianId != null) {
+                                      final selectedUser = availableUsers.firstWhere(
+                                        (u) => u.idPersonal == _selectedAssignedTechnicianId,
+                                        orElse: () => availableUsers.isNotEmpty
+                                            ? availableUsers.first
+                                            : Usuario(idPersonal: 0, idSucursal: 0, idTipo: 0, nombre: '', activo: false)
+                                      );
+                                      controller.text = selectedUser.nombre;
+                                    }
+                                    controller.addListener(() {
+                                      if (_selectedAssignedTechnicianId != null &&
+                                          controller.text !=
+                                              availableUsers.firstWhere(
+                                                (u) => u.idPersonal == _selectedAssignedTechnicianId,
+                                                orElse: () => availableUsers.isNotEmpty
+                                                    ? availableUsers.first
+                                                    : Usuario(idPersonal: 0, idSucursal: 0, idTipo: 0, nombre: '', activo: false)
+                                              ).nombre) {
+                                        setState(() {
+                                          _selectedAssignedTechnicianId = null;
+                                          state.didChange(null);
+                                        });
+                                      }
+                                    });
+                                    return TextFormField(
+                                      controller: controller,
+                                      focusNode: focusNode,
+                                      decoration: InputDecoration(
+                                        labelText: 'Técnico Asignado',
+                                        border: const OutlineInputBorder(),
+                                        prefixIcon: const Icon(Icons.person),
+                                        helperText: currentUser?.idTipo == 1
+                                            ? 'Solo puedes asignarte casos a ti mismo'
+                                            : null,
+                                        errorText: state.errorText,
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                             );
                           },
                         ),

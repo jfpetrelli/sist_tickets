@@ -99,6 +99,70 @@ class _NewCaseTabState extends State<NewCaseTab> {
       _isSaving = true; // Inicia el estado de carga
     });
 
+    // Validación informativa: técnico con ticket activo en el rango de 1 hora desde la fecha/hora tentativa
+    final ticketsProvider = context.read<TicketProvider>();
+    final List<Ticket> tickets = ticketsProvider.tickets;
+    final int? tecnicoId = _selectedAssignedTechnicianId;
+    final DateTime? fechaTentativa = _selectedTentativeDate;
+    // Solo tickets activos (estado 1 o 2)
+    final conflictTickets = tickets.where((t) {
+      if (t.idPersonalAsignado != tecnicoId) return false;
+      if (!(t.idEstado == 1 || t.idEstado == 2)) return false;
+      if (t.fechaTentativaInicio == null || fechaTentativa == null) return false;
+      // Rango de 1 hora desde la fecha tentativa
+      final start = fechaTentativa.subtract(const Duration(hours: 1));
+      final end = fechaTentativa.add(const Duration(hours: 1));
+      return t.fechaTentativaInicio!.isAfter(start) && t.fechaTentativaInicio!.isBefore(end);
+      // Comentario: aquí se podría implementar lógica de solapamiento en el futuro
+      // Ejemplo: if (t.fechaTentativaInicio < fechaTentativaFinal && t.fechaTentativaFinalizacion > fechaTentativaInicio) {...}
+    }).toList();
+
+    bool continueSave = true;
+    if (conflictTickets.isNotEmpty) {
+      final ticketIds = conflictTickets.map((t) => t.idCaso?.toString() ?? '-').toList();
+      continueSave = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: const Text('Advertencia de asignación'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  Text('El técnico seleccionado ya tiene ${conflictTickets.length} ticket(s) activo(s) asignado(s) en el rango de 1 hora desde la fecha/hora elegida.'),
+                  const SizedBox(height: 8),
+                  const Text('Tickets:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: ticketIds.map((id) => Chip(label: Text(id))).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('¿Desea continuar con la asignación?'),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Continuar'),
+              ),
+            ],
+          );
+        },
+      ) ?? false;
+    }
+    if (!continueSave) {
+      setState(() {
+        _isSaving = false;
+      });
+      return;
+    }
+
     // Obtiene el ID del usuario que está creando el caso
     final creatorId = context.read<UserProvider>().user?.idPersonal;
     if (creatorId == null) {
