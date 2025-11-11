@@ -15,6 +15,7 @@ class Ticket {
   final int idTipocaso;
   final int idEstado;
   final int idPrioridad;
+  final String? telefono_contacto;
   final DateTime? ultimaModificacion;
   final DateTime? fechaTentativaInicio;
   final DateTime? fechaTentativaFinalizacion;
@@ -34,6 +35,7 @@ class Ticket {
     required this.idTipocaso,
     required this.idEstado,
     required this.idPrioridad,
+    this.telefono_contacto,
     this.ultimaModificacion,
     this.fechaTentativaInicio,
     this.fechaTentativaFinalizacion,
@@ -57,6 +59,7 @@ class Ticket {
       idTipocaso: json['id_tipocaso'] as int,
       idEstado: json['id_estado'] as int,
       idPrioridad: json['id_prioridad'] as int,
+      telefono_contacto: json['telefono_contacto'] as String,
       ultimaModificacion: json['ultima_modificacion'] == null
           ? null
           : DateTime.parse(json['ultima_modificacion'] as String),
@@ -90,6 +93,7 @@ class Ticket {
       'id_tipocaso': idTipocaso,
       'id_estado': idEstado,
       'id_prioridad': idPrioridad,
+      'telefono_contacto': telefono_contacto,
       'ultima_modificacion': ultimaModificacion?.toIso8601String(),
       'fecha_tentativa_inicio': fechaTentativaInicio?.toIso8601String(),
       'fecha_tentativa_finalizacion':
