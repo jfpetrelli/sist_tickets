@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
+import 'package:sist_tickets/api/api_config.dart';
 import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/screens/home/cases_tab.dart';
@@ -129,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Usar timestamp actual como cache buster para refrescar la imagen
               final cacheBuster = DateTime.now().millisecondsSinceEpoch;
               profileImageUrl =
-                  'http://localhost:8000/usuarios/${user.idPersonal}/profile_photo?t=$cacheBuster';
+                  '${ApiConfig.baseUrl}/usuarios/${user.idPersonal}/profile_photo?t=$cacheBuster';
             }
 
             return Padding(

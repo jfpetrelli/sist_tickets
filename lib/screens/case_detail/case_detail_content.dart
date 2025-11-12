@@ -377,7 +377,10 @@ class _CaseDetailContentState extends State<CaseDetailContent>
           Consumer<TicketProvider>(
             builder: (context, ticketProvider, child) {
               final ticket = ticketProvider.ticket;
-              final telefono = ticket?.cliente?.telefono ?? '';
+              String telefono = ticket?.telefonoContacto ?? '';
+              if (telefono.isEmpty) {
+                telefono = ticket?.cliente?.telefono ?? '';
+              }
               return ScaleTransition(
                 alignment: Alignment.bottomRight,
                 scale: CurvedAnimation(
@@ -387,7 +390,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                 child: FloatingActionButton.extended(
                   heroTag: 'fab_whatsapp',
                   onPressed: () {
-                    abrirWhatsAppWeb(telefono, 'HOLA JUAN CRUZ');
+                    abrirWhatsAppWeb(telefono,
+                        'Hola, nos contactamos de CIF estoy por llegar al sitio. Ticket: ${ticket?.idCaso}');
                   },
                   label: const Text('Enviar Mensaje'),
                   icon: const Icon(Icons.message),
@@ -696,6 +700,11 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                       address.isEmpty ? 'Domicilio no disponible' : address,
                     );
                   }(),
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  Icons.phone,
+                  ticket?.telefonoContacto ?? 'Teléfono no disponible',
                 ),
                 /* _buildDetailRow(Icons.location_on,
                     ticket?.cliente?.domicilio ?? 'Domicilio no disponible'), */
