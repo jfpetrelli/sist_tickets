@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/ticket.dart';
 import '../models/intervencion_ticket.dart';
+import '../models/calificacion_ticket.dart';
 import '../models/usuario.dart';
 import '../api/api_service.dart';
 
@@ -31,6 +32,7 @@ class TicketProvider extends ChangeNotifier {
 
   List<Ticket> _tickets = [];
   Ticket? _ticket;
+  CalificacionTicket? _calificacion;
   bool isLoading = false;
 
   List<Ticket> get tickets => _tickets;
@@ -97,5 +99,24 @@ class TicketProvider extends ChangeNotifier {
       notifyListeners();
       return false; // Indica que hubo un error
     }
+  }
+
+  CalificacionTicket? get calificacion => _calificacion;
+  Future<void> getCalificacionByTicketId(String id) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final responseData = await _apiService.getCalificacionByTicketId(id);
+      // Aquí puedes manejar la calificación obtenida según tus necesidades
+      _calificacion = CalificacionTicket.fromJson(responseData);
+      print('Calificación obtenida: ${_calificacion?.puntuacion}');
+    } catch (e) {
+      print('Error en getCalificacionByTicketId: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+    isLoading = false;
+    notifyListeners();
   }
 }

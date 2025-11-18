@@ -34,5 +34,5 @@ class ApiConfig {
   static const String downloadAdjunto = '$baseUrl/adjuntos/';
 
   // Calificación endpoints
-  static const String calificacion = '$baseUrl/calificacion/';
+  static const String calificacion = '$baseUrl/calificacion/ticket/';
 }

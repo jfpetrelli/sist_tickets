@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:sist_tickets/constants.dart'; // Assuming this file exists and contains kPrimaryColor, kSuccessColor
 import 'package:sist_tickets/screens/case_detail/case_documents_page.dart';
 import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature_screen.dart';
+import 'package:sist_tickets/models/calificacion_ticket.dart';
 import 'package:sist_tickets/screens/case_detail/edit_case_screen.dart';
 import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
@@ -36,6 +37,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     with SingleTickerProviderStateMixin {
   // Controla si se muestra el menú de cambio de estado
   bool _showEstadoFabMenu = false;
+
+  CalificacionTicket? _calificacion;
 
   // ignore: unused_element
   void _toggleEstadoFabMenu() {
@@ -215,12 +218,25 @@ class _CaseDetailContentState extends State<CaseDetailContent>
       Provider.of<TicketProvider>(context, listen: false)
           .getTicketById(widget.caseId);
       // Asegurar que los tipos de caso estén cargados para poder mostrar el nombre
+      _loadCalificacion();
       final tiposCasoProvider =
           Provider.of<TiposCasoProvider>(context, listen: false);
       if (tiposCasoProvider.tiposCaso.isEmpty) {
         tiposCasoProvider.fetchTiposCaso();
       }
     });
+  }
+
+  Future<void> _loadCalificacion() async {
+    try {
+      final ticketProvider =
+          Provider.of<TicketProvider>(context, listen: false);
+      await ticketProvider.getCalificacionByTicketId(widget.caseId);
+      _calificacion = ticketProvider.calificacion;
+      setState(() {});
+    } catch (e) {
+      print('Error loading calificacion: $e');
+    }
   }
 
   @override
@@ -275,6 +291,8 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                 _buildDescription(value.ticket?.descripcion ?? ''),
                 const SizedBox(height: 24),
                 _buildDetails(value.ticket),
+                const SizedBox(height: 24),
+                _buildCalificacionCard(_calificacion),
                 const SizedBox(height: 24),
                 _buildIntervencionesList(value.ticket?.intervenciones ?? []),
               ],
@@ -833,6 +851,62 @@ class _CaseDetailContentState extends State<CaseDetailContent>
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalificacionCard(CalificacionTicket? calificacion) {
+    if (calificacion == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Calificación del Cliente',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.star, size: 20, color: Colors.amber),
+                const SizedBox(width: 8),
+                Text(
+                  calificacion.puntuacion != null
+                      ? 'Puntuación: ${calificacion.puntuacion}'
+                      : 'No calificado',
+                  style: const TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (calificacion.comentarioCliente != null &&
+                calificacion.comentarioCliente!.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Comentario:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(calificacion.comentarioCliente!),
+                ],
+              ),
+            if (calificacion.fechaCalificacion != null)
+              Text(
+                  'Fecha de Calificación: ${DateFormat('dd-MM-yyyy HH:mm').format(calificacion.fechaCalificacion!.toLocal())}'),
+          ],
         ),
       ),
     );

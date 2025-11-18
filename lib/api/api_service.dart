@@ -777,7 +777,6 @@ class ApiService {
           'Error al eliminar la foto de perfil: ${response.reasonPhrase}');
     }
   }
-  // --- FIN NUEVO MÉTODO PARA BORRAR FOTO ---
 
   // --- MÉTODOS DE CALIFICACIÓN ---
   Future<Map<String, dynamic>> getCalificacion(String token) async {
@@ -798,6 +797,27 @@ class ApiService {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> getCalificacionByTicketId(String ticketId) async {
+    final uri = Uri.parse('${ApiConfig.calificacion}$ticketId');
+
+    try {
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 404 || response.statusCode == 410) {
+        throw Exception('invalid_or_used');
+      } else {
+        throw Exception(
+            'Error al obtener calificación: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+
 
   Future<Map<String, dynamic>> submitCalificacion(
     String token,

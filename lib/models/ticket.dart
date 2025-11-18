@@ -20,9 +20,9 @@ class Ticket {
   final DateTime? fechaTentativaInicio;
   final DateTime? fechaTentativaFinalizacion;
   final Cliente? cliente;
-  final List<TicketIntervencion>? intervenciones; // Lista de intervenciones
-  final String? tecnico; // Cliente puede ser nulo
-  final VoidCallback? onTap; // onTap puede ser nulo ahora
+  final List<TicketIntervencion>? intervenciones; 
+  final String? tecnico; 
+  final VoidCallback? onTap; 
 
   Ticket({
     this.idCaso,
