@@ -778,4 +778,54 @@ class ApiService {
     }
   }
   // --- FIN NUEVO MÉTODO PARA BORRAR FOTO ---
+
+  // --- MÉTODOS DE CALIFICACIÓN ---
+  Future<Map<String, dynamic>> getCalificacion(String token) async {
+    final uri = Uri.parse('${ApiConfig.calificacion}$token');
+
+    try {
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 404 || response.statusCode == 410) {
+        throw Exception('invalid_or_used');
+      } else {
+        throw Exception(
+            'Error al obtener calificación: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> submitCalificacion(
+    String token,
+    int estrellas,
+    String? comentario,
+  ) async {
+    final uri = Uri.parse('${ApiConfig.calificacion}$token');
+
+    final body = {
+      'puntuacion': estrellas,
+      if (comentario != null && comentario.isNotEmpty) 'comentario': comentario,
+    };
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Error al enviar calificación: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+  // --- FIN MÉTODOS DE CALIFICACIÓN ---
 }

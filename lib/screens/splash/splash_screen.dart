@@ -6,6 +6,8 @@ import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/screens/home/home_screen.dart';
 import 'package:sist_tickets/screens/login/login_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:html' as html show window;
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,6 +24,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
+    // Verificar si estamos en una ruta de calificación
+    if (kIsWeb) {
+      final path = html.window.location.pathname;
+      if (path != null && path.startsWith('/calificar/')) {
+        // No hacer nada, dejar que la ruta de calificación se maneje sola
+        return;
+      }
+    }
+
     final apiService = context.read<ApiService>();
     final userProvider = context.read<UserProvider>();
 
