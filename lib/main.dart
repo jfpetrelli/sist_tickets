@@ -12,7 +12,7 @@ import 'package:sist_tickets/providers/client_provider.dart';
 import 'package:sist_tickets/providers/user_list_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:html' as html show window;
+import 'package:sist_tickets/utils/web_utils.dart';
 
 void main() {
   initializeDateFormatting().then((_) => runApp(const MyApp()));
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
 
   String? _getInitialRoute() {
     if (kIsWeb) {
-      final path = html.window.location.pathname;
+      final path = getCurrentPath();
       if (path != null && path.startsWith('/calificar/')) {
         return path;
       }

@@ -126,6 +126,8 @@ class _ReportsContentState extends State<ReportsContent> {
         _ticketStats!['tickets_resueltos_ultimos_7_dias'] ?? 0;
     final tiempoPromedioResolucion =
         _ticketStats!['tiempo_promedio_resolucion']?.toDouble() ?? 0.0;
+    final promedioCalificacion =
+        _ticketStats!['promedio_calificacion_tickets']?.toDouble() ?? 0.0;
 
     final ticketsPorEstado =
         _ticketStats!['tickets_por_estado'] as List<dynamic>? ?? [];
@@ -203,6 +205,12 @@ class _ReportsContentState extends State<ReportsContent> {
                     pw.SizedBox(height: 8),
                     _buildPDFKPIRow('Tiempo Promedio de Resolución',
                         '${tiempoPromedioResolucion.toStringAsFixed(1)} horas'),
+                    pw.SizedBox(height: 8),
+                    _buildPDFKPIRow(
+                        'Calificación Promedio',
+                        promedioCalificacion > 0
+                            ? '${promedioCalificacion.toStringAsFixed(1)} ⭐'
+                            : 'Sin calificaciones'),
                   ],
                 ),
               ),
@@ -272,6 +280,8 @@ class _ReportsContentState extends State<ReportsContent> {
                       final tEnProgreso = tecnico['en_progreso'] ?? 0;
                       final tFinalizados = tecnico['finalizados'] ?? 0;
                       final tCancelados = tecnico['cancelados'] ?? 0;
+                      final promedioCalif =
+                          tecnico['promedio_calificacion']?.toDouble() ?? 0.0;
                       final total = tPendientes +
                           tEnProgreso +
                           tFinalizados +
@@ -283,7 +293,7 @@ class _ReportsContentState extends State<ReportsContent> {
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
                             pw.Text(
-                              '$nombre - Total: $total tickets',
+                              '$nombre - Total: $total tickets${promedioCalif > 0 ? ' - ⭐ ${promedioCalif.toStringAsFixed(1)}' : ''}',
                               style:
                                   pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
@@ -441,6 +451,8 @@ class _ReportsContentState extends State<ReportsContent> {
         _ticketStats!['tickets_resueltos_ultimos_7_dias'] ?? 0;
     final tiempoPromedioResolucion =
         _ticketStats!['tiempo_promedio_resolucion']?.toDouble() ?? 0.0;
+    final promedioCalificacion =
+        _ticketStats!['promedio_calificacion_tickets']?.toDouble() ?? 0.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,11 +491,28 @@ class _ReportsContentState extends State<ReportsContent> {
           ],
         ),
         const SizedBox(height: 8),
-        _buildKPICard(
-          'Tiempo Promedio de Resolución',
-          '${tiempoPromedioResolucion.toStringAsFixed(1)} horas',
-          Icons.schedule,
-          Colors.orange,
+        Row(
+          children: [
+            Expanded(
+              child: _buildKPICard(
+                'Tiempo Promedio de Resolución',
+                '${tiempoPromedioResolucion.toStringAsFixed(1)} horas',
+                Icons.schedule,
+                Colors.orange,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildKPICard(
+                'Calificación Promedio',
+                promedioCalificacion > 0
+                    ? '${promedioCalificacion.toStringAsFixed(1)} ⭐'
+                    : 'Sin calificaciones',
+                Icons.star,
+                Colors.amber,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -799,6 +828,7 @@ class _ReportsContentState extends State<ReportsContent> {
     final enProgreso = tecnico['en_progreso'] ?? 0;
     final finalizados = tecnico['finalizados'] ?? 0;
     final cancelados = tecnico['cancelados'] ?? 0;
+    final promedioCalif = tecnico['promedio_calificacion']?.toDouble() ?? 0.0;
     final total = pendientes + enProgreso + finalizados + cancelados;
 
     return Padding(
@@ -836,6 +866,25 @@ class _ReportsContentState extends State<ReportsContent> {
                         color: Colors.grey[600],
                       ),
                     ),
+                    if (promedioCalif > 0)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            size: 14,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${promedioCalif.toStringAsFixed(1)} calificación promedio',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),

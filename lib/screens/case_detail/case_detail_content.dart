@@ -292,8 +292,9 @@ class _CaseDetailContentState extends State<CaseDetailContent>
                 const SizedBox(height: 24),
                 _buildDetails(value.ticket),
                 const SizedBox(height: 24),
-                _buildCalificacionCard(_calificacion),
-                const SizedBox(height: 24),
+                if (value.ticket?.idEstado == 3)
+                  _buildCalificacionCard(_calificacion),
+                if (value.ticket?.idEstado == 3) const SizedBox(height: 24),
                 _buildIntervencionesList(value.ticket?.intervenciones ?? []),
               ],
             );
