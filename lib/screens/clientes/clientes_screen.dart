@@ -435,39 +435,6 @@ class __AddClienteFormState extends State<_AddClienteForm> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              // ID Localidad + ID Tipo Cliente
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _idLocalidadController,
-                      decoration: const InputDecoration(
-                        labelText: 'ID Localidad',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _idTipoClienteController,
-                      decoration: const InputDecoration(
-                        labelText: 'ID Tipo Cliente',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
