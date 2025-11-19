@@ -20,7 +20,7 @@ class UserListProvider extends ChangeNotifier {
       errorMessage = null;
     } catch (e) {
       print('Error en addUserWithPassword: $e');
-      errorMessage = 'No se pudo agregar el usuario.';
+      errorMessage = 'No se pudo agregar el usuario:  $e';
     }
     isLoading = false;
     notifyListeners();

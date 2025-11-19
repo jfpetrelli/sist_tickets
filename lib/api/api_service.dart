@@ -51,8 +51,22 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      print('Error al crear el usuario:${response.body}');
-      throw Exception('Error al crear el usuario: ${response.statusCode}');
+      String mensajeError;
+      try {
+        // 1. Decodificamos el JSON de error que envía FastAPI
+        final errorBody = jsonDecode(response.body);
+        
+        // 2. Extraemos el mensaje. FastAPI pone el error en el campo 'detail'.
+        // Si 'detail' no existe, usamos un mensaje genérico.
+        mensajeError = errorBody['detail'] ?? 'Error al procesar la solicitud';
+        
+      } catch (_) {
+        // Si el body no es un JSON válido (ej: Error 500 del servidor nginx/apache en HTML)
+        mensajeError = 'Error inesperado (${response.statusCode})';
+      }
+
+      // 3. Lanzamos la excepción con el mensaje limpio para que el Provider lo capture
+      throw Exception(mensajeError);
     }
   }
 
@@ -74,10 +88,16 @@ class ApiService {
       print('User updated successfully');
       return jsonDecode(response.body);
     } else {
-      print(
-          'Error al actualizar usuario: ${response.statusCode} - ${response.body}');
-      throw Exception(
-          'Error al actualizar el usuario: ${response.reasonPhrase}');
+      String mensajeError;
+      try {
+        final errorBody = jsonDecode(response.body);
+        mensajeError = errorBody['detail'] ?? 'Error al actualizar el usuario';
+      } catch (_) {
+        mensajeError = 'Error inesperado al actualizar (${response.statusCode})';
+      }
+
+      print('Error al actualizar usuario: $mensajeError');
+      throw Exception(mensajeError);
     }
   }
 
