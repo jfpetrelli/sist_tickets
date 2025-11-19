@@ -182,21 +182,19 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
 
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) {
-      return; // Si el formulario no es válido, no hacer nada
+      return;
     }
 
     setState(() {
-      _isLoading = true; // Iniciar indicador de carga
+      _isLoading = true;
     });
 
-    // Crear el objeto Cliente actualizado
     final updatedCliente = Cliente(
-      idCliente: widget.cliente.idCliente, // Mantener el ID original
+      idCliente: widget.cliente.idCliente,
       razonSocial: _razonSocialController.text,
       domicilio: _domicilioController.text.isNotEmpty
           ? _domicilioController.text
           : null,
-      // ID Localidad ya no es editable desde esta pantalla; preservamos el valor original
       idLocalidad: widget.cliente.idLocalidad,
       nombreLocalidad: _nombreLocalidadController.text.isNotEmpty
           ? _nombreLocalidadController.text
@@ -215,28 +213,31 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
       cuit: _cuitController.text.isNotEmpty ? _cuitController.text : null,
       idTipoCliente: int.tryParse(_idTipoClienteController.text),
-      activo: _activo,
+      activo: _activo, // Asumo que tienes esta variable definida en el estado
     );
 
     try {
-      // Llamar al provider para actualizar el cliente
-      final success =
-          await context.read<ClientProvider>().updateClient(updatedCliente);
+      // 1. Guardamos la referencia al provider en una variable
+      final clientProvider = context.read<ClientProvider>();
+
+      // 2. Ejecutamos la actualización
+      final success = await clientProvider.updateClient(updatedCliente);
 
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Cliente actualizado con éxito.'),
-              backgroundColor: kSuccessColor,
+              backgroundColor: Colors.green,
             ),
           );
-          Navigator.of(context).pop(); // Volver a la pantalla anterior
+          Navigator.of(context).pop();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error al actualizar el cliente.'),
-              backgroundColor: kErrorColor,
+            SnackBar(
+              content: Text(clientProvider.errorMessage ??
+                  'Error al actualizar el cliente.'),
+              backgroundColor: Colors.red, // O kErrorColor
             ),
           );
         }
@@ -245,15 +246,15 @@ class _EditClienteScreenState extends State<EditClienteScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: kErrorColor,
+            content: Text('Error inesperado: ${e.toString()}'),
+            backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false; // Detener indicador de carga
+          _isLoading = false;
         });
       }
     }

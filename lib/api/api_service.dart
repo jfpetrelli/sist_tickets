@@ -55,11 +55,10 @@ class ApiService {
       try {
         // 1. Decodificamos el JSON de error que envía FastAPI
         final errorBody = jsonDecode(response.body);
-        
+
         // 2. Extraemos el mensaje. FastAPI pone el error en el campo 'detail'.
         // Si 'detail' no existe, usamos un mensaje genérico.
         mensajeError = errorBody['detail'] ?? 'Error al procesar la solicitud';
-        
       } catch (_) {
         // Si el body no es un JSON válido (ej: Error 500 del servidor nginx/apache en HTML)
         mensajeError = 'Error inesperado (${response.statusCode})';
@@ -93,7 +92,8 @@ class ApiService {
         final errorBody = jsonDecode(response.body);
         mensajeError = errorBody['detail'] ?? 'Error al actualizar el usuario';
       } catch (_) {
-        mensajeError = 'Error inesperado al actualizar (${response.statusCode})';
+        mensajeError =
+            'Error inesperado al actualizar (${response.statusCode})';
       }
 
       print('Error al actualizar usuario: $mensajeError');
@@ -171,24 +171,33 @@ class ApiService {
         body: jsonEncode(clientData),
       ),
     );
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      print('Error al crear el cliente: ${response.body}');
-      throw Exception('Error al crear el cliente: ${response.statusCode}');
+      String mensajeError;
+      try {
+        final bodyError = jsonDecode(response.body);
+        // Extraemos el mensaje del campo 'detail'
+        mensajeError = bodyError['detail'] ?? 'Error al crear el cliente';
+      } catch (_) {
+        // Si no es un JSON válido, usamos un mensaje genérico con el código
+        mensajeError = 'Error inesperado (${response.statusCode})';
+      }
+
+      print('Error al crear el cliente: $mensajeError');
+      throw Exception(mensajeError);
     }
   }
 
   Future<Map<String, dynamic>> updateClient(
       int clientId, Map<String, dynamic> clientData) async {
-    final url =
-        Uri.parse('${ApiConfig.clients}$clientId'); // Asume /clientes/{id}
+    final url = Uri.parse('${ApiConfig.clients}$clientId');
     print('Updating client at: $url');
     print('Data: ${jsonEncode(clientData)}');
 
     final response = await _makeAuthenticatedRequest(
       () => http.put(
-        // O http.patch si tu backend usa PATCH
         url,
         headers: _headers,
         body: jsonEncode(clientData),
@@ -198,10 +207,20 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      print(
-          'Error al actualizar cliente: ${response.statusCode} - ${response.body}');
-      throw Exception(
-          'Error al actualizar el cliente: ${response.reasonPhrase}');
+      String mensajeError;
+      try {
+        // 1. Intentamos leer el JSON del backend
+        final bodyError = jsonDecode(response.body);
+        // 2. Extraemos el campo 'detail'
+        mensajeError = bodyError['detail'] ?? 'Error al actualizar el cliente';
+      } catch (_) {
+        // Si falla (no es JSON), mensaje genérico con el código
+        mensajeError = 'Error inesperado (${response.statusCode})';
+      }
+
+      print('Error al actualizar cliente: $mensajeError');
+      // 3. Lanzamos la excepción limpia
+      throw Exception(mensajeError);
     }
   }
 
@@ -818,7 +837,8 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getCalificacionByTicketId(String ticketId) async {
+  Future<Map<String, dynamic>> getCalificacionByTicketId(
+      String ticketId) async {
     final uri = Uri.parse('${ApiConfig.calificacion}$ticketId');
 
     try {
@@ -836,8 +856,6 @@ class ApiService {
       rethrow;
     }
   }
-
-
 
   Future<Map<String, dynamic>> submitCalificacion(
     String token,

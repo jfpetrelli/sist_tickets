@@ -14,7 +14,7 @@ class ClientProvider extends ChangeNotifier {
       _clients.add(clienteCreado);
       errorMessage = null;
     } catch (e) {
-      errorMessage = 'No se pudo agregar el cliente.';
+      errorMessage = e.toString().replaceAll('Exception: ', '');
     }
     isLoading = false;
     notifyListeners();
@@ -50,20 +50,24 @@ class ClientProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      // Llamar al método de ApiService (que crearemos en el paso 4)
-      await _apiService.updateClient(clienteActualizado.idCliente, clienteActualizado.toJson());
+      await _apiService.updateClient(
+          clienteActualizado.idCliente, clienteActualizado.toJson());
 
       // Actualizar la lista local
-      final index = _clients.indexWhere((c) => c.idCliente == clienteActualizado.idCliente);
+      final index = _clients
+          .indexWhere((c) => c.idCliente == clienteActualizado.idCliente);
       if (index != -1) {
         _clients[index] = clienteActualizado;
       }
+      
       errorMessage = null;
       isLoading = false;
       notifyListeners();
       return true; // Indicar éxito
+      
     } catch (e) {
-      errorMessage = 'No se pudo actualizar el cliente: ${e.toString()}';
+      errorMessage = e.toString().replaceAll('Exception: ', '');
+      
       isLoading = false;
       notifyListeners();
       return false; // Indicar fallo
