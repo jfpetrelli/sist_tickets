@@ -498,11 +498,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   // Auto-seleccionar al usuario actual si no hay una selección previa
                   if (_selectedAssignedTechnicianId == null &&
                       currentUser != null) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      setState(() {
-                        _selectedAssignedTechnicianId = currentUser.idPersonal;
-                      });
-                    });
+                    _selectedAssignedTechnicianId = currentUser.idPersonal;
                   }
                 } else {
                   // Si es tipo 2 (administrador), mostrar todos los técnicos

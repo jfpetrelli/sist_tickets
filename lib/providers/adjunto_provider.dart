@@ -64,15 +64,18 @@ class AdjuntoProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> downloadAdjunto(Adjunto adjunto) async {
+  Future<String?> downloadAdjunto(Adjunto adjunto) async {
     try {
       _downloadProgress[adjunto.idAdjunto] = 0.0;
       notifyListeners();
+
+      String? downloadPath;
 
       if (kIsWeb) {
         // En Flutter Web, usar descarga del navegador
         await _apiService.downloadAdjuntoWeb(
             adjunto.idAdjunto, adjunto.filename);
+        downloadPath = 'Carpeta de descargas del navegador';
       } else {
         // En móvil, usar el método tradicional con path_provider
         final directory = await getDownloadsDirectory();
@@ -95,12 +98,13 @@ class AdjuntoProvider extends ChangeNotifier {
             }
           },
         );
+        downloadPath = savePath;
       }
 
       _downloadProgress.remove(adjunto.idAdjunto);
       notifyListeners();
 
-      // You can add logic here to open the file or show a success message.
+      return downloadPath;
     } catch (e) {
       _downloadProgress.remove(adjunto.idAdjunto);
       notifyListeners();

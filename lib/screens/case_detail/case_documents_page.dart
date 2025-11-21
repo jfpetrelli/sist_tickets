@@ -219,8 +219,29 @@ class _CaseDocumentsPageState extends State<CaseDocumentsPage> {
                       : IconButton(
                           icon: const Icon(Icons.download_for_offline_outlined,
                               color: Colors.blueGrey),
-                          onPressed: () {
-                            provider.downloadAdjunto(documento);
+                          onPressed: () async {
+                            try {
+                              final path =
+                                  await provider.downloadAdjunto(documento);
+                              if (path != null && mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Descargado en: $path'),
+                                    backgroundColor: kSuccessColor,
+                                    duration: const Duration(seconds: 4),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error al descargar: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                           },
                         ),
                 ),

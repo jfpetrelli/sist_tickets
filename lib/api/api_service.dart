@@ -798,8 +798,9 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getCalificacionByTicketId(String ticketId) async {
-    final uri = Uri.parse('${ApiConfig.calificacion}$ticketId');
+  Future<Map<String, dynamic>> getCalificacionByTicketId(
+      String ticketId) async {
+    final uri = Uri.parse('${ApiConfig.calificacionTicket}$ticketId');
 
     try {
       final response = await http.get(uri);
@@ -816,8 +817,6 @@ class ApiService {
       rethrow;
     }
   }
-
-
 
   Future<Map<String, dynamic>> submitCalificacion(
     String token,

@@ -268,8 +268,8 @@ class _ProfileTabState extends State<ProfileTab> {
               const SizedBox(height: 20),
               // Pasar el usuario al método _buildProfileCard
               _buildProfileCard(context, user), // Añadido context
-              const SizedBox(height: 20),
-              _buildStatsSection(),
+              //const SizedBox(height: 20),
+              //_buildStatsSection(),
               const SizedBox(height: 20),
               _buildSettingsSection(), // Mantenemos la sección de configuración
             ],
