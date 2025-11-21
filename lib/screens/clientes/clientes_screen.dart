@@ -65,7 +65,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (provider.errorMessage != null) {
+          if (provider.errorMessage != null && provider.clients.isEmpty) {
             return Center(child: Text(provider.errorMessage!));
           }
           final clientesFiltrados = provider.clients
@@ -245,8 +245,9 @@ class __AddClienteFormState extends State<_AddClienteForm> {
   void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
+      
       final nuevoCliente = Cliente(
-        idCliente: DateTime.now().millisecondsSinceEpoch, // Simulado
+        idCliente: DateTime.now().millisecondsSinceEpoch,
         razonSocial: _razonSocialController.text,
         domicilio: _domicilioController.text,
         idLocalidad: int.tryParse(_idLocalidadController.text),
@@ -259,16 +260,32 @@ class __AddClienteFormState extends State<_AddClienteForm> {
         cuit: _cuitController.text,
         idTipoCliente: int.tryParse(_idTipoClienteController.text),
       );
-      await Provider.of<ClientProvider>(context, listen: false)
-          .addClient(nuevoCliente);
+
+      // 1. Referencia al provider
+      final clientProvider = Provider.of<ClientProvider>(context, listen: false);
+      
+      // 2. Ejecutar 
+      await clientProvider.addClient(nuevoCliente);
+      
       if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cliente añadido con éxito'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (clientProvider.errorMessage == null) {
+          // --- ÉXITO ---
+          Navigator.of(context).pop(); 
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cliente añadido con éxito'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          // --- ERROR ---
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${clientProvider.errorMessage}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
       setState(() => _isLoading = false);
     }
@@ -431,39 +448,6 @@ class __AddClienteFormState extends State<_AddClienteForm> {
                         contentPadding:
                             EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // ID Localidad + ID Tipo Cliente
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _idLocalidadController,
-                      decoration: const InputDecoration(
-                        labelText: 'ID Localidad',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _idTipoClienteController,
-                      decoration: const InputDecoration(
-                        labelText: 'ID Tipo Cliente',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                      ),
-                      keyboardType: TextInputType.number,
                     ),
                   ),
                 ],

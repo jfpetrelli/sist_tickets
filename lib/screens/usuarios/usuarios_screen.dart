@@ -65,7 +65,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (provider.errorMessage != null) {
+          if (provider.errorMessage != null && provider.users.isEmpty) {
             return Center(child: Text(provider.errorMessage!));
           }
           final usuariosFiltrados = provider.users
@@ -251,6 +251,7 @@ class __AddUsuarioFormState extends State<_AddUsuarioForm> {
   void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
+
       final nuevoUsuario = Usuario(
         idPersonal: DateTime.now().millisecondsSinceEpoch,
         idSucursal: int.tryParse(_idSucursalController.text) ?? 0,
@@ -266,17 +267,34 @@ class __AddUsuarioFormState extends State<_AddUsuarioForm> {
             ? DateTime.tryParse(_fechaEgresoController.text)
             : null,
       );
-      await Provider.of<UserListProvider>(context, listen: false)
-          .addUserWithPassword(nuevoUsuario, _passwordController.text);
+
+      // 1. Obtenemos la referencia al provider
+      final userProvider = Provider.of<UserListProvider>(context, listen: false);
+
+      // 2. Ejecutamos la acción (esperamos a que termine)
+      await userProvider.addUserWithPassword(nuevoUsuario, _passwordController.text);
+
       if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Usuario añadido con éxito'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (userProvider.errorMessage == null) {
+          Navigator.of(context).pop(); // Cerramos el modal
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Usuario añadido con éxito'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+        } else {
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar: ${userProvider.errorMessage}'),
+              backgroundColor: Colors.red, // Color rojo para indicar error
+            ),
+          );
+        }
       }
+      
       setState(() => _isLoading = false);
     }
   }

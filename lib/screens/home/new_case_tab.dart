@@ -24,7 +24,8 @@ class _NewCaseTabState extends State<NewCaseTab> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _clientController = TextEditingController();
-  var _autoCompleteKey = UniqueKey(); // Key for the Autocomplete widget
+  var _autoCompleteKey = UniqueKey();
+  var _technicianAutoCompleteKey = UniqueKey();
 
   // Variables para guardar la selección del formulario
   int? _selectedClientId;
@@ -72,7 +73,8 @@ class _NewCaseTabState extends State<NewCaseTab> {
     setState(() {
       // Clear text controllers and reset all selected values
       _clientController.clear();
-      _autoCompleteKey = UniqueKey(); // Reset the Autocomplete key
+      _autoCompleteKey = UniqueKey();
+      _technicianAutoCompleteKey = UniqueKey(); // Reset the Autocomplete key
       _titleController.clear();
       _descriptionController.clear();
       _selectedClientId = null;
@@ -224,6 +226,8 @@ class _NewCaseTabState extends State<NewCaseTab> {
       // Limpia el formulario para el próximo caso
       _formKey.currentState?.reset();
       setState(() {
+        _autoCompleteKey = UniqueKey();            // Resetea el input del Cliente
+        _technicianAutoCompleteKey = UniqueKey();  // Resetea el input del Técnico
         _titleController.clear();
         _descriptionController.clear();
         _clientController.clear();
@@ -514,6 +518,7 @@ class _NewCaseTabState extends State<NewCaseTab> {
                   },
                   builder: (FormFieldState<String> state) {
                     return Autocomplete<Usuario>(
+                      key: _technicianAutoCompleteKey,
                       displayStringForOption: (Usuario user) => user.nombre,
                       optionsBuilder: (TextEditingValue textEditingValue) {
                         if (textEditingValue.text.isEmpty) {
