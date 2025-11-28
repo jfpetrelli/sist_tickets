@@ -275,8 +275,6 @@ class _AdminWebProfileState extends State<AdminWebProfile> {
                 const SizedBox(height: 20),
                 _buildProfileCard(context, user),
                 const SizedBox(height: 20),
-                _buildStatsSection(),
-                const SizedBox(height: 20),
                 _buildSettingsSection(),
               ],
             ),
@@ -430,9 +428,9 @@ class _AdminWebProfileState extends State<AdminWebProfile> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('Casos\\nCompletados', casosCompletados),
-                _buildStatItem('Casos\\nPendientes', casosPendientes),
-                _buildStatItem('Casos\\nEn Progreso', casosEnProgreso),
+                _buildStatItem('Casos Completados', casosCompletados),
+                _buildStatItem('Casos Pendientes', casosPendientes),
+                _buildStatItem('Casos En Progreso', casosEnProgreso),
               ],
             ),
           ],

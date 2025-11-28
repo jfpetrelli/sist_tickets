@@ -155,7 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.red.shade200),
+                                    border:
+                                        Border.all(color: Colors.red.shade200),
                                   ),
                                   child: Text(
                                     _errorMessage!,
@@ -248,7 +249,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _isPasswordObscured = !_isPasswordObscured;
+                                        _isPasswordObscured =
+                                            !_isPasswordObscured;
                                       });
                                     },
                                   ),
@@ -260,24 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   return null;
                                 },
                               ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () {},
-                                  style: TextButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    minimumSize: Size.zero,
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  child: Text(
-                                    '¿Olvidaste tu contraseña?',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
+
                               const SizedBox(height: 24),
                               SizedBox(
                                 width: double.infinity,
