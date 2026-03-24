@@ -886,4 +886,124 @@ class ApiService {
     }
   }
   // --- FIN MÉTODOS DE CALIFICACIÓN ---
+
+  // --- MÉTODOS DE VISITAS ---
+
+  /// GET /visitas/calendar/?fecha_inicio=...&fecha_fin=...&id_personal_asignado=...
+  /// Pass [idPersonalAsignado] only for TECNICO users; omit for ADMIN (returns all).
+  Future<List<dynamic>> getVisitasCalendar({
+    required DateTime fechaInicio,
+    required DateTime fechaFin,
+    int? idPersonalAsignado,
+  }) async {
+    final params = <String, String>{
+      'fecha_inicio': fechaInicio.toIso8601String(),
+      'fecha_fin': fechaFin.toIso8601String(),
+      if (idPersonalAsignado != null)
+        'id_personal_asignado': idPersonalAsignado.toString(),
+    };
+    final uri = Uri.parse(ApiConfig.visitasCalendar)
+        .replace(queryParameters: params);
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(uri, headers: _headers),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+          'Error al obtener el calendario de visitas: ${response.statusCode}');
+    }
+  }
+
+  /// GET /visitas/ticket/{ticket_id}
+  Future<List<dynamic>> getVisitasByTicket(int ticketId) async {
+    final uri = Uri.parse('${ApiConfig.visitasByTicket}$ticketId');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.get(uri, headers: _headers),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+          'Error al obtener visitas del ticket: ${response.statusCode}');
+    }
+  }
+
+  /// POST /visitas/
+  Future<Map<String, dynamic>> createVisita(
+      Map<String, dynamic> visitaData) async {
+    final response = await _makeAuthenticatedRequest(
+      () => http.post(
+        Uri.parse(ApiConfig.visitas),
+        headers: _headers,
+        body: jsonEncode(visitaData),
+      ),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      String mensajeError;
+      try {
+        final errorBody = jsonDecode(response.body);
+        mensajeError = errorBody['detail'] ?? 'Error al crear la visita';
+      } catch (_) {
+        mensajeError = 'Error inesperado (${response.statusCode})';
+      }
+      throw Exception(mensajeError);
+    }
+  }
+
+  /// PUT /visitas/{visita_id}
+  Future<Map<String, dynamic>> updateVisita(
+      int visitaId, Map<String, dynamic> visitaData) async {
+    final uri = Uri.parse('${ApiConfig.visitas}$visitaId');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.put(
+        uri,
+        headers: _headers,
+        body: jsonEncode(visitaData),
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      String mensajeError;
+      try {
+        final errorBody = jsonDecode(response.body);
+        mensajeError = errorBody['detail'] ?? 'Error al actualizar la visita';
+      } catch (_) {
+        mensajeError = 'Error inesperado (${response.statusCode})';
+      }
+      throw Exception(mensajeError);
+    }
+  }
+
+  /// DELETE /visitas/{visita_id}
+  Future<void> deleteVisita(int visitaId) async {
+    final uri = Uri.parse('${ApiConfig.visitas}$visitaId');
+
+    final response = await _makeAuthenticatedRequest(
+      () => http.delete(uri, headers: _headers),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      String mensajeError;
+      try {
+        final errorBody = jsonDecode(response.body);
+        mensajeError = errorBody['detail'] ?? 'Error al eliminar la visita';
+      } catch (_) {
+        mensajeError = 'Error inesperado (${response.statusCode})';
+      }
+      throw Exception(mensajeError);
+    }
+  }
+
+  // --- FIN MÉTODOS DE VISITAS ---
 }

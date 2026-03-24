@@ -6,6 +6,8 @@ import 'package:sist_tickets/screens/case_detail/case_documents_page.dart';
 import 'package:sist_tickets/screens/confirmation_signature/confirmation_signature_screen.dart';
 import 'package:sist_tickets/models/calificacion_ticket.dart';
 import 'package:sist_tickets/screens/case_detail/edit_case_screen.dart';
+import 'package:sist_tickets/screens/admin_web/calendar_screen.dart';
+import 'package:sist_tickets/providers/visita_provider.dart';
 import '../../models/ticket.dart';
 import '../../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';
@@ -276,6 +278,30 @@ class _CaseDetailContentState extends State<CaseDetailContent>
     );
   }
 
+  void _showNuevaVisitaForm(BuildContext context) {
+    if (_isFabMenuOpen) _toggleFabMenu();
+    final caseId = int.tryParse(widget.caseId);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => VisitaFormFromCaseDetail(
+        caseId: caseId,
+        onSaved: (data) async {
+          Navigator.pop(dialogCtx);
+          final ok =
+              await context.read<VisitaProvider>().createVisita(data);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  ok ? 'Visita creada' : 'Error al crear la visita'),
+              backgroundColor: ok ? kSuccessColor : kErrorColor,
+            ));
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -325,6 +351,22 @@ class _CaseDetailContentState extends State<CaseDetailContent>
               },
               label: const Text('Editar Caso'),
               icon: const Icon(Icons.edit),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ScaleTransition(
+            alignment: Alignment.bottomRight,
+            scale: CurvedAnimation(
+              parent: _fabAnimationController,
+              curve: Interval(0.3, 0.9, curve: Curves.easeOutCubic),
+            ),
+            child: FloatingActionButton.extended(
+              heroTag: 'fab_nueva_visita',
+              backgroundColor: kPrimaryColor,
+              foregroundColor: Colors.white,
+              onPressed: () => _showNuevaVisitaForm(context),
+              label: const Text('Nueva Visita'),
+              icon: const Icon(Icons.calendar_month),
             ),
           ),
           const SizedBox(height: 16),

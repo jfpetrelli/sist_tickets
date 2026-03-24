@@ -10,6 +10,7 @@ import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/providers/client_provider.dart';
 import 'package:sist_tickets/providers/user_list_provider.dart';
+import 'package:sist_tickets/providers/visita_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sist_tickets/utils/web_utils.dart';
@@ -54,7 +55,12 @@ class MyApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-            create: (context) => TiposCasoProvider(context.read<ApiService>())),
+            create: (context) =>
+                TiposCasoProvider(context.read<ApiService>())),
+        ChangeNotifierProvider(
+          create: (context) =>
+              VisitaProvider(context.read<ApiService>()),
+        ),
       ],
       child: MaterialApp(
         title: 'Sistema de Tickets',

@@ -6,6 +6,7 @@ import 'package:sist_tickets/providers/user_provider.dart';
 import 'package:sist_tickets/api/api_service.dart';
 import 'package:sist_tickets/constants.dart';
 import 'package:sist_tickets/screens/admin_web/admin_web_profile.dart';
+import 'package:sist_tickets/screens/admin_web/calendar_screen.dart';
 import 'package:sist_tickets/screens/login/login_screen.dart';
 import 'package:sist_tickets/screens/usuarios/usuarios_screen.dart';
 import 'package:sist_tickets/screens/clientes/clientes_screen.dart';
@@ -13,6 +14,7 @@ import 'package:sist_tickets/screens/reports/reports_content.dart';
 import 'package:sist_tickets/screens/home/archivados_screen.dart';
 import 'package:sist_tickets/screens/home/new_case_tab.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AdminWebDashboard extends StatefulWidget {
   const AdminWebDashboard({super.key});
@@ -207,6 +209,27 @@ class _AdminWebDashboardState extends State<AdminWebDashboard> {
             );
           },
         ),
+        if (kIsWeb)
+          ListTile(
+            leading: const Icon(Icons.calendar_month, color: Colors.white),
+            title: const Text('Calendario',
+                style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => Scaffold(
+                          appBar: AppBar(
+                            title: const Text('Calendario de Visitas'),
+                            backgroundColor: kPrimaryColor,
+                            foregroundColor: Colors.white,
+                          ),
+                          body: const CalendarScreen(),
+                        )),
+              );
+            },
+          ),
         const Divider(color: Colors.white24),
         Consumer<UserProvider>(
           builder: (context, userProvider, child) {

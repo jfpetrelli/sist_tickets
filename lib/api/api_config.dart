@@ -36,4 +36,9 @@ class ApiConfig {
   // Calificación endpoints
   static const String calificacion = '$baseUrl/calificacion/';
   static const String calificacionTicket = '$baseUrl/calificacion/ticket/';
+
+  // Visitas endpoints
+  static const String visitasCalendar = '$baseUrl/visitas/calendar/';
+  static const String visitas = '$baseUrl/visitas/';
+  static const String visitasByTicket = '$baseUrl/visitas/ticket/';
 }
